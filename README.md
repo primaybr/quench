@@ -120,6 +120,7 @@ quench ships adapter files for 10 other tools. See [INSTALL.md](./INSTALL.md):
 
 | Tool | Adapter |
 |------|---------|
+| Antigravity | `adapters/antigravity/.agents/rules/AGENTS.md` (or native plugin) |
 | Cursor AI | `adapters/cursor/.cursorrules` or `.cursor/rules/*.mdc` |
 | GitHub Copilot | `adapters/copilot/copilot-instructions.md` |
 | Kilo Code | `adapters/kilo/kilo.jsonc` + `.kilo/rules/` |
@@ -161,6 +162,7 @@ quench/
   rules/
     AGENTS.md                    - Always-on compact rules (derived from skills)
   adapters/
+    antigravity/                 - Antigravity standalone drop-in adapter
     cursor/                      - Cursor AI adapter
     copilot/                     - GitHub Copilot adapter
     cline/                       - Cline adapter

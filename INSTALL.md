@@ -59,7 +59,12 @@ your-project/
 ## Installation per Tool
 
 ### Antigravity (native - best experience)
-See Option A above.
+- **Global Plugin (Recommended):** Register quench path in `~/.gemini/config/plugins.json` (see Option A above).
+- **Standalone Workspace Drop-in:**
+  ```bash
+  mkdir -p /your-project/.agents/rules
+  cp adapters/antigravity/.agents/rules/AGENTS.md /your-project/.agents/rules/AGENTS.md
+  ```
 
 ### Cursor AI - single file (simpler)
 ```bash
@@ -134,6 +139,7 @@ cp adapters/junie/.junie/rules/plaincast.md   /your-project/.junie/rules/
 
 | Adapter | steel-mind | plaincast |
 |---------|-----------|-----------|
+| Antigravity `.agents/rules/AGENTS.md` | [x] | [x] |
 | Cursor `.cursorrules` | [x] | [x] |
 | Cursor `.cursor/rules/steel-mind.mdc` | [x] | - |
 | Cursor `.cursor/rules/plaincast.mdc` | - | [x] |

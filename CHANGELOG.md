@@ -19,7 +19,8 @@ Format: [version] date - description
   - Protocol 9: Punctuation Density & List Restraint (colon and semicolon density gating, bold-first list spam avoidance)
 - `rules/AGENTS.md`:
   - Synchronized always-on compact extracts for structural cadence, false agency, colon restraint, and list spam avoidance
-- Synchronized all 10 adapters across the repository:
+- Synchronized all 11 adapters across the repository:
+  - Antigravity (`adapters/antigravity/.agents/rules/AGENTS.md`)
   - Cursor (`.cursorrules`, `.cursor/rules/*.mdc`)
   - GitHub Copilot (`copilot-instructions.md`)
   - Kilo Code (`.kilo/rules/`)
