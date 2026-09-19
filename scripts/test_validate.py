@@ -87,6 +87,14 @@ class TestLeakguardGate(unittest.TestCase):
         self.assertFalse(report.passed)
         self.assertTrue(any("Personal Access Token" in v.message for v in report.violations))
 
+    def test_cross_project_bleed_detected(self):
+        report = validate.ValidationReport()
+        bad_term = "hush" + "cache"
+        dirty = f"Use {bad_term}_ask to query cached items.\n"
+        validate.validate_path_leaks(Path('test.md'), dirty, report)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("Cross-project" in v.message for v in report.violations))
+
 
 class TestHygieneGate(unittest.TestCase):
     def test_utf8_no_bom_and_lf_passes(self):

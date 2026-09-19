@@ -120,3 +120,12 @@ Remove invisible characters: U+200B U+200C U+200D U+00A0 U+FEFF.
 Do not overuse bold. More than two bolded phrases per paragraph is inflation.
 Avoid bold-first list spam (**Key:** Value on every bullet). Use prose or plain bullets.
 Limit colons in prose to formal definitions; keep semicolons rare.
+
+## 10. leakguard: Path, Environment & Context Sanitization
+
+NEVER output or commit host drive letters (C:\, F:\) or user profiles (Users/, /home/).
+Always use generic placeholders (/path/to/<project>, ~/.config/<tool>/) or relative paths.
+Never mix forward and backward slashes in paths; use / universally.
+Maintain hermetic project isolation: never leak private tools, MCP names, internal APIs,
+or sibling project names from the host environment into repository files or commits.
+Never expose authentication tokens (ghp_, sk-, bearer) or connection strings with passwords.

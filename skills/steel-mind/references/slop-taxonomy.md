@@ -100,6 +100,17 @@ Conceptual fallacies common in machine-generated technical prose.
 | Compulsive silver lining | Adding "challenges and opportunities" to bug post-mortems | State defects and causes unsoftened |
 | Copula avoidance puffery | "serves as" / "stands as" / "boasts" | Use direct `is` or `has` |
 
+## Category 9 - Context Bleed and Boundary Violations
+
+Cross-project contamination where tools, paths, or concepts from external environments leak into the target repository.
+
+| Pattern | Example | Fix |
+|---------|---------|-----|
+| Environment tool bleed | Prescribing a private MCP tool or local daemon in public code/docs | Use generic tools or repo-defined dependencies |
+| Sibling workspace bleed | Importing names, classes, or tables from an unrelated local project | Restrict references to current repository |
+| System prompt echo | Echoing internal agent instructions, prompt tokens, or rule IDs | Omit internal meta-context from output |
+| Host path exposure | Writing `C:\Users\...` or local drive letters in docs or configs | Use `/path/to/<project>` or relative paths |
+
 ---
 
 ## Quick Detection (3-flag Rule)
@@ -112,3 +123,4 @@ If 3 or more of these are present in a response, the response needs a rewrite:
 - [ ] Identical phrasing appears twice within 100 tokens
 - [ ] A heading exists with fewer than 3 lines of content under it
 - [ ] An apology or hedge appears before the main content
+- [ ] An external private tool or host path was referenced

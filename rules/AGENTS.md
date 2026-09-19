@@ -125,6 +125,17 @@ Semicolons should be rare: if two clauses can stand alone, use a period.
 
 ---
 
+## leakguard: Path, Environment & Context Sanitization
+
+Never output or commit host drive letters (C:\, F:\) or user profiles (Users/, /home/).
+Always use generic placeholders (/path/to/<project>, ~/.config/<tool>/) or relative paths.
+Never mix forward and backward slashes in paths; use / universally.
+Maintain hermetic project isolation: never leak private tools, MCP names, internal APIs,
+or sibling project names from the host environment into repository files or commits.
+Never expose authentication tokens (ghp_, sk-, bearer) or connection strings with passwords.
+
+---
+
 ## quench: Repository & Ecosystem Invariants
 
 - **Canonical Source of Truth:** `skills/<name>/SKILL.md` is the canonical source of truth. Always edit skills first.

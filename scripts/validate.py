@@ -113,6 +113,8 @@ FORBIDDEN_PATH_PATTERNS = [
     (re.compile(r'\bghp_[A-Za-z0-9]{36}\b'), 'GitHub Personal Access Token'),
     (re.compile(r'\bgithub_pat_[A-Za-z0-9_]{82}\b'), 'GitHub Fine-grained PAT'),
     (re.compile(r'\bsk-[A-Za-z0-9_-]{20,}\b'), 'OpenAI/API secret key'),
+    # Cross-project context bleed & ungrounded private tools
+    (re.compile(r'\b' + 'hush' + 'cache' + r'(?:_[a-z0-9_]+)?\b', re.IGNORECASE), 'Cross-project context bleed / private environment tool'),
 ]
 
 # Illustrative documentation examples allowed
@@ -140,20 +142,25 @@ REQUIRED_ADAPTERS = [
     Path('adapters/cursor/.cursorrules'),
     Path('adapters/cursor/.cursor/rules/steel-mind.mdc'),
     Path('adapters/cursor/.cursor/rules/plaincast.mdc'),
+    Path('adapters/cursor/.cursor/rules/leakguard.mdc'),
     Path('adapters/copilot/copilot-instructions.md'),
     Path('adapters/kilo/kilo.jsonc'),
     Path('adapters/kilo/.kilo/rules/steel-mind.md'),
     Path('adapters/kilo/.kilo/rules/plaincast.md'),
+    Path('adapters/kilo/.kilo/rules/leakguard.md'),
     Path('adapters/cline/.clinerules/steel-mind.md'),
     Path('adapters/cline/.clinerules/plaincast.md'),
+    Path('adapters/cline/.clinerules/leakguard.md'),
     Path('adapters/windsurf/.windsurfrules'),
     Path('adapters/claude/CLAUDE.md'),
     Path('adapters/generic/system-prompt.md'),
     Path('adapters/aider/CONVENTIONS.md'),
     Path('adapters/zed/.zedprompts/steel-mind.md'),
     Path('adapters/zed/.zedprompts/plaincast.md'),
+    Path('adapters/zed/.zedprompts/leakguard.md'),
     Path('adapters/junie/.junie/rules/steel-mind.md'),
     Path('adapters/junie/.junie/rules/plaincast.md'),
+    Path('adapters/junie/.junie/rules/leakguard.md'),
 ]
 
 # ---------------------------------------------------------------------------
@@ -275,7 +282,18 @@ def validate_plaincast(path: Path, content: str, report: ValidationReport, auto_
 def validate_path_leaks(path: Path, content: str, report: ValidationReport):
     """Gate 2: Detect environment path leaks and local credentials."""
     lines = content.split('\n')
+    in_ignore_block = False
+
     for line_idx, line in enumerate(lines, 1):
+        if '<!-- leakguard:ignore-start -->' in line:
+            in_ignore_block = True
+        if '<!-- leakguard:ignore-end -->' in line:
+            in_ignore_block = False
+            continue
+
+        if in_ignore_block or '<!-- leakguard:ignore-line -->' in line:
+            continue
+
         # Skip whitelisted sample illustrations in documentation
         if any(w in line for w in WHITELISTED_PATH_SUBSTRINGS):
             continue

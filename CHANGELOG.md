@@ -3,6 +3,37 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.5.0] 2026-09-19
+
+### Added
+- `skills/leakguard/SKILL.md` (v1.0.0):
+  - Environment, path, and context isolation discipline
+  - Protocol 1: Path Neutralization & Generic Placeholders (host path neutralization hierarchy)
+  - Protocol 2: Hermetic Project Isolation & Anti-Context Bleed (preventing private environment tools, sibling project names, and internal prompts from leaking into public code and docs)
+  - Protocol 3: Secret & Credential Redaction (API keys, PATs, database connection strings)
+  - Protocol 4: Pre-Commit Diff & Staging Audit
+  - Protocol 5: Portable Path Formatting (universal forward slashes)
+- `skills/leakguard/references/leak-patterns.md`:
+  - Reference catalog detailing path leaks, context bleed vectors, credential exposures, and remediation procedures
+- `skills/steel-mind/SKILL.md` (v1.1.0):
+  - Protocol 5: Added Hermetic Project Isolation integrity gate (verifying tools and dependencies exist in current repository)
+  - Protocol 6: Generic subagent delegation and cache guidance
+- `skills/steel-mind/references/slop-taxonomy.md`:
+  - Added Category 9: Context Bleed and Boundary Violations
+- `rules/AGENTS.md`:
+  - Added always-on compact extract for `leakguard`
+  - Enforced hermetic project boundaries across repository invariants
+- Multi-Tool Adapter Parity:
+  - Synchronized `leakguard` across all 11 adapters (Antigravity, Cursor, Copilot, Kilo, Cline, Windsurf, Claude, Generic, Aider, Zed, Junie)
+- Validation Engine & Pre-Commit Hook:
+  - Added Cross-Project Context Bleed detection to Gate 2 in `scripts/validate.py`
+  - Added `test_cross_project_bleed_detected` to unit test suite
+
+### Security & Sanitization
+- Purged all occurrences of external project names and private tool references across git history using `git-filter-repo`
+
+---
+
 ## [1.4.0] 2026-09-19
 
 ### Added

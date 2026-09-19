@@ -1,0 +1,24 @@
+---
+description: leakguard - Environment, path, and context isolation discipline. Prevents leaking local host paths, drive letters, user profile directories, internal machine identities, credentials, and cross-project tools into public code, commits, and documentation.
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# leakguard (quench)
+
+## Path Neutralization
+
+NEVER output or commit host drive letters (`C:\`, `F:\`) or user profile directories (`Users/`, `/home/`).
+Always use generic placeholders (`/path/to/<project>`, `~/.config/<tool>/`) or relative paths (`./config.json`).
+Never mix forward and backward slashes in paths; use `/` universally across platforms.
+
+## Hermetic Project Isolation
+
+Maintain strict project isolation: never leak private tools, MCP names, internal APIs,
+or sibling project names from the host environment into repository files, docs, or commits.
+Every repository must be self-contained; only reference tools and dependencies defined locally.
+
+## Secret Redaction
+
+NEVER commit or output authentication tokens (`ghp_*`, `github_pat_*`, `sk-*`, `bearer *`)
+or database connection strings with embedded passwords. Use environment variables.
