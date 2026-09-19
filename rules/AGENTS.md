@@ -56,6 +56,7 @@ Before asserting a function, class, or path exists: verify it by reading the sou
 Before outputting code: mentally execute it for obvious runtime errors.
 No phantom APIs. No hallucinated imports. No invented config keys.
 No invented file paths - use directory listings to confirm before asserting.
+Hermetic boundary: never bleed private tools or names from host environment into output.
 
 ## steel-mind: Context Economy
 

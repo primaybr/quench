@@ -255,6 +255,11 @@ they cause failures in production.
 - [ ] Have I seen this config format in the actual project files?
 - [ ] Is this command correct for the specific framework (not a generic assumption)?
 
+**For tools and ecosystem dependencies (Hermetic Project Isolation):**
+- [ ] Does this tool, script, or package exist in this project repository?
+- [ ] Am I bleeding a private tool or project name from external system prompts or host setup?
+- [ ] Is this reference portable to anyone cloning this repository?
+
 ### The "Verify Before Assert" Rule
 
 If you are about to write "the file is at X" or "the function is called Y" -
@@ -276,13 +281,13 @@ into a compact statement rather than leaving the full exchange in context.
 "Completed: auth module refactor - 3 files modified, tests pass" is better
 than 40 lines of back-and-forth.
 
-### When to Offload to Focused Subagents
+### When to Offload to Focused Subagents or Cached Lookups
 
 Use lightweight subagents or cached lookups for:
 - Secondary research queries ("what does X library do?")
 - Summarizing a long file you've already read
 - Verifying a code pattern without burning session context
-- Any query that might have been asked before (cache hit = 0ms, \$0.00)
+- Cacheable queries to avoid repetitive token spend
 
 Use a full `invoke_subagent` for:
 - Parallel workstreams that need independent tool access
