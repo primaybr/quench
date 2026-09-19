@@ -1,0 +1,31 @@
+# quench - line ending policy
+# All text files stored as LF in the repo.
+# Git handles checkout conversion per-platform where needed.
+
+* text=auto eol=lf
+
+# Markdown - always LF
+*.md text eol=lf
+*.mdc text eol=lf
+
+# Rules / config adapter files - always LF
+.cursorrules text eol=lf
+.windsurfrules text eol=lf
+.codeiumrules text eol=lf
+
+# JSON / YAML
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Shell scripts - must be LF (CRLF silently breaks on Linux)
+*.sh text eol=lf
+
+# Binary assets - no line ending conversion
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.tar.gz binary

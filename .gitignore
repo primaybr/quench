@@ -1,0 +1,48 @@
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.zed/
+
+# Windows
+$RECYCLE.BIN/
+
+# Logs
+*.log
+logs/
+
+# Temp / scratch
+*.tmp
+*.bak
+*.orig
+scratch/
+
+# Node (if tooling is ever added)
+node_modules/
+.npm/
+.pnp.*
+
+# Python (if scripts are added)
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Build output (if a compile step is added later)
+dist/
+build/
+out/
