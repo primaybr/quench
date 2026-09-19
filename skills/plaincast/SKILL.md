@@ -8,7 +8,6 @@ description: >-
   documentation, articles, news content, commit messages, code comments,
   or any text that must survive encoding pipelines, search indexing, copy-paste,
   screen readers, and version control diffs without corruption.
-trigger: model_decision
 ---
 
 # plaincast: Text Normalization Discipline

@@ -6,7 +6,6 @@ description: >-
   seven grounded protocols: anti-slop lexicon, platform grounding, tool-use
   discipline, epistemic integrity, output integrity gates, context economy,
   and encoding hygiene. Not a persona. Not a jailbreak. A tempering process.
-trigger: model_decision
 ---
 
 # steel-mind: AI Behavior Tempering
