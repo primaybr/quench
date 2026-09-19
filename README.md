@@ -17,8 +17,8 @@ and real lessons - not copied from generic prompt engineering guides.
 
 | Skill | Version | Description |
 |-------|---------|-------------|
-| [steel-mind](./skills/steel-mind/SKILL.md) | 1.0.0 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity |
-| [plaincast](./skills/plaincast/SKILL.md) | 1.0.0 | Text normalization: no emoji, no em dashes, no curly quotes, no Unicode decorations |
+| [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.0 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
+| [plaincast](./skills/plaincast/SKILL.md) | 1.1.0 | Text normalization: standard keyboard boundary, no emoji, no em dashes, no curly quotes, colon/list restraint |
 
 ---
 

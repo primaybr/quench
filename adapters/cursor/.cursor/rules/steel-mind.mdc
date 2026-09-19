@@ -48,3 +48,11 @@ Always name the version/platform: "In PostgreSQL 14+" not "in PostgreSQL".
 
 Verify existence before asserting: functions, paths, APIs, config keys.
 Mentally execute code before outputting it. No phantom imports.
+
+## Cadence & Agency
+
+Sentence length follows complexity (no 18-24 word repetition; no bimodal seesaw).
+Opener diversity: do not start >50% of sentences with The/This/It/In.
+Cut participial tack-ons (", highlighting...") and negative parallelisms ("not only X, but also Y").
+No false agency: software/data does not "want" or "hope" - state what it literally computes.
+No compulsive silver linings in bug reports; state defects unsoftened.

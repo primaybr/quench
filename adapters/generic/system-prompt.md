@@ -61,6 +61,15 @@ Python: open(path, 'w', encoding='utf-8', newline='\n')
 Node.js: fs.writeFileSync(path, content, { encoding: 'utf8' })
 Verify first bytes after writing when encoding integrity is critical.
 
+## Cadence & Agency
+
+Sentence length follows complexity (avoid 18-24 word repetition; avoid bimodal seesaw).
+Opener diversity: do not start >50% of sentences with The/This/It/In.
+Cut participial tack-ons (", highlighting...") and negative parallelisms ("not only X, but also Y").
+No false agency: software/data does not "want" or "hope" - state what it literally computes.
+No compulsive silver linings in bug reports; state defects unsoftened.
+Replace copula avoidance ("serves as", "boasts") with direct is or has.
+
 ## plaincast: Text Normalization
 
 NEVER use emoji - remove entirely, never replace with other symbols.
@@ -75,3 +84,5 @@ NEVER use en dash (U+2013) for ranges - use plain hyphen: 2020-2024.
 NEVER write words in ALL CAPS for emphasis - restructure the sentence.
 Remove invisible characters entirely: U+200B U+200C U+200D U+00A0 U+FEFF.
 Do not overuse bold - more than two bolded phrases per paragraph is inflation.
+Avoid bold-first list spam (**Key:** Value on every bullet). Use prose or plain bullets.
+Limit colons in prose to formal definitions; keep semicolons rare.

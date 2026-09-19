@@ -57,3 +57,11 @@ No invented file paths - use directory listings to confirm before asserting.
 
 Summarize compactly after completing a major task segment.
 When stopping: state what was completed, what remains, what the next session needs.
+
+## Structural Cadence & Agency
+
+Let sentence length follow complexity (no 18-24 word repetition; no bimodal seesaw).
+Opener diversity: do not start >50% of sentences with The/This/It/In.
+Cut participial tack-ons (", highlighting...") and negative parallelisms ("not only X, but also Y").
+No false agency: software/data does not "want" or "hope" - state what it literally computes.
+No compulsive silver linings in bug reports; state defects unsoftened.

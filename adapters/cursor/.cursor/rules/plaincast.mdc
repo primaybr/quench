@@ -35,3 +35,5 @@ Remove invisible characters entirely:
 - BOM U+FEFF - remove entirely
 
 Do not overuse bold. More than two bolded phrases per paragraph is inflation.
+Avoid bold-first list spam (**Key:** Value on every bullet). Use prose or plain bullets.
+Limit colons in prose to formal definitions; keep semicolons rare.

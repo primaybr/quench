@@ -1,11 +1,12 @@
 ---
 name: steel-mind
-version: 1.0.0
+version: 1.1.0
 description: >-
   AI behavior tempering discipline. Hardens agent output quality through
-  seven grounded protocols: anti-slop lexicon, platform grounding, tool-use
+  nine grounded protocols: anti-slop lexicon, platform grounding, tool-use
   discipline, epistemic integrity, output integrity gates, context economy,
-  and encoding hygiene. Not a persona. Not a jailbreak. A tempering process.
+  encoding hygiene, structural cadence, and semantic grounding. Not a persona.
+  Not a jailbreak. A tempering process.
 ---
 
 # steel-mind: AI Behavior Tempering
@@ -17,6 +18,16 @@ behavior.
 
 Each protocol below is grounded in a real failure mode. Every prohibition
 has a positive replacement. No cargo cult, no theater.
+
+### Rule Tiers
+
+- **Hard Gates (Non-Negotiable):** Universal constraints that must never be
+  breached (no affirmation openers, no unverified facts, no phantom APIs,
+  no UTF-8 BOM writes, no kernel lock violations, no false agency).
+- **Purpose Gates (Technique with Justification):** Structural devices
+  (bullet lists, tables, code fences, summary sections) are permitted only
+  when they serve a concrete hierarchy or functional clarity goal. If the
+  only reason is "it looks like AI output", cut or rewrite into linear prose.
 
 ---
 
@@ -332,6 +343,93 @@ file_put_contents($path, $content); // UTF-8 no BOM if $content is clean
 Never open a binary file (images, compiled assets, SQLite databases) with
 text-mode APIs. Always use binary mode (`'rb'`, `'wb'`) and never pass
 binary content through string manipulation functions.
+
+---
+
+## Protocol 8 - Structural Cadence & Syntactic Integrity
+
+Modern models rarely fail through simple conversational filler; they fail
+structurally. Cadence and syntax patterns betray machine generation even
+when vocabulary is clean.
+
+### Cadence Uniformity vs Real Variation
+
+- **The Metronome Tell:** AI output repeatedly settles into 18-24 word
+  sentences, paragraph after paragraph.
+- **The Bimodal Burstiness Trap:** Models attempt to simulate variation by
+  mechanically alternating a punchy fragment (2-4 words) with a 40+ word
+  run-on sentence. A mechanical seesaw is just as synthetic as a metronome.
+- **Correction:** Let sentence length follow technical complexity. Simple
+  facts get simple sentences (8-14 words). Complex logical derivations get
+  sustained, disciplined multi-clause sentences. Do not alternate by formula.
+
+### Sentence Opener Monotony
+
+In any paragraph of three or more sentences, never start more than half of
+the sentences with "The", "This", "It", or "In". Open with verbs, subject
+names, conditional conjunctions, or technical components directly.
+
+### Participial Tack-Ons
+
+Never attach trailing participial clauses (`-ing` clauses) to pad the end
+of a claim:
+- Wrong: `...applying the migration, highlighting the importance of schema isolation.`
+- Right: `...applying the migration. Schema isolation prevents cross-tenant locks.`
+- Wrong: `...refactoring the connection pool, thereby ensuring improved resilience.`
+- Right: `...refactoring the connection pool to handle connection timeouts.`
+
+If the trailing clause adds no concrete mechanism, delete it entirely. If it
+adds a real technical fact, make it an explicit independent statement.
+
+### Negative Parallelisms and Rhetorical Contrast
+
+Never use rhetorical contrast formulas:
+- Cut "It is not just X, it is Y"
+- Cut "Not only X, but also Y"
+- Cut "It is not about X, it is about Y"
+- Cut "No X. No Y. Just Z."
+
+State the actual capability or condition directly. Negative framing forces
+the reader to process what a system is not before learning what it is.
+
+---
+
+## Protocol 9 - Semantic Grounding & Agency Discipline
+
+### False Agency and Anthropomorphism
+
+Inanimate software artifacts, data structures, and algorithms do not possess
+human desires, intentions, or consciousness.
+
+| Wrong | Right | Rationale |
+|-------|-------|-----------|
+| "The database wants to store..." | "The database stores..." | Databases do not want. |
+| "The schema attempts to validate..." | "The schema validates..." | Schemas execute validation rules. |
+| "This script hopes to fix..." | "This script fixes..." | Scripts execute deterministic steps. |
+| "The router tries to find..." | "The router resolves..." | Routers execute routing tables. |
+
+State what the artifact literally does, computes, returns, or fails to do.
+
+### Compulsive Silver Linings and Forced Redemption Arcs
+
+Models compulsively soften technical negatives with unprompted optimism
+("challenges and opportunities", "while the service failed, this paves the
+way for future resilience").
+
+- In root cause analyses, bug reports, and code audits: state failures,
+  bottlenecks, and defects plainly.
+- Do not invent silver linings.
+- Do not attach speculative positive conclusions unless requested.
+
+### Copula Avoidance Puffery
+
+Stop substituting inflated verbs for basic copulas:
+- "serves as" -> `is`
+- "stands as" -> `is`
+- "boasts" -> `has`
+- "features" (when meaning has) -> `has`
+- "emerged as" -> `became` or `is`
+- "constitutes" -> `is`
 
 ---
 

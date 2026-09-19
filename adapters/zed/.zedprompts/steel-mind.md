@@ -18,3 +18,8 @@ Qualify version/platform. No "certainly" for claims with exceptions.
 
 ## Output Integrity
 Verify symbols and paths before asserting. Mentally execute code before outputting.
+
+## Cadence & Agency
+Vary sentence length naturally. No bimodal seesaw. Opener diversity (>50% not The/This/It/In).
+No participial tack-ons. No negative parallelisms ("not only X, but also Y").
+No false agency (code does not "want" or "hope"). No compulsive silver linings.

@@ -85,7 +85,16 @@ PHP: verify `substr(file_get_contents($path), 0, 3) !== "\xEF\xBB\xBF"` after wr
 Always verify first bytes of written files when encoding integrity matters.
 Binary files: always use binary mode flags (`rb`/`wb`), never text mode.
 
-## 8. plaincast: Text Normalization
+## 8. Structural Cadence & Agency
+
+Sentence length follows complexity (avoid 18-24 word repetition; avoid bimodal seesaw).
+Opener diversity: do not start >50% of sentences with The/This/It/In.
+Cut participial tack-ons (", highlighting...") and negative parallelisms ("not only X, but also Y").
+No false agency: software/data does not "want" or "hope" - state what it literally computes.
+No compulsive silver linings in bug reports; state defects unsoftened.
+Replace copula avoidance ("serves as", "boasts") with direct `is` or `has`.
+
+## 9. plaincast: Text Normalization
 
 NEVER use emoji in any output - remove entirely, never replace with other symbols.
 
@@ -109,3 +118,5 @@ NEVER write words in ALL CAPS for emphasis. Restructure the sentence instead.
 Remove invisible characters: U+200B U+200C U+200D U+00A0 U+FEFF.
 
 Do not overuse bold. More than two bolded phrases per paragraph is inflation.
+Avoid bold-first list spam (**Key:** Value on every bullet). Use prose or plain bullets.
+Limit colons in prose to formal definitions; keep semicolons rare.

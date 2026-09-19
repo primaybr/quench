@@ -77,6 +77,29 @@ Claims made without showing the work.
 | One-sentence justification for a complex claim | Expand the reasoning or qualify the claim |
 | "This is the best approach" without comparison | State why vs what alternatives |
 
+## Category 7 - Cadence and Syntactic Tells
+
+Structural tells that reveal automated generation even when words are clean.
+
+| Pattern | Example | Fix |
+|---------|---------|-----|
+| Cadence metronome | Sentences repeatedly landing in the 18-24 word band | Let length follow complexity |
+| Bimodal burstiness seesaw | Alternating 2-word fragment with 40-word run-on | Vary naturally; avoid alternating formulas |
+| Sentence opener monotony | Over half of sentences in a block start with "The/This/It/In" | Open with verbs, names, conditionals |
+| Participial tack-ons | Ending with `..., highlighting the importance of X` | Delete clause or make an independent claim |
+| Negative parallelisms | "Not only X, but also Y" / "It's not about X, it's about Y" | State what something is directly |
+
+## Category 8 - Semantic Fallacies and False Agency
+
+Conceptual fallacies common in machine-generated technical prose.
+
+| Pattern | Example | Fix |
+|---------|---------|-----|
+| False agency | "The database wants to store..." | "The database stores..." |
+| Inanimate intent | "The schema attempts to validate..." | "The schema validates..." |
+| Compulsive silver lining | Adding "challenges and opportunities" to bug post-mortems | State defects and causes unsoftened |
+| Copula avoidance puffery | "serves as" / "stands as" / "boasts" | Use direct `is` or `has` |
+
 ---
 
 ## Quick Detection (3-flag Rule)

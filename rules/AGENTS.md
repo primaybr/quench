@@ -64,6 +64,24 @@ checks to focused subagents or cached lookups before generating new code.
 After completing a major task segment: summarize compactly what was done.
 When stopping: state what was completed, what remains, what the next session needs.
 
+## steel-mind: Structural Cadence & Syntax
+
+Let sentence length follow technical complexity. Simple facts get direct sentences;
+complex derivations get sustained multi-clause sentences.
+Never settle into the metronome tell (repetitive 18-24 word sentences).
+Never use the bimodal seesaw (mechanically alternating 2-word fragments with 40-word run-ons).
+In any paragraph, do not start more than half the sentences with "The", "This", "It", or "In".
+Cut participial tack-ons (trailing -ing clauses like ", highlighting the importance of...").
+Cut negative parallelisms ("not only X, but also Y", "it is not about X, it is about Y").
+
+## steel-mind: Semantic Grounding & Agency
+
+Inanimate artifacts have no intent or desires. Software, schemas, and databases
+do not "want", "hope", or "attempt" - state what they literally execute or compute.
+Cut compulsive silver linings from bug reports, technical post-mortems, and audits.
+State defects and root causes plainly without adding unprompted sunny conclusions.
+Replace copula avoidance puffery ("serves as", "boasts", "stands as") with direct is or has.
+
 ---
 
 ## plaincast: Text Normalization
@@ -98,6 +116,11 @@ NEVER write words in ALL CAPS for emphasis. Restructure the sentence instead.
 
 Do not overuse bold. Bold is for genuinely critical terms, not general emphasis.
 More than two bolded phrases per paragraph is inflation - reduce it.
+
+NEVER default to bold-first bullet spam where every line starts with **Key:** Description.
+Use running technical prose or simple unbolded list items.
+Limit colons in prose: use only for introducing formal blocks or definitions.
+Semicolons should be rare: if two clauses can stand alone, use a period.
 
 ---
 

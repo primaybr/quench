@@ -5,6 +5,34 @@ Format: [version] date - description
 
 ---
 
+## [1.3.0] 2026-09-19
+
+### Added
+- `skills/steel-mind/SKILL.md` (v1.1.0):
+  - Formally introduced Rule Tiers: Hard Gates (non-negotiable invariants) and Purpose Gates (techniques requiring functional justification)
+  - Protocol 8: Structural Cadence & Syntactic Integrity (cadence uniformity prevention, bimodal burstiness trap mitigation, sentence opener diversity, elimination of trailing participial tack-ons, and removal of negative parallelisms)
+  - Protocol 9: Semantic Grounding & Agency Discipline (elimination of false agency in inanimate software artifacts, removal of compulsive silver linings from technical findings, and copula avoidance puffery replacement)
+- `skills/steel-mind/references/slop-taxonomy.md`:
+  - Added Category 7: Cadence and Syntactic Tells
+  - Added Category 8: Semantic Fallacies and False Agency
+- `skills/plaincast/SKILL.md` (v1.1.0):
+  - Protocol 9: Punctuation Density & List Restraint (colon and semicolon density gating, bold-first list spam avoidance)
+- `rules/AGENTS.md`:
+  - Synchronized always-on compact extracts for structural cadence, false agency, colon restraint, and list spam avoidance
+- Synchronized all 10 adapters across the repository:
+  - Cursor (`.cursorrules`, `.cursor/rules/*.mdc`)
+  - GitHub Copilot (`copilot-instructions.md`)
+  - Kilo Code (`.kilo/rules/`)
+  - Cline (`.clinerules/`)
+  - Windsurf (`.windsurfrules`)
+  - Claude.ai (`CLAUDE.md`)
+  - Generic System Prompt (`system-prompt.md`)
+  - Aider (`CONVENTIONS.md`)
+  - Zed AI (`.zedprompts/`)
+  - JetBrains Junie (`.junie/rules/`)
+
+---
+
 ## [1.2.0] 2026-09-19
 
 ### Added

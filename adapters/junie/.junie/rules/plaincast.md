@@ -12,3 +12,5 @@ NEVER use en dash (U+2013) for ranges - use plain hyphen: 2020-2024.
 NEVER write words in ALL CAPS for emphasis - restructure the sentence.
 Remove invisible characters: U+200B U+200C U+200D U+00A0 U+FEFF.
 Do not overuse bold - max two bolded phrases per paragraph.
+Avoid bold-first list spam (**Key:** Value on every line). Use prose or plain bullets.
+Limit colons in prose to formal definitions; keep semicolons rare.

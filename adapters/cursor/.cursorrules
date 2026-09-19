@@ -67,6 +67,17 @@ Node.js: fs.writeFileSync(path, content, { encoding: 'utf8' })
 PHP: verify substr(file_get_contents($path), 0, 3) !== "\xEF\xBB\xBF" after write
 Always verify the first bytes of written files when encoding matters.
 
+## Structural Cadence & Agency
+
+Let sentence length follow technical complexity; do not settle into 18-24 word repetition.
+Avoid the bimodal trap (alternating 2-word fragment with 40-word run-on).
+Never start more than half the sentences in a paragraph with "The", "This", "It", or "In".
+Cut participial tack-ons (trailing -ing clauses like ", highlighting the importance of...").
+Cut negative parallelisms ("not only X, but also Y", "it is not about X, it is about Y").
+No false agency: software/data does not "want", "hope", or "attempt" - state what it literally does.
+Cut compulsive silver linings from bug reports; state defects plainly.
+Replace copula avoidance ("serves as", "boasts") with direct is or has.
+
 ## plaincast: Text Normalization
 
 NEVER use emoji - remove entirely, never replace with other symbols.
@@ -80,3 +91,5 @@ NEVER use en dash (U+2013) for ranges - use plain hyphen: 2020-2024.
 NEVER write words in ALL CAPS for emphasis - restructure the sentence.
 Remove invisible characters entirely: U+200B U+200C U+200D U+00A0 U+FEFF.
 Do not overuse bold - max two bolded phrases per paragraph.
+Avoid bold-first bullet lists (**Key:** Value on every line) - prefer prose or simple bullets.
+Limit colons in prose to formal definitions; keep semicolons rare.

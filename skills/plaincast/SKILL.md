@@ -1,13 +1,13 @@
 ---
 name: plaincast
-version: 1.0.0
+version: 1.1.0
 description: >-
   Text formatting discipline. Normalizes AI output to standard keyboard
   characters only. Eliminates emoji, typographic dashes, curly quotes,
-  Unicode decorative symbols, and invisible characters. Use when writing
-  documentation, articles, news content, commit messages, code comments,
-  or any text that must survive encoding pipelines, search indexing, copy-paste,
-  screen readers, and version control diffs without corruption.
+  Unicode decorative symbols, invisible characters, and colon/bullet inflation.
+  Use when writing documentation, articles, news content, commit messages,
+  code comments, or any text that must survive encoding pipelines, search
+  indexing, copy-paste, screen readers, and version control diffs without corruption.
 ---
 
 # plaincast: Text Normalization Discipline
@@ -330,6 +330,34 @@ Wrong:  5 x 10^3 (U+00D7 multiplication sign)
 Right:  5 * 10^3
 Right:  5e3
 ```
+
+---
+
+## Protocol 9 - Punctuation Density & List Restraint
+
+### Colon and Semicolon Density Gate
+
+Models often over-index on colons (`:`) and semicolons (`;`) to attach
+additive thoughts, explanations, or subordinate clauses without committing
+to a new sentence.
+
+- Limit colons in prose: use a colon only when introducing a formal code block,
+  definition, or verbatim quote.
+- If a sentence ends in a colon leading to a one-line thought, split into
+  two sentences ending with periods.
+- Semicolons should be rare in technical documentation. If two clauses can
+  stand alone, use a period.
+
+### Bold-First List Monotony
+
+Never default to generating vertical lists where every single bullet begins
+with bolded text followed by a colon:
+- Wrong:
+  - **Scalability:** Handles large user loads effortlessly.
+  - **Reliability:** Built with automatic failover mechanisms.
+  - **Maintainability:** Modular architecture ensures easy updates.
+- Right: Prefer running technical prose that explains relationships, or
+  simple unbolded bullet points when listing discrete items.
 
 ---
 
