@@ -130,6 +130,19 @@ FORBIDDEN_PATH_PATTERNS = [
     # Stripe tokens
     (re.compile(r'\b(?:sk|pk|rk)_(?:live|test)_[A-Za-z0-9]{24,}\b'), 'Stripe secret/publishable/restricted key'),
 
+    # Slack tokens
+    (re.compile(r'\bxox[bpa]-[a-z0-9-]+'), 'Slack API token (xoxb/xoxp/xoxa)'),
+
+    # Twilio credentials
+    (re.compile(r'\bAC[a-f0-9]{32}\b'), 'Twilio Account SID'),
+    (re.compile(r'\bTWILIO_AUTH_TOKEN\s*=\s*[\'"][0-9a-fA-F]{32}[\'"]'), 'Twilio Auth Token inline assignment'),
+
+    # SendGrid API key
+    (re.compile(r'\bSG\.[A-Za-z0-9]{67}\b'), 'SendGrid API key (SG. prefix)'),
+
+    # GCP service account private key fragment
+    (re.compile(r'"private_key"\s*:\s*"[^"]*-----BEGIN (?:RSA )?PRIVATE KEY-----'), 'GCP service account private key fragment'),
+
     # Database connection strings with embedded credentials
     (re.compile(r'(?i)(?:postgres|postgresql|mysql|mariadb|mongodb|redis|mssql)://[^:@\s]+:[^@\s]+@[^\s"\']+'), 'Database URI with embedded credentials'),
 
@@ -306,9 +319,27 @@ def validate_plaincast(path: Path, content: str, report: ValidationReport, auto_
     return None
 
 
-def validate_path_leaks(path: Path, content: str, report: ValidationReport):
-    """Gate 2: Detect environment path leaks and local credentials."""
+# Patterns whose matches are local paths and safe to auto-replace
+_PATH_AUTOFIX_PATTERNS = {
+    'Hardcoded local workspace drive path',
+    'Windows user profile absolute path',
+    'Unix home directory absolute path',
+}
+
+
+def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto_fix: bool = False) -> Optional[str]:
+    """Gate 2: Detect environment path leaks and local credentials.
+
+    When auto_fix=True:
+    - Local drive/home path matches are replaced with /path/to/<project>
+    - Secret/token matches are NOT replaced; their violation message gains
+      ' (manual rotation required)' to prompt the committer
+    Returns the fixed content string when auto_fix=True and edits were made,
+    or None otherwise.
+    """
     lines = content.split('\n')
+    fixed_lines = list(lines)
+    has_changes = False
     in_ignore_block = False
 
     for line_idx, line in enumerate(lines, 1):
@@ -328,14 +359,25 @@ def validate_path_leaks(path: Path, content: str, report: ValidationReport):
         for pattern, desc in FORBIDDEN_PATH_PATTERNS:
             for match in pattern.finditer(line):
                 matched_str = match.group(0)
+                is_path_violation = desc in _PATH_AUTOFIX_PATTERNS
+                violation_msg = f"Potential local path or secret leak: {desc}"
+                if auto_fix and not is_path_violation:
+                    violation_msg += ' (manual rotation required)'
                 report.add(Violation(
                     gate='leakguard',
                     file_path=path,
                     line=line_idx,
                     col=match.start() + 1,
-                    message=f"Potential local path or secret leak: {desc}",
+                    message=violation_msg,
                     sample=matched_str
                 ))
+                if auto_fix and is_path_violation:
+                    fixed_lines[line_idx - 1] = fixed_lines[line_idx - 1].replace(matched_str, '/path/to/<project>', 1)
+                    has_changes = True
+
+    if auto_fix and has_changes:
+        return '\n'.join(fixed_lines)
+    return None
 
 
 def validate_encoding_and_endings(path: Path, raw_bytes: bytes, report: ValidationReport):
@@ -498,7 +540,10 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
                 continue
 
             # Gate 2: Path & Leak Validation
-            validate_path_leaks(rel_path, content, report)
+            gate2_fixed = validate_path_leaks(rel_path, content, report, auto_fix=auto_fix)
+            if auto_fix and gate2_fixed is not None and gate2_fixed != content:
+                file_path.write_text(gate2_fixed, encoding='utf-8', newline='\n')
+                content = gate2_fixed
 
             if not check_paths_only:
                 # Gate 1: Plaincast

@@ -3,6 +3,31 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.5.2] 2026-09-19
+
+### Added
+- CI badge in `README.md` (GitHub Actions Validate workflow status badge)
+- Gate 2 extended secret patterns (5 new categories):
+  - Slack API tokens (`xoxb-`, `xoxp-`, `xoxa-` prefixes)
+  - Twilio Account SIDs (`AC[a-f0-9]{32}`)
+  - Twilio Auth Token inline assignments
+  - SendGrid API keys (`SG.[A-Za-z0-9]{67}`)
+  - GCP service account private_key fragments
+- Gate 2 auto-fix (`--fix` flag now also repairs local drive path violations):
+  - `validate_path_leaks` gains `auto_fix: bool = False` parameter
+  - Local drive/home path matches replaced with `/path/to/<project>` in-place
+  - Secret/token matches flagged with `(manual rotation required)` but NOT auto-replaced
+  - `scan_repository` wires Gate 2 fixes alongside existing Gate 1 fixes
+- 9 new unit tests (7 in `TestLeakguardCloudPatterns`, 2 in `TestGate2AutoFix`)
+- `skills/leakguard/SKILL.md` (v1.0.2): Protocol 3 updated with new token signatures
+- `INSTALL.md`: leakguard install instructions added for all 11 adapters
+
+### Changed
+- README skills table: leakguard version updated to 1.0.2
+- INSTALL.md adapter install blocks: leakguard `cp` lines added for Cursor (mdc), Cline, Kilo, Zed, Junie
+
+---
+
 ## [1.5.1] 2026-09-19
 
 ### Added

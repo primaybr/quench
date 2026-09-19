@@ -2,6 +2,8 @@
 
 > The hardening moment. A production-grade Skills ecosystem for AI Agents.
 
+[![Validate](https://github.com/primaybr/quench/actions/workflows/validate.yml/badge.svg)](https://github.com/primaybr/quench/actions/workflows/validate.yml)
+
 Not a prompt pack. Not a jailbreak collection. Not a role-play library.
 
 quench is where raw AI capability gets rapidly cooled into disciplined,
@@ -19,7 +21,7 @@ and real lessons - not copied from generic prompt engineering guides.
 |-------|---------|-------------|
 | [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.0 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
 | [plaincast](./skills/plaincast/SKILL.md) | 1.1.0 | Text normalization: standard keyboard boundary, no emoji, no em dashes, no curly quotes, colon/list restraint |
-| [leakguard](./skills/leakguard/SKILL.md) | 1.0.0 | Environment, path, and context isolation: host path neutralization, hermetic project boundaries, credential redaction |
+| [leakguard](./skills/leakguard/SKILL.md) | 1.0.2 | Environment, path, and context isolation: host path neutralization, hermetic project boundaries, credential redaction |
 
 ---
 
@@ -120,7 +122,7 @@ project root. See [INSTALL.md](./INSTALL.md) for full per-tool instructions.
 
 ### Other AI tools
 
-quench ships adapter files for 10 other tools. See [INSTALL.md](./INSTALL.md):
+quench ships adapter files for 10 other tools (11 total including Antigravity). See [INSTALL.md](./INSTALL.md):
 
 | Tool | Adapter |
 |------|---------|

@@ -278,6 +278,96 @@ class TestCommitMsgGate(unittest.TestCase):
             temp_path.unlink(missing_ok=True)
 
 
+class TestLeakguardCloudPatterns(unittest.TestCase):
+    """Tests for round-2 cloud/SaaS secret patterns added in v1.5.2."""
+
+    def test_slack_xoxb_token_detected(self):
+        report = validate.ValidationReport()
+        fake_token = "xoxb-" + "1234567890-1234567890-abcdefghijklmnop"
+        dirty = f"SLACK_TOKEN={fake_token}\n"
+        validate.validate_path_leaks(Path('config.py'), dirty, report)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("Slack" in v.message for v in report.violations))
+
+    def test_slack_xoxp_token_detected(self):
+        report = validate.ValidationReport()
+        fake_token = "xoxp-" + "9876543210-9876543210-zyxwvutsrqponmlk"
+        dirty = f"token = '{fake_token}'\n"
+        validate.validate_path_leaks(Path('config.py'), dirty, report)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("Slack" in v.message for v in report.violations))
+
+    def test_slack_xoxa_token_detected(self):
+        report = validate.ValidationReport()
+        fake_token = "xoxa-" + "2-111111111-222222222-333333333-abc"
+        dirty = f"APP_TOKEN={fake_token}\n"
+        validate.validate_path_leaks(Path('config.py'), dirty, report)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("Slack" in v.message for v in report.violations))
+
+    def test_twilio_account_sid_detected(self):
+        report = validate.ValidationReport()
+        # AC + 32 lowercase hex chars
+        fake_sid = "AC" + "a" * 32
+        dirty = f"account_sid = '{fake_sid}'\n"
+        validate.validate_path_leaks(Path('twilio_client.py'), dirty, report)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("Twilio Account SID" in v.message for v in report.violations))
+
+    def test_twilio_auth_token_detected(self):
+        report = validate.ValidationReport()
+        fake_token = "a" * 32
+        dirty = f"TWILIO_AUTH_TOKEN='{fake_token}'\n"
+        validate.validate_path_leaks(Path('config.py'), dirty, report)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("Twilio Auth Token" in v.message for v in report.violations))
+
+    def test_sendgrid_api_key_detected(self):
+        report = validate.ValidationReport()
+        # SG. + 67 alphanumeric chars
+        fake_key = "SG." + "A" * 67
+        dirty = f"SENDGRID_API_KEY={fake_key}\n"
+        validate.validate_path_leaks(Path('mailer.py'), dirty, report)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("SendGrid" in v.message for v in report.violations))
+
+    def test_gcp_private_key_fragment_detected(self):
+        report = validate.ValidationReport()
+        dirty = '"private_key": "-----BEGIN RSA PRIVATE KEY-----\\nMIIEowIBAAKCAQEA"\n'
+        validate.validate_path_leaks(Path('service_account.json'), dirty, report)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("GCP" in v.message for v in report.violations))
+
+
+class TestGate2AutoFix(unittest.TestCase):
+    """Tests for Gate 2 auto-fix behavior."""
+
+    def test_path_violation_auto_replaced(self):
+        """Local drive paths should be replaced with /path/to/<project> when auto_fix=True."""
+        report = validate.ValidationReport()
+        # Construct path string without triggering the scanner in this source file
+        fake_path = "f" + ":/quench/skills"
+        content = f"See the project at {fake_path} for details.\n"
+        fixed = validate.validate_path_leaks(Path('README.md'), content, report, auto_fix=True)
+        self.assertFalse(report.passed, "Violation should still be reported even when auto-fixing")
+        self.assertIsNotNone(fixed, "auto_fix=True with a path violation should return fixed content")
+        self.assertNotIn("f:/quench", fixed)
+        self.assertIn("/path/to/<project>", fixed)
+
+    def test_token_violation_not_auto_replaced(self):
+        """Secret/token violations should NOT be replaced, only flagged with manual rotation note."""
+        report = validate.ValidationReport()
+        fake_token = "ghp_" + ("1234567890" * 3 + "123456")
+        content = f"Token: {fake_token}\n"
+        fixed = validate.validate_path_leaks(Path('README.md'), content, report, auto_fix=True)
+        # Violation must be reported
+        self.assertFalse(report.passed)
+        # Message should include the manual rotation note
+        self.assertTrue(any("manual rotation required" in v.message for v in report.violations))
+        # Token must remain in returned content (NOT auto-replaced) or fixed is None
+        if fixed is not None:
+            self.assertIn(fake_token, fixed)
+
+
 if __name__ == '__main__':
     unittest.main()
-

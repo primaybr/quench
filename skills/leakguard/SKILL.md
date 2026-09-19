@@ -1,6 +1,6 @@
 ---
 name: leakguard
-version: 1.0.1
+version: 1.0.2
 description: Environment, path, and context isolation discipline. Prevents agents from leaking local host paths, drive letters, user profile directories, internal machine identities, credentials, and cross-project tools into public code, commits, and documentation.
 ---
 
@@ -104,11 +104,16 @@ Accidental secret leakage in commits is irreversible once pushed to public remot
 - AWS Access Key IDs (`AKIA[A-Z0-9]{16}`)
 - AWS Secret Access Key assignments (`aws_secret... = <40-char value>`)
 - Stripe live/test keys (`sk_live_...`, `pk_live_...`, `rk_live_...`)
+- Slack API tokens (`xoxb-...`, `xoxp-...`, `xoxa-...`)
+- Twilio Account SIDs (`AC[a-f0-9]{32}`)
+- Twilio Auth Token inline assignments (`TWILIO_AUTH_TOKEN = '...'`)
+- SendGrid API keys (`SG.[A-Za-z0-9]{67}`)
+- GCP service account private_key fragments (`"private_key": "-----BEGIN ... PRIVATE KEY-----"`)
 - Raw Bearer tokens in prose or config (`Bearer <20+ chars>`)
 - Generic API key assignments (`api_key = <20+ chars>`)
 - Database URLs containing embedded passwords (`postgres://user:password@host/db`) <!-- leakguard:ignore-line -->
-- Common `.env` secret assignments (`DB_PASSWORD=`, `SECRET_KEY=`, `JWT_SECRET=`) with real non-placeholder values
-- Private LAN IP addresses (`192.168.x.x`, `10.x.x.x`, `172.16-31.x.x`)
+- Common `.env` secret assignments (`DB_PASSWORD=`, `SECRET_KEY=`, `JWT_SECRET=`, `APP_KEY=`, `AUTH_SECRET=`) with real non-placeholder values
+- Private LAN IP addresses (`192.168.x.x`, `10.x.x.x`, RFC 1918 ranges)
 - Localhost URLs pointing to non-generic application paths
 
 ### Redaction Pattern

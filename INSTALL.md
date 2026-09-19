@@ -75,6 +75,7 @@ cp adapters/cursor/.cursorrules /your-project/.cursorrules
 ```bash
 cp adapters/cursor/.cursor/rules/steel-mind.mdc /your-project/.cursor/rules/
 cp adapters/cursor/.cursor/rules/plaincast.mdc   /your-project/.cursor/rules/
+cp adapters/cursor/.cursor/rules/leakguard.mdc   /your-project/.cursor/rules/
 ```
 
 ### GitHub Copilot
@@ -86,6 +87,7 @@ cp adapters/copilot/copilot-instructions.md /your-project/.github/copilot-instru
 ```bash
 cp adapters/cline/.clinerules/steel-mind.md  /your-project/.clinerules/
 cp adapters/cline/.clinerules/plaincast.md   /your-project/.clinerules/
+cp adapters/cline/.clinerules/leakguard.md   /your-project/.clinerules/
 ```
 
 ### Windsurf
@@ -117,20 +119,23 @@ cp adapters/kilo/kilo.jsonc /your-project/kilo.jsonc
 mkdir -p /your-project/.kilo/rules
 cp adapters/kilo/.kilo/rules/steel-mind.md /your-project/.kilo/rules/
 cp adapters/kilo/.kilo/rules/plaincast.md  /your-project/.kilo/rules/
+cp adapters/kilo/.kilo/rules/leakguard.md  /your-project/.kilo/rules/
 ```
-The `kilo.jsonc` file references both rule files automatically.
+The `kilo.jsonc` file references all rule files automatically.
 For global rules (all projects): place `kilo.jsonc` at `~/.config/kilo/kilo.jsonc`.
 
 ### Zed AI
 ```bash
 cp adapters/zed/.zedprompts/steel-mind.md  /your-project/.zedprompts/
 cp adapters/zed/.zedprompts/plaincast.md   /your-project/.zedprompts/
+cp adapters/zed/.zedprompts/leakguard.md   /your-project/.zedprompts/
 ```
 
 ### JetBrains Junie
 ```bash
 cp adapters/junie/.junie/rules/steel-mind.md  /your-project/.junie/rules/
 cp adapters/junie/.junie/rules/plaincast.md   /your-project/.junie/rules/
+cp adapters/junie/.junie/rules/leakguard.md   /your-project/.junie/rules/
 ```
 
 ---
