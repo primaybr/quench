@@ -103,6 +103,19 @@ cp adapters/aider/CONVENTIONS.md /your-project/CONVENTIONS.md
 # Aider reads CONVENTIONS.md automatically as context
 ```
 
+### Kilo Code
+```bash
+# Copy the config file to your project root
+cp adapters/kilo/kilo.jsonc /your-project/kilo.jsonc
+
+# Copy the rule files
+mkdir -p /your-project/.kilo/rules
+cp adapters/kilo/.kilo/rules/steel-mind.md /your-project/.kilo/rules/
+cp adapters/kilo/.kilo/rules/plaincast.md  /your-project/.kilo/rules/
+```
+The `kilo.jsonc` file references both rule files automatically.
+For global rules (all projects): place `kilo.jsonc` at `~/.config/kilo/kilo.jsonc`.
+
 ### Zed AI
 ```bash
 cp adapters/zed/.zedprompts/steel-mind.md  /your-project/.zedprompts/
@@ -131,6 +144,7 @@ cp adapters/junie/.junie/rules/plaincast.md   /your-project/.junie/rules/
 | Claude.ai `CLAUDE.md` | [x] | [x] |
 | Generic `system-prompt.md` | [x] | [x] |
 | Aider `CONVENTIONS.md` | [x] | [x] |
+| Kilo Code `kilo.jsonc` + `.kilo/rules/` | [x] | [x] |
 | Zed `.zedprompts/steel-mind.md` | [x] | - |
 | Zed `.zedprompts/plaincast.md` | - | [x] |
 | Junie `.junie/rules/steel-mind.md` | [x] | - |
