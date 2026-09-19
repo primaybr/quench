@@ -1,6 +1,6 @@
 ---
 name: leakguard
-version: 1.0.0
+version: 1.0.1
 description: Environment, path, and context isolation discipline. Prevents agents from leaking local host paths, drive letters, user profile directories, internal machine identities, credentials, and cross-project tools into public code, commits, and documentation.
 ---
 
@@ -100,8 +100,16 @@ Accidental secret leakage in commits is irreversible once pushed to public remot
 - GitHub Personal Access Tokens (`ghp_[A-Za-z0-9]{36}`)
 - GitHub Fine-Grained Tokens (`github_pat_[A-Za-z0-9_]{82}`)
 - OpenAI / LLM API Keys (`sk-[A-Za-z0-9_-]{20,}`)
-- Generic Bearer Headers with raw token values
-- Database URLs containing embedded passwords (`postgres://user:password@host/db`)
+- Anthropic API Keys (`sk-ant-[A-Za-z0-9_-]{20,}`)
+- AWS Access Key IDs (`AKIA[A-Z0-9]{16}`)
+- AWS Secret Access Key assignments (`aws_secret... = <40-char value>`)
+- Stripe live/test keys (`sk_live_...`, `pk_live_...`, `rk_live_...`)
+- Raw Bearer tokens in prose or config (`Bearer <20+ chars>`)
+- Generic API key assignments (`api_key = <20+ chars>`)
+- Database URLs containing embedded passwords (`postgres://user:password@host/db`) <!-- leakguard:ignore-line -->
+- Common `.env` secret assignments (`DB_PASSWORD=`, `SECRET_KEY=`, `JWT_SECRET=`) with real non-placeholder values
+- Private LAN IP addresses (`192.168.x.x`, `10.x.x.x`, `172.16-31.x.x`)
+- Localhost URLs pointing to non-generic application paths
 
 ### Redaction Pattern
 

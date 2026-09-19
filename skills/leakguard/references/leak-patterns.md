@@ -112,6 +112,7 @@ const token = process.env.GITHUB_TOKEN || "test-placeholder-token";
 ### Failure Mode: Database Connection Strings with Credentials
 Connection strings in example configuration files or unit tests frequently contain plain text credentials.
 
+<!-- leakguard:ignore-start -->
 ```
 Wrong:
 DATABASE_URL="postgres://admin:Password123!@db.internal.corp:5432/prod"
@@ -119,6 +120,7 @@ DATABASE_URL="postgres://admin:Password123!@db.internal.corp:5432/prod"
 Right:
 DATABASE_URL="postgres://user:password@localhost:5432/dbname"
 ```
+<!-- leakguard:ignore-end -->
 
 ---
 

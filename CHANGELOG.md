@@ -3,7 +3,31 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.5.1] 2026-09-19
+
+### Added
+- Expanded Gate 2 secret scanner in `scripts/validate.py` with 10 new pattern categories:
+  - Anthropic API Keys (`sk-ant-` prefix)
+  - AWS Access Key IDs (`AKIA[A-Z0-9]{16}`)
+  - AWS Secret Access Key inline assignments
+  - Stripe live/test/restricted keys (`sk_live_`, `pk_live_`, `rk_live_`, `rk_test_`)
+  - Raw Bearer token strings in documentation or config
+  - Generic API key assignments (`api_key = <value>`)
+  - Database connection URIs with embedded credentials (postgres, mysql, mongodb, redis, mssql)
+  - `.env` secret assignment bleed for common variable names (`DB_PASSWORD`, `SECRET_KEY`, `JWT_SECRET`, `APP_KEY`, `AUTH_SECRET`)
+  - Private LAN IP addresses (`192.168.x.x`, `10.x.x.x`, RFC 1918 ranges)
+  - Localhost URLs with non-generic application paths
+- 8 new unit tests in `TestLeakguardExtendedPatterns` (30 total, up from 22)
+- `skills/leakguard/SKILL.md` (v1.0.1): expanded Protocol 3 scanned token signatures list to match all new engine patterns
+- `skills/leakguard/references/leak-patterns.md`: wrapped DB URI example block with `leakguard:ignore` markers
+
+### Changed
+- Versioning scheme: patch digit (last position) increments from 0 through 9 before the minor digit advances
+
+---
+
 ## [1.5.0] 2026-09-19
+
 
 ### Added
 - `skills/leakguard/SKILL.md` (v1.0.0):

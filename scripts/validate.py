@@ -109,10 +109,37 @@ FORBIDDEN_PATH_PATTERNS = [
     (re.compile(r'(?<![A-Za-z0-9_])[a-zA-Z]:[/\\]quench\b', re.IGNORECASE), 'Hardcoded local workspace drive path'),
     (re.compile(r'[a-zA-Z]:[/\\]Users[/\\][A-Za-z0-9_.-]+[/\\]', re.IGNORECASE), 'Windows user profile absolute path'),
     (re.compile(r'/(?:home|Users)/[A-Za-z0-9_.-]+/(?:projects|work|quench|code)', re.IGNORECASE), 'Unix home directory absolute path'),
-    # Tokens & credentials
+
+    # GitHub tokens
     (re.compile(r'\bghp_[A-Za-z0-9]{36}\b'), 'GitHub Personal Access Token'),
     (re.compile(r'\bgithub_pat_[A-Za-z0-9_]{82}\b'), 'GitHub Fine-grained PAT'),
-    (re.compile(r'\bsk-[A-Za-z0-9_-]{20,}\b'), 'OpenAI/API secret key'),
+
+    # AI / LLM API keys
+    (re.compile(r'\bsk-[A-Za-z0-9_-]{20,}\b'), 'OpenAI/LLM secret key (sk- prefix)'),
+    (re.compile(r'\bsk-ant-[A-Za-z0-9_-]{20,}\b'), 'Anthropic API key'),
+
+    # AWS credentials
+    (re.compile(r'\bAKIA[A-Z0-9]{16}\b'), 'AWS Access Key ID'),
+    (re.compile(r'\bAKIAS[A-Z0-9]{16}\b'), 'AWS STS temporary Access Key ID'),
+    (re.compile(r'(?i)aws.{0,20}secret.{0,20}=\s*[A-Za-z0-9+/]{40}\b'), 'AWS Secret Access Key assignment'),
+
+    # Generic high-entropy bearer / API tokens
+    (re.compile(r'\bBearer\s+[A-Za-z0-9\-._~+/]{20,}\b'), 'Raw Bearer token in content'),
+    (re.compile(r'(?i)api[_-]?key\s*[:=]\s*["\']?[A-Za-z0-9\-._~+/]{20,}["\']?'), 'Generic API key assignment'),
+
+    # Stripe tokens
+    (re.compile(r'\b(?:sk|pk|rk)_(?:live|test)_[A-Za-z0-9]{24,}\b'), 'Stripe secret/publishable/restricted key'),
+
+    # Database connection strings with embedded credentials
+    (re.compile(r'(?i)(?:postgres|postgresql|mysql|mariadb|mongodb|redis|mssql)://[^:@\s]+:[^@\s]+@[^\s"\']+'), 'Database URI with embedded credentials'),
+
+    # .env file content bleed - key=value with a real secret value (non-placeholder)
+    (re.compile(r'(?im)^(?:DB_PASSWORD|DATABASE_PASSWORD|SECRET_KEY|APP_KEY|JWT_SECRET|AUTH_SECRET)\s*=\s*(?!["\'"]?\s*$|["\']?<|["\']?your|["\']?change|["\']?placeholder)[^\s\n]{8,}'), '.env secret assignment bleed'),
+
+    # Private/internal hostnames and IPs
+    (re.compile(r'\b(?:192\.168\.|10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.)[\d.]+(?::\d+)?(?:/\S+)?\b'), 'Private LAN IP address'),
+    (re.compile(r'(?i)\b(?:localhost|127\.0\.0\.1):\d{4,5}/(?!path/|your-|example)[a-zA-Z0-9_-]{3,}\b'), 'Localhost URL with non-generic path'),
+
     # Cross-project context bleed & ungrounded private tools
     (re.compile(r'\b' + 'hush' + 'cache' + r'(?:_[a-z0-9_]+)?\b', re.IGNORECASE), 'Cross-project context bleed / private environment tool'),
 ]
