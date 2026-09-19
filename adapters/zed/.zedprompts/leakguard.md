@@ -14,3 +14,7 @@ Every repository must be self-contained; only reference tools and dependencies d
 ## Secret Redaction
 Never commit or output authentication tokens (`ghp_*`, `github_pat_*`, `sk-*`, `bearer *`)
 or database connection strings with embedded passwords.
+
+## Commit Message Hygiene
+Never name leaked tokens, host paths, or private project names in commit messages or PR descriptions.
+State fixes generically ("sanitize credentials", "remove external project references").

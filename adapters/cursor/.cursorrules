@@ -102,3 +102,5 @@ Never mix forward and backward slashes in paths; use / universally.
 Maintain hermetic project isolation: never leak private tools, MCP names, internal APIs,
 or sibling project names from the host environment into repository files or commits.
 Never expose authentication tokens (ghp_, sk-, bearer) or connection strings with passwords.
+Commit message hygiene: never name leaked tokens, host paths, or private project names
+in commit messages or PR descriptions; describe removals generically.

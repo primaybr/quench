@@ -1,0 +1,29 @@
+#!/bin/sh
+# quench commit-msg validation hook
+# Validates that commit messages do not contain local paths, private project names,
+# secrets, emojis, em dashes, or other plaincast/leakguard violations.
+
+COMMIT_MSG_FILE="$1"
+
+if [ -z "$COMMIT_MSG_FILE" ]; then
+    echo "Error: No commit message file provided."
+    exit 1
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+elif command -v python >/dev/null 2>&1; then
+    PYTHON_BIN="python"
+else
+    echo "Error: python not found in PATH. Cannot validate commit message."
+    exit 1
+fi
+
+$PYTHON_BIN scripts/validate.py --check-commit-msg "$COMMIT_MSG_FILE"
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+    exit 1
+fi
+
+exit 0

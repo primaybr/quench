@@ -485,6 +485,37 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
     return report
 
 
+def validate_commit_message(msg_path: Path, report: ValidationReport):
+    """Validate a commit message for leaks, banned characters, and encoding."""
+    try:
+        raw_bytes = msg_path.read_bytes()
+    except Exception as e:
+        report.add(Violation('io', msg_path, 0, 0, f"Cannot read commit message file: {e}"))
+        return
+
+    if raw_bytes.startswith(b'\xef\xbb\xbf'):
+        report.add(Violation('hygiene', msg_path, 1, 1, "Commit message starts with UTF-8 BOM"))
+
+    try:
+        content = raw_bytes.decode('utf-8')
+    except UnicodeDecodeError as e:
+        report.add(Violation('encoding', msg_path, 0, 0, f"Commit message is not valid UTF-8: {e}"))
+        return
+
+    # Filter out git comment lines starting with '#'
+    non_comment_lines = [l for l in content.splitlines() if not l.strip().startswith('#')]
+    effective_msg = '\n'.join(non_comment_lines).strip()
+    if not effective_msg:
+        report.add(Violation('commit-msg', msg_path, 1, 1, "Commit message is empty"))
+        return
+
+    # Gate 1: Plaincast
+    validate_plaincast(Path('COMMIT_MSG'), effective_msg, report, auto_fix=False)
+
+    # Gate 2: Leakguard
+    validate_path_leaks(Path('COMMIT_MSG'), effective_msg, report)
+
+
 def main():
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -495,8 +526,23 @@ def main():
     parser.add_argument('--root', type=str, default='.', help="Path to repository root")
     parser.add_argument('--fix', action='store_true', help="Automatically fix plaincast character violations")
     parser.add_argument('--check-paths-only', action='store_true', help="Only run Gate 2 (Path & Secret leak checks)")
+    parser.add_argument('--check-commit-msg', type=str, help="Validate commit message file from git commit-msg hook")
     parser.add_argument('--verbose', action='store_true', help="Show verbose scan information")
     args = parser.parse_args()
+
+    if args.check_commit_msg:
+        msg_file = Path(args.check_commit_msg)
+        report = ValidationReport()
+        validate_commit_message(msg_file, report)
+        if report.passed:
+            print("[PASS] Commit message is clean.")
+            sys.exit(0)
+        else:
+            print(f"\n[FAIL] Commit message contains {len(report.violations)} violation(s):\n")
+            for v in report.violations:
+                print(f"  {v}")
+            print("\nCommit rejected: do not mention private project names, host paths, or tokens in commit messages.")
+            sys.exit(1)
 
     repo_root = Path(args.root).resolve()
     print(f"Running quench Validation Engine on: {repo_root}")

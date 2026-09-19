@@ -147,5 +147,69 @@ class TestAdapterParityGate(unittest.TestCase):
         self.assertTrue(report.passed)
 
 
+class TestCommitMsgGate(unittest.TestCase):
+    def test_clean_commit_msg_passes(self):
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', delete=False) as f:
+            f.write("feat: add feature and clean tests\n\n# Git comment line\n")
+            temp_path = Path(f.name)
+        try:
+            report = validate.ValidationReport()
+            validate.validate_commit_message(temp_path, report)
+            self.assertTrue(report.passed)
+        finally:
+            temp_path.unlink(missing_ok=True)
+
+    def test_commit_msg_with_emoji_rejected(self):
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', delete=False) as f:
+            f.write("feat: launch rocket \U0001F680\n")
+            temp_path = Path(f.name)
+        try:
+            report = validate.ValidationReport()
+            validate.validate_commit_message(temp_path, report)
+            self.assertFalse(report.passed)
+            self.assertTrue(any("emoji" in v.message.lower() for v in report.violations))
+        finally:
+            temp_path.unlink(missing_ok=True)
+
+    def test_commit_msg_with_em_dash_rejected(self):
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', delete=False) as f:
+            f.write("fix: broken module\u2014fixed properly\n")
+            temp_path = Path(f.name)
+        try:
+            report = validate.ValidationReport()
+            validate.validate_commit_message(temp_path, report)
+            self.assertFalse(report.passed)
+            self.assertTrue(any("em-dash" in v.message.lower() for v in report.violations))
+        finally:
+            temp_path.unlink(missing_ok=True)
+
+    def test_commit_msg_with_host_path_rejected(self):
+        fake_drive = "f" + ":/" + "quench"
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', delete=False) as f:
+            f.write(f"fix: remove references to {fake_drive}\n")
+            temp_path = Path(f.name)
+        try:
+            report = validate.ValidationReport()
+            validate.validate_commit_message(temp_path, report)
+            self.assertFalse(report.passed)
+            self.assertTrue(any("leak" in v.message.lower() for v in report.violations))
+        finally:
+            temp_path.unlink(missing_ok=True)
+
+    def test_commit_msg_with_context_bleed_rejected(self):
+        bad_term = "hush" + "cache"
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', delete=False) as f:
+            f.write(f"fix: remove {bad_term} references\n")
+            temp_path = Path(f.name)
+        try:
+            report = validate.ValidationReport()
+            validate.validate_commit_message(temp_path, report)
+            self.assertFalse(report.passed)
+            self.assertTrue(any("cross-project" in v.message.lower() or "leak" in v.message.lower() for v in report.violations))
+        finally:
+            temp_path.unlink(missing_ok=True)
+
+
 if __name__ == '__main__':
     unittest.main()
+

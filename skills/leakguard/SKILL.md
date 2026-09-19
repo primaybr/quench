@@ -120,7 +120,7 @@ API_KEY="sk-your-api-key-here"
 
 ---
 
-## Protocol 4 - Pre-Commit Diff & Staging Audit
+## Protocol 4 - Pre-Commit Diff & Commit Message Audit
 
 Before executing `git commit` or writing release notes:
 
@@ -129,8 +129,12 @@ Before executing `git commit` or writing release notes:
    - Host usernames (`Users/`, `/home/`)
    - Private environment or project names
    - Unredacted credentials
-2. **Automated Validation:** Execute repository validation tools (e.g. `python scripts/validate.py --check-paths-only`).
-3. **Clean Commit Messages:** Ensure the commit message itself contains no host paths, private issue tracker links, or internal usernames.
+2. **Commit Message Sanitization Gate:**
+   - Commit messages are public and permanent in git history.
+   - When fixing or removing a leak, NEVER mention the leaked secret, host path, or private project in the commit message (e.g. writing "remove secret XYZ" or "remove private-tool" permanently leaks the secret or name into git logs).
+   - State the action generically: "remove external project references" or "sanitize sensitive credentials".
+   - Enforce automated commit-msg hooks (`.githooks/commit-msg`) that reject any commit message containing host paths, tokens, or foreign project identifiers.
+3. **Automated Validation:** Execute repository validation tools (`python scripts/validate.py`).
 
 ---
 
