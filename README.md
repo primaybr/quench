@@ -22,6 +22,7 @@ and real lessons - not copied from generic prompt engineering guides.
 | [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.0 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
 | [plaincast](./skills/plaincast/SKILL.md) | 1.1.0 | Text normalization: standard keyboard boundary, no emoji, no em dashes, no curly quotes, colon/list restraint |
 | [leakguard](./skills/leakguard/SKILL.md) | 1.0.2 | Environment, path, and context isolation: host path neutralization, hermetic project boundaries, credential redaction |
+| [precision-output](./skills/precision-output/SKILL.md) | 1.0.0 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution |
 
 ---
 
@@ -77,6 +78,9 @@ skills/           <- Full reference docs. Authored and maintained here.
     SKILL.md
     references/
   leakguard/
+    SKILL.md
+    references/
+  precision-output/
     SKILL.md
     references/
 

@@ -3,6 +3,45 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.5.3] 2026-09-19
+
+### Added
+- `skills/precision-output/SKILL.md` (v1.0.0):
+  - Hallucination prevention, epistemic integrity, and verification-before-assertion gates
+  - Protocol 1: Verify-Before-Assert Invariant (Existence Gate)
+  - Protocol 2: The Three Epistemic States (Known, Inferred, Uncertain)
+  - Protocol 3: Phantom API & Import Elimination (Manifest Cross-Referencing)
+  - Protocol 4: Execution Grounding & Mental Runtime Simulation
+  - Protocol 5: Clean Refusal & Blast Radius Calibration
+- Reference documentation for precision-output:
+  - `skills/precision-output/references/verification-checklist.md`: Pre-assertion checklist for agents before outputting code or claims
+  - `skills/precision-output/references/hallucination-catalog.md`: Taxonomy of phantom APIs, fabricated flags, and memory drift traps
+- Full adapter parity across all 11 adapters:
+  - New modular adapter files:
+    - `adapters/cursor/.cursor/rules/precision-output.mdc`
+    - `adapters/kilo/.kilo/rules/precision-output.md`
+    - `adapters/cline/.clinerules/precision-output.md`
+    - `adapters/zed/.zedprompts/precision-output.md`
+    - `adapters/junie/.junie/rules/precision-output.md`
+  - Updated `adapters/kilo/kilo.jsonc` to include `.kilo/rules/precision-output.md`
+  - Appended precision-output section to all consolidated adapters:
+    - `adapters/antigravity/.agents/rules/AGENTS.md`
+    - `adapters/cursor/.cursorrules`
+    - `adapters/copilot/copilot-instructions.md`
+    - `adapters/windsurf/.windsurfrules`
+    - `adapters/claude/CLAUDE.md` (section 11)
+    - `adapters/generic/system-prompt.md`
+    - `adapters/aider/CONVENTIONS.md`
+- Always-on rule extraction:
+  - Added `## precision-output: Grounded Verification & Integrity Gates` section to `rules/AGENTS.md`
+- Validation engine parity update (`scripts/validate.py`):
+  - Added the 5 new modular adapter paths to `REQUIRED_ADAPTERS` in Gate 3 parity check
+- Documentation updates:
+  - `README.md`: Added `precision-output` (v1.0.0) to skills table and architecture tree
+  - `INSTALL.md`: Added `precision-output` installation copy commands and adapter coverage matrix
+
+---
+
 ## [1.5.2] 2026-09-19
 
 ### Added

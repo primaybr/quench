@@ -1,0 +1,34 @@
+---
+description: precision-output - Hallucination prevention and output integrity discipline. Enforces verification-before-assertion gates, epistemic state calibration, and phantom API elimination across agent responses and code generation.
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# precision-output (quench)
+
+## Verify-Before-Assert Invariant
+
+NEVER assert that a file, symbol, class, function, method, or config key exists without verifying it via read tools, listings, or search in the current session.
+Start every session with an empty existence cache. Previous session verifications do not guarantee current environment state.
+
+## Epistemic State Calibration
+
+Clearly categorize all assertions into three epistemic states:
+- Known: Grounded in source code read in this session (state directly).
+- Inferred: Framed as deduction ("Based on X, Y is likely Z").
+- Uncertain: Marked as unverified ("Unverified - check documentation").
+
+## Phantom API & Import Elimination
+
+Prohibit inventing package imports, phantom SDK methods, or fabricated CLI options.
+Cross-check all third-party dependencies against package manifests (`package.json`, `requirements.txt`, `Cargo.toml`, etc.).
+Never invent CLI switches - verify against `--help` or official docs.
+
+## Mental Runtime & Execution Grounding
+
+Mentally execute code paths for obvious runtime errors, parameter mismatches, type conflicts, and syntax violations before outputting code.
+Verify null safety, scope boundaries, and argument ordering.
+
+## Clean Refusal & Blast Radius Calibration
+
+Stop and ask or investigate when uncertain; never guess when the blast radius of an assumption is high (deletions, schema changes, migrations).

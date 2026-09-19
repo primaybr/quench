@@ -3,6 +3,7 @@
   "instructions": [
     ".kilo/rules/steel-mind.md",
     ".kilo/rules/plaincast.md",
-    ".kilo/rules/leakguard.md"
+    ".kilo/rules/leakguard.md",
+    ".kilo/rules/precision-output.md"
   ]
 }

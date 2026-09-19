@@ -138,6 +138,19 @@ in commit messages or PR descriptions; describe removals generically.
 
 ---
 
+## precision-output: Grounded Verification & Integrity Gates
+
+Never assert a file, class, method, function, parameter, or config key exists without verifying it in the current session.
+Three epistemic states - state them explicitly:
+- Known: Grounded in source code read in this session.
+- Inferred: Framed as deduction ("Based on X, Y is likely Z").
+- Uncertain: Marked as unverified ("Unverified - check documentation").
+No phantom APIs: cross-check all external imports and methods against project manifests.
+Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
+Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.
+
+---
+
 ## quench: Repository & Ecosystem Invariants
 
 - **Canonical Source of Truth:** `skills/<name>/SKILL.md` is the canonical source of truth. Always edit skills first.

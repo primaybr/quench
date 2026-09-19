@@ -54,3 +54,11 @@ or sibling project names from the host environment into repository files or comm
 Never expose authentication tokens (ghp_, sk-, bearer) or connection strings with passwords.
 Commit message hygiene: never name leaked tokens, host paths, or private project names
 in commit messages or PR descriptions; describe removals generically.
+
+## precision-output: Grounded Verification & Integrity Gates
+
+Never assert a file, symbol, class, function, method, or config key exists without verifying it in this session.
+Three epistemic states: Known (grounded), Inferred (deduced), Uncertain (unverified).
+No phantom APIs: verify imports and methods against project manifests.
+Mentally execute code for syntax, arity, and runtime errors before returning.
+Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.
