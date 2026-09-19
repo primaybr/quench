@@ -134,6 +134,43 @@ quench ships adapter files for 10 other tools. See [INSTALL.md](./INSTALL.md):
 
 ---
 
+## Validation Engine & Integrity Gates
+
+quench includes a zero-dependency repository verification tool (`scripts/validate.py`)
+enforcing strict repository quality and cleanliness before commits:
+
+- **Gate 1 (Plaincast Character Boundary):** Flags banned emojis, typographic dashes (em dash, en dash), curly quotes, Unicode ellipsis, and zero-width or invisible characters. Supports `--fix` for automatic conversion to ASCII equivalents.
+- **Gate 2 (Leakguard & Path Sanitization):** Scans for hardcoded local drives (`C:`, `F:`, etc.), user profile paths, absolute home directories, and accidental secret leaks (API tokens, PATs).
+- **Gate 3 (Multi-Tool Adapter Parity):** Verifies all 11 adapters exist and stay synchronized with active skills.
+- **Gate 4 (Skill Frontmatter Schema):** Validates YAML frontmatter on all `skills/*/SKILL.md` files (requires `name`, SemVer `version`, `description`; rejects illegal fields like `trigger`).
+- **Gate 5 (Encoding & Line Endings):** Verifies UTF-8 encoding without BOM and rejects CRLF line endings.
+
+### Running Validation
+
+```bash
+# Run full validation across the repository
+python scripts/validate.py
+
+# Check only for path or secret leaks
+python scripts/validate.py --check-paths-only
+
+# Automatically fix plaincast character violations in-place
+python scripts/validate.py --fix
+
+# Run unit tests
+python scripts/test_validate.py
+```
+
+### Git Pre-Commit Hook
+
+Install the repository pre-commit hook to automatically run the validation engine on every commit:
+
+```bash
+python scripts/install-hooks.py
+```
+
+---
+
 ## Philosophy
 
 - Every rule has a grounded reason (no cargo-cult instructions)
@@ -154,6 +191,12 @@ quench/
   CHANGELOG.md                   - Version history
   .gitignore
   .gitattributes                 - Enforces LF line endings
+  .githooks/
+    pre-commit                   - Automated git pre-commit validation hook
+  scripts/
+    validate.py                  - Zero-dependency repository validation engine
+    test_validate.py             - Unit test suite for validation engine
+    install-hooks.py             - Hook installation utility
   skills/
     <skill-name>/
       SKILL.md                   - Full canonical skill documentation

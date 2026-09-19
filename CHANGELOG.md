@@ -3,6 +3,26 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.4.0] 2026-09-19
+
+### Added
+- Repository Validation Engine (`scripts/validate.py`):
+  - Zero-dependency verification engine using Python 3 standard library
+  - Gate 1 (Plaincast Character Boundary): Enforces strict ASCII keyboard boundary, detects banned emojis, typographic dashes, curly quotes, Unicode ellipsis, and zero-width characters with optional `--fix` auto-repair
+  - Gate 2 (Leakguard & Path Sanitization): Detects hardcoded local workspace drive paths, user profile folders, absolute home paths, and accidental secret token leaks
+  - Gate 3 (Multi-Tool Adapter Parity): Verifies presence of all 11 adapters and ensures bidirectional synchronization with active skills and `rules/AGENTS.md`
+  - Gate 4 (Skill Frontmatter Schema): Validates YAML schema on all skills (requires `name`, SemVer `version`, `description`; rejects illegal fields like `trigger`)
+  - Gate 5 (Hygiene & Encoding): Enforces UTF-8 encoding without BOM and rejects CRLF line endings
+- Pre-commit Automation (`.githooks/pre-commit`, `scripts/install-hooks.py`):
+  - Added git pre-commit hook executing `scripts/validate.py` before any commit
+  - Added installer utility configuring `core.hooksPath` to `.githooks`
+- Unit Test Suite (`scripts/test_validate.py`):
+  - 16 test cases verifying each validation gate against clean and dirty fixtures, path leaks, and auto-fix behavior
+
+### Security & Sanitization
+- Purged local path references across repository git history using `git-filter-repo`
+- Replaced absolute host drive paths in documentation with standardized `/path/to/quench` placeholders
+
 ---
 
 ## [1.3.0] 2026-09-19

@@ -64,6 +64,7 @@ Emoji are not characters. They are pictograms. They have no place in:
 Never replace an emoji with another symbol. Remove it entirely.
 If the intent was emphasis, use words:
 
+<!-- plaincast:ignore-start -->
 ```
 Wrong:  The build passed successfully! 🚀
 Right:  The build passed successfully.
@@ -74,6 +75,7 @@ Right:  Warning: do not delete this file.
 Wrong:  New feature ✨ Dark mode support
 Right:  New feature: dark mode support
 ```
+<!-- plaincast:ignore-end -->
 
 ---
 
@@ -98,6 +100,7 @@ There are eight dash characters in Unicode. Only one belongs in plain text outpu
 The em dash (U+2014) is the character AI models generate most aggressively.
 It appears after phrases like "however", "but", and "note that".
 
+<!-- plaincast:ignore-start -->
 ```
 Wrong:  The process completed—but with errors.
 Right:  The process completed - but with errors.
@@ -108,6 +111,7 @@ Right:  There are three options, each with tradeoffs.
 Wrong:  Note: this feature is experimental—use with caution.
 Right:  Note: this feature is experimental. Use with caution.
 ```
+<!-- plaincast:ignore-end -->
 
 **When rewriting em dashes:** prefer restructuring the sentence over mechanical
 substitution. A comma, colon, period, or parentheses often reads more naturally
@@ -117,6 +121,7 @@ than ` - `.
 
 En dashes (U+2013) are used for numeric ranges. Replace with a hyphen:
 
+<!-- plaincast:ignore-start -->
 ```
 Wrong:  Pages 10–20
 Right:  Pages 10-20
@@ -124,6 +129,7 @@ Right:  Pages 10-20
 Wrong:  2020–2024
 Right:  2020-2024
 ```
+<!-- plaincast:ignore-end -->
 
 ---
 
@@ -172,6 +178,7 @@ Right:  Don't use it.
 The ellipsis character (U+2026) is a single Unicode glyph that AI models use
 instead of three separate periods.
 
+<!-- plaincast:ignore-start -->
 ```
 Wrong:  The list continues… and so on.
 Right:  The list continues... and so on.
@@ -179,6 +186,7 @@ Right:  The list continues... and so on.
 Wrong:  Loading…
 Right:  Loading...
 ```
+<!-- plaincast:ignore-end -->
 
 **Why it matters:** The ellipsis character (U+2026) is a single token.
 Grep, search indexers, and many text parsers do not match it against `...`.

@@ -1,0 +1,26 @@
+#!/bin/sh
+# quench pre-commit validation hook
+# Runs validation engine on repository before allowing a commit.
+
+echo "Running quench pre-commit validation..."
+
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+elif command -v python >/dev/null 2>&1; then
+    PYTHON_BIN="python"
+else
+    echo "Error: python not found in PATH. Cannot run validation."
+    exit 1
+fi
+
+$PYTHON_BIN scripts/validate.py
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+    echo ""
+    echo "Commit rejected: validation violations found."
+    echo "Run 'python scripts/validate.py --fix' to auto-resolve plaincast violations."
+    exit 1
+fi
+
+exit 0
