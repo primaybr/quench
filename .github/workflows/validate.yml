@@ -1,0 +1,27 @@
+name: Validate
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  validate:
+    name: Quench Validation Engine
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run unit tests
+        run: python scripts/test_validate.py -v
+
+      - name: Run full repository scan
+        run: python scripts/validate.py
