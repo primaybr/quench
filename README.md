@@ -116,19 +116,20 @@ project root. See [INSTALL.md](./INSTALL.md) for full per-tool instructions.
 
 ### Other AI tools
 
-quench ships adapter files for 9 other tools. See [INSTALL.md](./INSTALL.md):
+quench ships adapter files for 10 other tools. See [INSTALL.md](./INSTALL.md):
 
 | Tool | Adapter |
 |------|---------|
-| Cursor AI | `adapters/cursor/.cursorrules` or `adapters/cursor/.cursor/rules/steel-mind.mdc` |
+| Cursor AI | `adapters/cursor/.cursorrules` or `.cursor/rules/*.mdc` |
 | GitHub Copilot | `adapters/copilot/copilot-instructions.md` |
-| Cline | `adapters/cline/.clinerules/steel-mind.md` |
+| Kilo Code | `adapters/kilo/kilo.jsonc` + `.kilo/rules/` |
+| Cline | `adapters/cline/.clinerules/` |
 | Windsurf | `adapters/windsurf/.windsurfrules` |
 | Claude.ai Projects | `adapters/claude/CLAUDE.md` |
 | ChatGPT / Replit | `adapters/generic/system-prompt.md` |
 | Aider | `adapters/aider/CONVENTIONS.md` |
-| Zed AI | `adapters/zed/.zedprompts/steel-mind.md` |
-| JetBrains Junie | `adapters/junie/.junie/rules/steel-mind.md` |
+| Zed AI | `adapters/zed/.zedprompts/` |
+| JetBrains Junie | `adapters/junie/.junie/rules/` |
 
 ---
 
@@ -167,6 +168,7 @@ quench/
     claude/                      - Claude.ai adapter
     generic/                     - ChatGPT / paste-anywhere adapter
     aider/                       - Aider adapter
+    kilo/                        - Kilo Code adapter
     zed/                         - Zed AI adapter
     junie/                       - JetBrains Junie adapter
 ```

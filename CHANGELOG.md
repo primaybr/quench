@@ -5,6 +5,24 @@ Format: [version] date - description
 
 ---
 
+## [1.2.0] 2026-09-19
+
+### Added
+- `adapters/kilo/` - Kilo Code adapter (free, popular VS Code AI coding extension)
+  - `kilo.jsonc` - project config file referencing both rule files via `instructions` array
+  - `.kilo/rules/steel-mind.md` - behavior tempering rules
+  - `.kilo/rules/plaincast.md` - text normalization rules
+  - Supports global install via `~/.config/kilo/kilo.jsonc`
+- `INSTALL.md` updated with Kilo Code section and updated adapter coverage table
+
+### Fixed
+- All adapters now include both steel-mind and plaincast content (previously plaincast
+  was missing from all adapter files)
+- Added modular plaincast files for tools supporting separate rule files:
+  Cursor (.mdc), Cline (.clinerules), Zed (.zedprompts), JetBrains Junie (.junie/rules)
+
+---
+
 ## [1.1.0] 2026-09-19
 
 ### Added
