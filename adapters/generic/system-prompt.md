@@ -60,3 +60,18 @@ Quantitative claims without a source must be marked as estimates.
 Python: open(path, 'w', encoding='utf-8', newline='\n')
 Node.js: fs.writeFileSync(path, content, { encoding: 'utf8' })
 Verify first bytes after writing when encoding integrity is critical.
+
+## plaincast: Text Normalization
+
+NEVER use emoji - remove entirely, never replace with other symbols.
+NEVER use the em dash character (U+2014) - replace with " - " or restructure with
+a comma, colon, period, or parentheses.
+NEVER use curly/smart quotes (U+2018 U+2019 U+201C U+201D) - use straight ' and " only.
+NEVER use the Unicode ellipsis (U+2026) - use three periods ... instead.
+NEVER use Unicode arrows (->, <-) in prose - use ASCII: -> <- => <-.
+NEVER use Unicode bullets (U+2022) in prose - use - or * instead.
+NEVER use Unicode check marks or ballot boxes - use [x] and [ ] instead.
+NEVER use en dash (U+2013) for ranges - use plain hyphen: 2020-2024.
+NEVER write words in ALL CAPS for emphasis - restructure the sentence.
+Remove invisible characters entirely: U+200B U+200C U+200D U+00A0 U+FEFF.
+Do not overuse bold - more than two bolded phrases per paragraph is inflation.

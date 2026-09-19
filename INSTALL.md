@@ -1,49 +1,75 @@
 # quench - Multi-Tool Installation Guide
 
-quench skills are authored in Antigravity SKILL.md format (the canonical source),
-then compiled into adapter files for every major AI tool.
+quench skills are authored in `skills/*/SKILL.md` (the canonical source of truth).
+Always-on rules live in `rules/AGENTS.md` (the compiled extract).
+Adapter files for each tool are derived from both.
 
-The rule: **one source of truth, many adapters**.
-Edit `skills/<name>/SKILL.md` - adapters are generated from it, never the other way.
-
----
-
-## Adapter Files (What Gets Generated)
-
-| File | Target Tool(s) |
-|------|---------------|
-| `adapters/cursor/.cursorrules` | Cursor AI |
-| `adapters/cursor/.cursor/rules/steel-mind.mdc` | Cursor AI (modular) |
-| `adapters/copilot/.github/copilot-instructions.md` | GitHub Copilot |
-| `adapters/cline/.clinerules/steel-mind.md` | Cline |
-| `adapters/windsurf/.windsurfrules` | Windsurf |
-| `adapters/claude/CLAUDE.md` | Claude.ai Projects |
-| `adapters/generic/system-prompt.md` | ChatGPT, Replit, any paste-in tool |
-| `adapters/aider/CONVENTIONS.md` | Aider |
-| `adapters/zed/.zedprompts/steel-mind.md` | Zed AI |
-| `adapters/junie/.junie/rules/steel-mind.md` | JetBrains Junie |
-| `adapters/copilot/.github/copilot-instructions.md` | GitHub Copilot |
+**The rule:** Edit `skills/*/SKILL.md`. Never edit adapters or rules directly.
 
 ---
 
-## Installation per Tool
+## Install Options by Experience Level
 
-### Antigravity (native - best experience)
+### Option A - Full plugin (recommended for Antigravity)
+
+Gives you both always-on rules AND on-demand skills. Best experience.
+
+```jsonc
+// ~/.gemini/config/plugins.json
+{
+  "entries": [{ "path": "/path/to/quench" }]
+}
+```
+
+What this loads every session, automatically and silently:
+- `rules/AGENTS.md` - steel-mind + plaincast behavioral disciplines
+- `skills/*/SKILL.md` descriptions - available for on-demand deep reference
+
+### Option B - Skills only (Antigravity, no always-on rules)
+
 ```jsonc
 // ~/.gemini/config/skills.json
 {
   "entries": [{ "path": "/path/to/quench/skills" }]
 }
 ```
-Or per-project: copy `skills/steel-mind/` into your project's `.agents/skills/`.
 
-### Cursor AI
+Skills are loaded on-demand when the agent decides they are relevant.
+Use this if you want quench skills available but prefer to control when they activate.
+
+### Option C - Per-project (any team, via version control)
+
+Place at project root for team-wide use - any team member who clones gets the rules:
+
+```
+your-project/
+  .agents/
+    plugins/
+      quench/            <- clone quench here, or symlink
+        plugin.json
+        rules/
+          AGENTS.md
+        skills/
+          steel-mind/
+          plaincast/
+```
+
+---
+
+## Installation per Tool
+
+### Antigravity (native - best experience)
+See Option A above.
+
+### Cursor AI - single file (simpler)
 ```bash
-# Option A - single file (simpler)
 cp adapters/cursor/.cursorrules /your-project/.cursorrules
+```
 
-# Option B - modular rules (recommended for Cursor 0.42+)
+### Cursor AI - modular rules (recommended for Cursor 0.42+)
+```bash
 cp adapters/cursor/.cursor/rules/steel-mind.mdc /your-project/.cursor/rules/
+cp adapters/cursor/.cursor/rules/plaincast.mdc   /your-project/.cursor/rules/
 ```
 
 ### GitHub Copilot
@@ -53,7 +79,8 @@ cp adapters/copilot/copilot-instructions.md /your-project/.github/copilot-instru
 
 ### Cline
 ```bash
-cp adapters/cline/steel-mind.md /your-project/.clinerules/steel-mind.md
+cp adapters/cline/.clinerules/steel-mind.md  /your-project/.clinerules/
+cp adapters/cline/.clinerules/plaincast.md   /your-project/.clinerules/
 ```
 
 ### Windsurf
@@ -65,7 +92,7 @@ cp adapters/windsurf/.windsurfrules /your-project/.windsurfrules
 1. Open Claude.ai -> Projects -> your project -> Project Knowledge
 2. Upload `adapters/claude/CLAUDE.md` as a knowledge file
 
-### ChatGPT / Replit / Any paste-in tool
+### ChatGPT / Replit / any paste-in tool
 1. Open `adapters/generic/system-prompt.md`
 2. Copy the contents
 3. Paste into Custom Instructions / System Prompt field
@@ -73,31 +100,38 @@ cp adapters/windsurf/.windsurfrules /your-project/.windsurfrules
 ### Aider
 ```bash
 cp adapters/aider/CONVENTIONS.md /your-project/CONVENTIONS.md
-# Aider reads this automatically as context
+# Aider reads CONVENTIONS.md automatically as context
 ```
 
 ### Zed AI
 ```bash
-cp adapters/zed/steel-mind.md /your-project/.zedprompts/steel-mind.md
+cp adapters/zed/.zedprompts/steel-mind.md  /your-project/.zedprompts/
+cp adapters/zed/.zedprompts/plaincast.md   /your-project/.zedprompts/
 ```
 
 ### JetBrains Junie
 ```bash
-cp adapters/junie/steel-mind.md /your-project/.junie/rules/steel-mind.md
+cp adapters/junie/.junie/rules/steel-mind.md  /your-project/.junie/rules/
+cp adapters/junie/.junie/rules/plaincast.md   /your-project/.junie/rules/
 ```
 
 ---
 
-## What the Adapters Contain
+## What Each Adapter Contains
 
-All adapters distill the same 7 protocols from `skills/steel-mind/SKILL.md`:
-1. Anti-Slop Lexicon
-2. Platform Grounding
-3. Tool Use Discipline
-4. Epistemic Integrity
-5. Output Integrity Gates
-6. Context Economy
-7. Encoding and File Write Hygiene
-
-The Antigravity SKILL.md is the full reference with all detail.
-Adapters are condensed for tools with tighter context budgets.
+| Adapter | steel-mind | plaincast |
+|---------|-----------|-----------|
+| Cursor `.cursorrules` | [x] | [x] |
+| Cursor `.cursor/rules/steel-mind.mdc` | [x] | - |
+| Cursor `.cursor/rules/plaincast.mdc` | - | [x] |
+| GitHub Copilot `copilot-instructions.md` | [x] | [x] |
+| Cline `.clinerules/steel-mind.md` | [x] | - |
+| Cline `.clinerules/plaincast.md` | - | [x] |
+| Windsurf `.windsurfrules` | [x] | [x] |
+| Claude.ai `CLAUDE.md` | [x] | [x] |
+| Generic `system-prompt.md` | [x] | [x] |
+| Aider `CONVENTIONS.md` | [x] | [x] |
+| Zed `.zedprompts/steel-mind.md` | [x] | - |
+| Zed `.zedprompts/plaincast.md` | - | [x] |
+| Junie `.junie/rules/steel-mind.md` | [x] | - |
+| Junie `.junie/rules/plaincast.md` | - | [x] |

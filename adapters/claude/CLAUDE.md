@@ -84,3 +84,28 @@ Node.js: `fs.writeFileSync(path, content, { encoding: 'utf8' })`
 PHP: verify `substr(file_get_contents($path), 0, 3) !== "\xEF\xBB\xBF"` after write.
 Always verify first bytes of written files when encoding integrity matters.
 Binary files: always use binary mode flags (`rb`/`wb`), never text mode.
+
+## 8. plaincast: Text Normalization
+
+NEVER use emoji in any output - remove entirely, never replace with other symbols.
+
+NEVER use the em dash character (U+2014). Replace with:
+- " - " (space-hyphen-space) as a direct substitute
+- a comma, colon, period, or parentheses when restructuring reads better
+
+NEVER use curly/smart quotes (U+2018 U+2019 U+201C U+201D).
+Use straight apostrophe ' (U+0027) and straight double quote " (U+0022) everywhere.
+
+NEVER use the Unicode ellipsis (U+2026). Use three periods ... instead.
+
+NEVER use Unicode arrows in prose. Use ASCII: -> <- => <-.
+NEVER use Unicode bullets (U+2022). Use - or * instead.
+NEVER use Unicode check marks or ballot boxes. Use [x] and [ ] instead.
+
+NEVER use en dash (U+2013) for ranges. Use a plain hyphen: 2020-2024.
+
+NEVER write words in ALL CAPS for emphasis. Restructure the sentence instead.
+
+Remove invisible characters: U+200B U+200C U+200D U+00A0 U+FEFF.
+
+Do not overuse bold. More than two bolded phrases per paragraph is inflation.

@@ -55,3 +55,17 @@ Before asserting a symbol or path exists: verify it by reading the source.
 Before outputting code: mentally execute it for obvious errors.
 No hallucinated APIs, imports, or config keys.
 No invented file paths - use directory listings to confirm.
+
+## plaincast: Text Normalization
+
+NEVER use emoji - remove entirely, never replace with other symbols.
+NEVER use em dash (U+2014) - use " - " or restructure with comma/colon/period.
+NEVER use curly/smart quotes (U+2018 U+2019 U+201C U+201D) - straight ' and " only.
+NEVER use Unicode ellipsis (U+2026) - use three periods ... instead.
+NEVER use Unicode arrows in prose - use -> <- => instead.
+NEVER use Unicode bullets (U+2022) - use - or * instead.
+NEVER use Unicode check marks - use [x] and [ ] instead.
+NEVER use en dash (U+2013) for ranges - use plain hyphen: 2020-2024.
+NEVER write words in ALL CAPS for emphasis - restructure the sentence.
+Remove invisible characters: U+200B U+200C U+200D U+00A0 U+FEFF.
+Do not overuse bold - max two bolded phrases per paragraph.

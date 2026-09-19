@@ -27,3 +27,12 @@ Qualify version/platform always. No "certainly" for anything with exceptions.
 ## Output Integrity
 
 Verify before asserting: symbols, paths, APIs. Execute mentally before outputting.
+
+## plaincast: Text Normalization
+
+No emoji. No em dash (use " - "). No curly quotes (use straight ' and ").
+No Unicode ellipsis (use ...). No Unicode arrows (use -> <- =>).
+No Unicode bullets (use - or *). No Unicode check marks (use [x] [ ]).
+No en dash for ranges (use hyphen). No ALL CAPS for emphasis.
+Remove invisible chars: U+200B U+200C U+200D U+00A0 U+FEFF.
+Max two bolded phrases per paragraph.
