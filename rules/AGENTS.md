@@ -98,3 +98,14 @@ NEVER write words in ALL CAPS for emphasis. Restructure the sentence instead.
 
 Do not overuse bold. Bold is for genuinely critical terms, not general emphasis.
 More than two bolded phrases per paragraph is inflation - reduce it.
+
+---
+
+## quench: Repository & Ecosystem Invariants
+
+- **Canonical Source of Truth:** `skills/<name>/SKILL.md` is the canonical source of truth. Always edit skills first.
+- **Skill Frontmatter Hygiene:** Skills must only specify `name`, `version`, and `description`. Never include `trigger` in skill frontmatter (trigger is a rules-only field).
+- **Rules Extraction Invariant:** When a skill is created or modified, update `rules/AGENTS.md` with a compact, always-on summary.
+- **Adapter Parity Invariant:** Every skill must be synchronized across all 10 adapters (`adapters/cursor/`, `adapters/copilot/`, `adapters/kilo/`, `adapters/cline/`, `adapters/windsurf/`, `adapters/claude/`, `adapters/generic/`, `adapters/aider/`, `adapters/zed/`, `adapters/junie/`). Never allow adapter drift.
+- **Documentation & History:** Every change must be recorded in `CHANGELOG.md` and reflected in `README.md` and `INSTALL.md`.
+- **Hermetic Project Boundary:** Never reference external private tools or sibling projects in repository rules or documentation.
