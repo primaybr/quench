@@ -10,7 +10,22 @@ Adapter files for each tool are derived from both.
 
 ## Install Options by Experience Level
 
-### Option A - Full plugin (recommended for Antigravity)
+### Option A - Fast automated CLI (Recommended)
+
+Use the zero-dependency Quench CLI to configure rules and hooks in seconds:
+
+```bash
+# Interactive mode (prompts for tool selection)
+python quench.py init --target /your-project
+
+# Direct install for a specific tool (e.g. Cursor)
+python quench.py init --tool cursor --target /your-project
+
+# Install all adapters and git validation hooks
+python quench.py init --tool all --hooks --target /your-project
+```
+
+### Option B - Full plugin (recommended for Antigravity)
 
 Gives you both always-on rules AND on-demand skills. Best experience.
 
@@ -25,7 +40,7 @@ What this loads every session, automatically and silently:
 - `rules/AGENTS.md` - steel-mind + plaincast + leakguard + precision-output behavioral disciplines
 - `skills/*/SKILL.md` descriptions - available for on-demand deep reference
 
-### Option B - Skills only (Antigravity, no always-on rules)
+### Option C - Skills only (Antigravity, no always-on rules)
 
 ```jsonc
 // ~/.gemini/config/skills.json
@@ -37,7 +52,7 @@ What this loads every session, automatically and silently:
 Skills are loaded on-demand when the agent decides they are relevant.
 Use this if you want quench skills available but prefer to control when they activate.
 
-### Option C - Per-project (any team, via version control)
+### Option D - Per-project (any team, via version control)
 
 Place at project root for team-wide use - any team member who clones gets the rules:
 

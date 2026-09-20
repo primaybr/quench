@@ -18,6 +18,7 @@ REPO_ROOT = SCRIPTS_DIR.parent
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import validate
+from test_cli_e2e import TestQuenchCliE2E
 
 
 class TestPlaincastGate(unittest.TestCase):

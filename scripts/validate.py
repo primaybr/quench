@@ -464,6 +464,10 @@ def validate_skill_frontmatter(path: Path, content: str, report: ValidationRepor
 
 def validate_adapter_parity(root: Path, report: ValidationReport):
     """Gate 3: Ensure all 11 adapters exist and represent active skills."""
+    # Gate 3 parity check applies to Quench repository source tree
+    if not (root / 'adapters').exists():
+        return
+
     # 1. Verify existence of all adapter files
     for adapter in REQUIRED_ADAPTERS:
         full_path = root / adapter
@@ -499,7 +503,7 @@ def validate_adapter_parity(root: Path, report: ValidationReport):
 
 TEXT_EXTENSIONS = {'.md', '.mdc', '.json', '.jsonc', '.txt', '.py', '.sh', '.yml', '.yaml'}
 IGNORE_DIRS = {'.git', '__pycache__', '.pytest_cache', '.vscode', '.idea', 'venv', 'env', 'node_modules', '.kilo', 'worktrees'}
-IGNORE_FILES = {'test_validate.py'}
+IGNORE_FILES = {'test_validate.py', 'test_cli_e2e.py'}
 
 
 def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool = False) -> ValidationReport:

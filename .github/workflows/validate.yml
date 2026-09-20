@@ -23,5 +23,8 @@ jobs:
       - name: Run unit tests
         run: python scripts/test_validate.py -v
 
+      - name: Run E2E contributor sanity tests
+        run: python scripts/test_cli_e2e.py -v
+
       - name: Run full repository scan
         run: python scripts/validate.py

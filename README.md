@@ -95,6 +95,33 @@ When a skill changes, update rules/AGENTS.md to match.
 
 ## Installation
 
+### Quench CLI (Fastest - Recommended)
+
+quench includes a zero-dependency CLI (`quench.py` or `scripts/quench.py`) to initialize, validate, update, and inspect rules across any repository:
+
+```bash
+# Interactive setup: choose an adapter from a numbered menu
+python quench.py init
+
+# Direct adapter initialization in a project directory
+python quench.py init --tool cursor --target /path/to/project
+
+# Install all adapters and git validation hooks
+python quench.py init --tool all --hooks --target /path/to/project
+
+# Validate repository integrity across all 5 gates
+python quench.py check --target /path/to/project
+
+# Validate and auto-fix fixable plaincast and path issues
+python quench.py check --fix --target /path/to/project
+
+# Inspect active adapters and git hooks status
+python quench.py status --target /path/to/project
+
+# Refresh existing installed adapters to latest upstream versions
+python quench.py update --target /path/to/project
+```
+
 ### Antigravity (native - recommended)
 
 **As a plugin (full experience: skills + always-on rules):**
@@ -195,6 +222,7 @@ python scripts/install-hooks.py
 
 ```
 quench/
+  quench.py                      - Unified CLI runner
   plugin.json                    - Antigravity plugin manifest
   README.md                      - This file
   INSTALL.md                     - Per-tool installation guide
@@ -203,9 +231,12 @@ quench/
   .gitattributes                 - Enforces LF line endings
   .githooks/
     pre-commit                   - Automated git pre-commit validation hook
+    commit-msg                   - Automated git commit-msg validation hook
   scripts/
+    quench.py                    - Interactive Quench CLI implementation
     validate.py                  - Zero-dependency repository validation engine
     test_validate.py             - Unit test suite for validation engine
+    test_cli_e2e.py              - End-to-end contributor sanity suite
     install-hooks.py             - Hook installation utility
   skills/
     <skill-name>/

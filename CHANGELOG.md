@@ -3,6 +3,29 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.5.4] 2026-09-20
+
+### Added
+- Interactive Quench CLI (`scripts/quench.py` and top-level runner `quench.py`):
+  - Zero-dependency unified command line interface built with Python 3 stdlib.
+  - `quench init`: Interactive or scripted initialization across 12 adapter targets (`cursor`, `copilot`, `kilo`, `cline`, `windsurf`, `claude`, `generic`, `aider`, `zed`, `junie`, `antigravity`, `rules`, or `all`). Supports `--target`, `--force`, and `--hooks`.
+  - `quench check`: Repository verification across all 5 gates with `--fix` and `--paths-only` options.
+  - `quench update`: Automatic detection and refreshing of installed adapters from upstream templates.
+  - `quench status` / `info`: Inspection of active adapters, configured rules, and git hook status.
+  - Global `--version` / `-v` flag reporting `quench 1.5.4`.
+- External Contributor Sanity Check Suite (`scripts/test_cli_e2e.py`):
+  - End-to-end integration tests using isolated temporary directories and fresh git repositories.
+  - Comprehensive coverage for single, modular, and full adapter initialization.
+  - Verification of git pre-commit and commit-msg hooks and execution permissions.
+  - Validation engine pass/fail detection on clean projects, synthetic violations, and auto-fix capabilities.
+  - Status detection and adapter updating workflows.
+  - Wired into `scripts/test_validate.py` and CI workflow `.github/workflows/validate.yml`.
+- Validation engine adjustments (`scripts/validate.py`):
+  - Gate 3 parity check scoped to repositories containing `adapters/` source tree, ensuring clean validation of consumer repositories.
+  - Added `test_cli_e2e.py` to `IGNORE_FILES`.
+
+---
+
 ## [1.5.3] 2026-09-19
 
 ### Added
