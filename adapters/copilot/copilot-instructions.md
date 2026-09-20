@@ -23,7 +23,7 @@ in this repository.
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 [System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
 ```
-`Set-Content -Encoding UTF8` writes BOM - do not use for PHP, Python, or shell scripts.
+`Set-Content -Encoding UTF8` writes BOM - do not use for PHP, Python, or shell scripts. Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
 
 **File locking:** Running `.exe` files on Windows are kernel-locked. Kill the process
 before overwriting the binary.
@@ -59,9 +59,11 @@ No invented file paths - use directory listings to confirm.
 ## Cadence & Agency
 
 Sentence length follows complexity (avoid 18-24 word repetition; avoid bimodal seesaw).
+Cadence gate: in prose of 5+ sentences, if 4+ fall within a 5-word band, rewrite 2.
 Opener diversity: do not start >50% of sentences with The/This/It/In.
 Cut participial tack-ons (", highlighting...") and negative parallelisms ("not only X, but also Y").
 No false agency: software/data does not "want" or "hope" - state what it literally computes.
+In code reviews and PR descriptions: check "tries", "wants", "hopes", "attempts", "believes", "expects" on software subjects - replace with the specific computation or failure.
 No compulsive silver linings in bug reports; state defects unsoftened.
 
 ## plaincast: Text Normalization

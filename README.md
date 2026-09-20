@@ -149,7 +149,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.5.5
+    rev: v1.5.8
     hooks:
       - id: quench-check
       - id: quench-commit-msg

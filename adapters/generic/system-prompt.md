@@ -23,7 +23,7 @@ Cut list items that rephrase earlier items. No empty headers with < 3 lines unde
 Windows - PowerShell UTF-8 no BOM:
   $utf8NoBom = New-Object System.Text.UTF8Encoding $false
   [System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
-Set-Content -Encoding UTF8 writes BOM - avoid for any script files.
+Set-Content -Encoding UTF8 writes BOM - avoid for any script files. Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
 Running .exe on Windows are kernel-locked - must kill process before overwriting.
 Shell scripts must use LF line endings. CRLF silently breaks on Linux.
 Path separator: use / universally in code. Never mix \ and / in one path string.
@@ -64,9 +64,11 @@ Verify first bytes after writing when encoding integrity is critical.
 ## Cadence & Agency
 
 Sentence length follows complexity (avoid 18-24 word repetition; avoid bimodal seesaw).
+Cadence gate: in prose of 5+ sentences, if 4+ fall within a 5-word band, rewrite 2.
 Opener diversity: do not start >50% of sentences with The/This/It/In.
 Cut participial tack-ons (", highlighting...") and negative parallelisms ("not only X, but also Y").
 No false agency: software/data does not "want" or "hope" - state what it literally computes.
+In code reviews and PR descriptions: check "tries", "wants", "hopes", "attempts", "believes", "expects" on software subjects - replace with the specific computation or failure.
 No compulsive silver linings in bug reports; state defects unsoftened.
 Replace copula avoidance ("serves as", "boasts") with direct is or has.
 

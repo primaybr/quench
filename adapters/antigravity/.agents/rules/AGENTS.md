@@ -21,7 +21,7 @@ No list items that rephrase earlier items. No section headers with trivial conte
 PowerShell UTF-8 no BOM - the only safe write pattern:
   $utf8NoBom = New-Object System.Text.UTF8Encoding $false
   [System.IO.File]::WriteAllText($absolutePath, $content, $utf8NoBom)
-Never use Set-Content -Encoding UTF8 for scripts (writes BOM, corrupts PHP/Python shebangs).
+Never use Set-Content -Encoding UTF8 for scripts (writes BOM, corrupts PHP/Python shebangs). Quick-test: if output contains a PowerShell write, confirm it uses WriteAllText with UTF8Encoding $false.
 
 Windows: running .exe files are kernel-locked - kill the daemon task before rebuilding.
 Long-running processes need IsDaemon: true - non-daemon tasks kill child processes on exit.
@@ -66,11 +66,13 @@ Offload secondary research to subagents or cached lookups before generating code
 Vary sentence length with complexity. Never repeat the same sentence length cadence across a paragraph (metronome tell). Never alternate 2-word fragments with 40-word run-ons (bimodal seesaw).
 In any paragraph, do not start more than half the sentences with "The", "This", "It", or "In".
 Cut trailing participial tack-ons (", highlighting...", ", demonstrating...") and negative parallelisms ("not only X, but also Y").
+Cadence gate: in any prose block of 5+ sentences, if 4+ fall within a 5-word band, rewrite 2 to break uniformity.
 
 ## steel-mind: Semantic Grounding & Agency
 
 Inanimate artifacts have no intent or desires. Software, schemas, and databases
 do not "want", "hope", or "attempt" - state what they literally execute or compute.
+In code reviews and PR descriptions: check "tries", "wants", "hopes", "attempts", "believes", "expects" on software subjects - replace with the specific computation or failure.
 Cut compulsive silver linings from bug reports, technical post-mortems, and audits.
 State defects and root causes plainly without adding unprompted sunny conclusions.
 Replace copula avoidance puffery ("serves as", "boasts", "stands as") with direct is or has.

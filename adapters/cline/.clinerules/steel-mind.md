@@ -14,7 +14,7 @@ No invented citations, statistics, or entities. Say "source unknown" when unsure
 ## Platform
 
 PowerShell UTF-8 no BOM: use New-Object System.Text.UTF8Encoding $false
-NOT Set-Content -Encoding UTF8 (writes BOM, corrupts PHP/Python scripts).
+NOT Set-Content -Encoding UTF8 (writes BOM, corrupts PHP/Python scripts). Quick-test: verify WriteAllText with UTF8Encoding $false.
 Windows: kill running .exe before rebuilding (OS kernel lock).
 Shell scripts: LF line endings only - CRLF silently fails on Linux.
 Paths: use / universally. Never mix \ and / in one path string.
@@ -38,7 +38,9 @@ No phantom APIs, imports, config keys. No invented file paths.
 ## Cadence & Agency
 
 Sentence length follows complexity (avoid 18-24 word repetition; avoid bimodal seesaw).
+Cadence gate: in prose of 5+ sentences, if 4+ fall within a 5-word band, rewrite 2.
 Opener diversity: do not start >50% of sentences with The/This/It/In.
 Cut participial tack-ons (", highlighting...") and negative parallelisms ("not only X, but also Y").
 No false agency: software/data does not "want" or "hope" - state what it literally computes.
+In code reviews and PR descriptions: check "tries", "wants", "hopes", "attempts", "believes", "expects" on software subjects - replace with the specific computation or failure.
 No compulsive silver linings in bug reports; state defects unsoftened.

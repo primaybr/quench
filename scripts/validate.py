@@ -160,7 +160,12 @@ FORBIDDEN_PATH_PATTERNS = [
         r'|172\.(?:1[6-9]|2[0-9]|3[01])\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)'
         r')(?::\d+)?(?:/\S+)?\b'
     ), 'Private LAN IP address'),
-    (re.compile(r'(?i)\b(?:localhost|127\.0\.0\.1):\d{4,5}/(?!path/|your-|example)[a-zA-Z0-9_-]{3,}\b'), 'Localhost URL with non-generic path'),
+    # Negative lookahead excludes: generic doc placeholders (path/, your-, example),
+    # and well-known development API path prefixes that appear legitimately in monorepo
+    # example READMEs and dev tool scripts (api, graphql, graph, webhook, stripe,
+    # health, docs, metrics, mf-manifest, mf-). Private service paths (e.g.
+    # localhost:PORT/internal-dashboard) are still flagged.
+    (re.compile(r'(?i)\b(?:localhost|127\.0\.0\.1):\d{4,5}/(?!path/|your-|example|api\b|graphql\b|graph\b|webhook\b|stripe\b|health\b|docs\b|metrics\b|mf-)[a-zA-Z0-9_-]{3,}\b'), 'Localhost URL with non-generic path'),
 
     # Cross-project context bleed & ungrounded private tools
     (re.compile(r'\b' + 'hush' + 'cache' + r'(?:_[a-z0-9_]+)?\b', re.IGNORECASE), 'Cross-project context bleed / private environment tool'),

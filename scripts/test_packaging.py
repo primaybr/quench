@@ -96,13 +96,13 @@ class TestPackagingConfiguration(unittest.TestCase):
         self.assertEqual(build_system.get('build-backend'), 'setuptools.build_meta')
 
     def test_04_project_metadata(self):
-        """Project metadata table must define name, version 1.5.5, and zero dependencies."""
+        """Project metadata table must define name, version 1.5.8, and zero dependencies."""
         if tomllib is None:
             self.skipTest("tomllib not available")
 
         project = self.parsed.get('project', {})
         self.assertEqual(project.get('name'), 'quench')
-        self.assertEqual(project.get('version'), '1.5.5')
+        self.assertEqual(project.get('version'), '1.5.8')
         self.assertIn('description', project)
         self.assertGreater(len(project['description']), 0)
         self.assertEqual(project.get('readme'), 'README.md')
@@ -143,7 +143,7 @@ class TestPackagingConfiguration(unittest.TestCase):
         """Root quench module must import cleanly and expose main and metadata."""
         self.assertTrue(hasattr(quench, '__file__'), "quench module has no __file__ attribute")
         self.assertTrue(callable(getattr(quench, 'main', None)), "quench.main is not callable")
-        self.assertEqual(getattr(quench, '__version__', None), '1.5.5')
+        self.assertEqual(getattr(quench, '__version__', None), '1.5.8')
 
     def test_08_subcommand_execution_via_entrypoint(self):
         """Entrypoint logic must handle --version cleanly without error."""

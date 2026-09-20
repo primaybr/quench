@@ -15,7 +15,7 @@ No list items that rephrase earlier items. No section headers with trivial conte
 
 ## steel-mind: Platform Grounding
 
-PowerShell UTF-8 no BOM: use `New-Object System.Text.UTF8Encoding $false` + `WriteAllText`. Never use `Set-Content -Encoding UTF8` (writes BOM, corrupts shebangs).
+PowerShell UTF-8 no BOM: use `New-Object System.Text.UTF8Encoding $false` + `WriteAllText`. Never use `Set-Content -Encoding UTF8` (writes BOM, corrupts shebangs). Quick-test: if output contains a PowerShell write, confirm it uses `WriteAllText` with `UTF8Encoding $false`.
 Kill running .exe before rebuilding (OS kernel lock). Shell scripts: LF only.
 Use / as path separator universally in code. Never mix \ and / in one path string.
 
@@ -50,10 +50,12 @@ Offload secondary research to subagents or cached lookups before generating code
 Vary sentence length with complexity. Never repeat the same sentence length cadence across a paragraph (metronome tell). Never alternate 2-word fragments with 40-word run-ons (bimodal seesaw).
 In any paragraph, do not start more than half the sentences with "The", "This", "It", or "In".
 Cut trailing participial tack-ons (", highlighting...", ", demonstrating...") and negative parallelisms ("not only X, but also Y").
+Cadence gate: in any prose block of 5+ sentences, if 4+ fall within a 5-word band, rewrite 2 to break uniformity.
 
 ## steel-mind: Semantic Grounding & Agency
 
 Software, schemas, and databases do not "want", "hope", or "attempt" - state what they literally execute or compute.
+In code reviews and PR descriptions: check "tries", "wants", "hopes", "attempts", "believes", "expects" on software subjects - replace with the specific computation or failure.
 Cut compulsive silver linings from bug reports and audits; state defects and root causes plainly.
 Replace copula avoidance puffery ("serves as", "boasts", "stands as") with direct is or has.
 

@@ -3,6 +3,27 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.5.8] 2026-09-20
+
+### Added
+- Resolved adversarial gap proposals across skill definitions and synced to all 11 adapters:
+  - G-01 (`steel-mind`): Added `Cadence Self-Check Gate` (prose of 5+ sentences where 4+ fall within a 5-word band triggers rewriting at least 2 sentences).
+  - G-02 (`plaincast`): Evaluated and closed - bold-first list spam is already covered by existing protocol.
+  - G-03 (`steel-mind` / `leakguard`): Evaluated and closed - path separator mixing is already covered by existing invariants.
+  - G-04 (`steel-mind`): Added explicit activation gate for code review comments and PR descriptions to check software subjects for false agency verbs ("tries", "wants", "hopes", "attempts", "believes", "expects").
+  - G-05 (`steel-mind`): Added `PowerShell Write Quick-Test` verifying `[System.IO.File]::WriteAllText` with `UTF8Encoding $false` on any generated PowerShell write.
+- Synced all rule additions across `rules/AGENTS.md` and all 11 adapters (antigravity, cursor, copilot, kilo, cline, windsurf, claude, generic, aider, zed, junie).
+
+### Fixed
+- False-positive calibration across Rust, Ruby, and Monorepo corpora (tokio-rs/tokio, sinatra/sinatra, vercel/turbo - 6,900+ files cloned):
+  - **Localhost URL pattern** (`scripts/validate.py`):
+    - In `vercel/turbo`, 41 violations were flagged for standard local dev URLs like `localhost:3000/api`, `localhost:9090/graph`, `localhost:3002/stripe` appearing in example documentation and test fixtures.
+    - Fix: Extended the negative lookahead of the localhost regex to exclude common development API path prefixes (`api`, `graphql`, `graph`, `webhook`, `stripe`, `health`, `docs`, `metrics`, `mf-manifest`, `mf-`). Private service URLs remain flagged.
+    - Re-scanned `turbo` (2,501 files): all validation gates passed with 0 violations.
+    - `tokio` (41 text files) and `sinatra` (24 text files) passed with 0 violations.
+
+---
+
 ## [1.5.7] 2026-09-20
 
 ### Fixed

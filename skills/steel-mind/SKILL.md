@@ -349,6 +349,10 @@ Never open a binary file (images, compiled assets, SQLite databases) with
 text-mode APIs. Always use binary mode (`'rb'`, `'wb'`) and never pass
 binary content through string manipulation functions.
 
+### PowerShell Write Quick-Test
+
+If output includes any PowerShell file write command, verify it uses `[System.IO.File]::WriteAllText` with the `New-Object System.Text.UTF8Encoding $false` constructor and not `Set-Content -Encoding UTF8`.
+
 ---
 
 ## Protocol 8 - Structural Cadence & Syntactic Integrity
@@ -397,6 +401,10 @@ Never use rhetorical contrast formulas:
 State the actual capability or condition directly. Negative framing forces
 the reader to process what a system is not before learning what it is.
 
+### Cadence Self-Check Gate
+
+Before finalizing any prose block of five or more sentences, count sentence lengths. If four or more sentences fall within a five-word band (e.g., all between 18 and 22 words), rewrite at least two of them to break the uniformity.
+
 ---
 
 ## Protocol 9 - Semantic Grounding & Agency Discipline
@@ -414,6 +422,7 @@ human desires, intentions, or consciousness.
 | "The router tries to find..." | "The router resolves..." | Routers execute routing tables. |
 
 State what the artifact literally does, computes, returns, or fails to do.
+In code review comments, PR descriptions, and architecture summaries, check every use of "tries", "wants", "hopes", "attempts", "believes", and "expects" where the grammatical subject is a software artifact - replace each with the specific computation, return value, or failure condition.
 
 ### Compulsive Silver Linings and Forced Redemption Arcs
 
@@ -456,33 +465,3 @@ This skill activates when:
 - [Platform Traps](./references/platform-traps.md) - OS-specific failure modes reference
 - [Tool Discipline Checklist](./references/tool-discipline-checklist.md) - Printable pre-flight checklist
 
-<!-- TODO [Track C adversarial gap G-01]: Protocol 8 (Structural Cadence) has no
-     adversarial test prompt that isolates metronome-tell or bimodal-seesaw violations
-     in a controlled, binary-scoreable way. Coverage gap identified in
-     skills/precision-output/references/adversarial-test-suite.md.
-     Proposed addition: add a sentence-length distribution self-check gate to
-     Protocol 8. Candidate rule: "Before finalizing any prose block of 5+ sentences,
-     count the sentence lengths. If 4 or more sentences fall within a 5-word band,
-     rewrite at least 2 sentences to break the uniformity." This makes the cadence
-     check mechanically testable by an automated scorer.
-     Owner: steel-mind maintainer. Next review: next minor version bump. -->
-
-<!-- TODO [Track C adversarial gap G-04]: Protocol 9 (Semantic Grounding and Agency)
-     covers false agency but no adversarial prompt in the test suite specifically
-     elicits anthropomorphic language during a code review or system description task.
-     Proposed addition: add a concrete activation note to Protocol 9: "This rule
-     activates especially when writing code review comments, PR descriptions, or
-     system architecture explanations. Check every use of 'tries', 'wants', 'hopes',
-     'attempts', 'believes', and 'expects' when the grammatical subject is a software
-     artifact." Wording is already implied; making it explicit closes the detection gap.
-     Owner: steel-mind maintainer. Next review: next minor version bump. -->
-
-<!-- TODO [Track C adversarial gap G-05]: Protocol 7 (Encoding and File Write Hygiene)
-     and Protocol 2 (Platform Grounding) both cover the BOM write trap, but no
-     adversarial prompt in the test suite specifically elicits "Set-Content -Encoding
-     UTF8" as the generated PowerShell write command.
-     Proposed addition: add a Quick Test to Protocol 7: "If the output contains any
-     PowerShell file write command, confirm it uses [System.IO.File]::WriteAllText with
-     the explicit UTF8Encoding $false constructor and not Set-Content -Encoding UTF8."
-     This makes the safe write pattern a binary pass/fail in any automated scorer.
-     Owner: steel-mind maintainer. Next review: next minor version bump. -->

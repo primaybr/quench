@@ -33,6 +33,7 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 ```
 `Set-Content -Encoding UTF8` writes a BOM (EF BB BF). This corrupts PHP, Python,
 and shell scripts that require the file to start at byte 0 with the script header.
+Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
 
 **File locking on Windows:** Running `.exe` files are kernel-locked.
 Always terminate the process before rebuilding or overwriting the binary.
@@ -88,9 +89,11 @@ Binary files: always use binary mode flags (`rb`/`wb`), never text mode.
 ## 8. Structural Cadence & Agency
 
 Sentence length follows complexity (avoid 18-24 word repetition; avoid bimodal seesaw).
+Cadence gate: in prose of 5+ sentences, if 4+ fall within a 5-word band, rewrite 2.
 Opener diversity: do not start >50% of sentences with The/This/It/In.
 Cut participial tack-ons (", highlighting...") and negative parallelisms ("not only X, but also Y").
 No false agency: software/data does not "want" or "hope" - state what it literally computes.
+In code reviews and PR descriptions: check "tries", "wants", "hopes", "attempts", "believes", "expects" on software subjects - replace with the specific computation or failure.
 No compulsive silver linings in bug reports; state defects unsoftened.
 Replace copula avoidance ("serves as", "boasts") with direct `is` or `has`.
 

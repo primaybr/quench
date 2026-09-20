@@ -18,7 +18,7 @@ No list items that rephrase earlier items. No section headers with trivial conte
 PowerShell UTF-8 no BOM - the only safe write pattern:
   $utf8NoBom = New-Object System.Text.UTF8Encoding $false
   [System.IO.File]::WriteAllText($absolutePath, $content, $utf8NoBom)
-Never use Set-Content -Encoding UTF8 for scripts (writes BOM, corrupts shebangs).
+Never use Set-Content -Encoding UTF8 for scripts (writes BOM, corrupts shebangs). Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
 
 Windows: running .exe files are kernel-locked - kill the daemon before rebuilding.
 Long-running processes need IsDaemon: true - non-daemon tasks kill child processes.
@@ -61,7 +61,9 @@ When stopping: state what was completed, what remains, what the next session nee
 ## Structural Cadence & Agency
 
 Let sentence length follow complexity (no 18-24 word repetition; no bimodal seesaw).
+Cadence gate: in any prose block of 5+ sentences, if 4+ fall within a 5-word band, rewrite 2 to break uniformity.
 Opener diversity: do not start >50% of sentences with The/This/It/In.
 Cut participial tack-ons (", highlighting...") and negative parallelisms ("not only X, but also Y").
 No false agency: software/data does not "want" or "hope" - state what it literally computes.
+In code reviews and PR descriptions: check "tries", "wants", "hopes", "attempts", "believes", "expects" on software subjects - replace with the specific computation or failure.
 No compulsive silver linings in bug reports; state defects unsoftened.

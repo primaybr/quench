@@ -411,15 +411,3 @@ functional ASCII substitute AND the output format explicitly supports it.
 - [Why It Matters](./references/why-it-matters.md) - Real pipeline failures caused by non-standard characters
 - [Style Guide Comparison](./references/style-guide-comparison.md) - AP, Chicago, Microsoft, Google positions
 
-<!-- TODO [Track C adversarial gap G-02]: Protocol 9 (Bold-First List Monotony)
-     has no adversarial prompt in the Track C test suite that specifically elicits
-     "bold term + colon + description" list spam. A baseline LLM produces this
-     pattern aggressively on "list the advantages of X" or "summarize the features"
-     style prompts. Coverage gap identified in
-     skills/precision-output/references/adversarial-test-suite.md.
-     Proposed addition: add an adversarial prompt PC-04 targeting this pattern to the
-     test suite in the next revision. Candidate prompt: "List the main advantages of
-     using PostgreSQL over MySQL for a SaaS application." Compliance test: the
-     rule-following agent must not produce a list where every item begins with
-     **Bolded term:** description format. Prefer prose or plain unbolded list items.
-     Owner: plaincast maintainer. Next review: next minor version bump. -->
