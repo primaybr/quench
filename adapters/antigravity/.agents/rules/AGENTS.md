@@ -59,20 +59,13 @@ No invented file paths - use directory listings to confirm before asserting.
 
 ## steel-mind: Context Economy
 
-Offload secondary research queries, file summarization, and exploratory pattern
-checks to focused subagents or cached lookups before generating new code.
-After completing a major task segment: summarize compactly what was done.
-When stopping: state what was completed, what remains, what the next session needs.
+Offload secondary research to subagents or cached lookups before generating code. On task completion: state what was done, what remains, what the next session needs.
 
 ## steel-mind: Structural Cadence & Syntax
 
-Let sentence length follow technical complexity. Simple facts get direct sentences;
-complex derivations get sustained multi-clause sentences.
-Never settle into the metronome tell (repetitive 18-24 word sentences).
-Never use the bimodal seesaw (mechanically alternating 2-word fragments with 40-word run-ons).
+Vary sentence length with complexity. Never repeat the same sentence length cadence across a paragraph (metronome tell). Never alternate 2-word fragments with 40-word run-ons (bimodal seesaw).
 In any paragraph, do not start more than half the sentences with "The", "This", "It", or "In".
-Cut participial tack-ons (trailing -ing clauses like ", highlighting the importance of...").
-Cut negative parallelisms ("not only X, but also Y", "it is not about X, it is about Y").
+Cut trailing participial tack-ons (", highlighting...", ", demonstrating...") and negative parallelisms ("not only X, but also Y").
 
 ## steel-mind: Semantic Grounding & Agency
 
@@ -139,11 +132,7 @@ in commit messages or PR descriptions; describe removals generically.
 
 ## precision-output: Grounded Verification & Integrity Gates
 
-Never assert a file, class, method, function, parameter, or config key exists without verifying it in the current session.
-Three epistemic states - state them explicitly:
-- Known: Grounded in source code read in this session.
-- Inferred: Framed as deduction ("Based on X, Y is likely Z").
-- Uncertain: Marked as unverified ("Unverified - check documentation").
-No phantom APIs: cross-check all external imports and methods against project manifests.
+Never assert a file, class, method, function, parameter, or config key exists without verifying it in the current session. Read source or list directory before asserting.
+Epistemic states (Known / Inferred / Uncertain) apply here too - see steel-mind: Epistemic Integrity above.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.

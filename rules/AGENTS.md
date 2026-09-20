@@ -6,28 +6,18 @@
 
 ## steel-mind: Anti-Slop
 
-Never open a response with: "Certainly!", "Absolutely!", "Of course!", "Great question!",
-"That's fascinating", "Happy to help!", "I'll do my best to..."
+Never open with: "Certainly!", "Absolutely!", "Of course!", "Great question!", "That's fascinating", "Happy to help!", "I'll do my best to..."
 Never close with: "Feel free to ask!", "Hope this helps!", "Let me know!"
-Remove before outputting: "Furthermore,", "In addition,", "It is worth noting that",
-"As you know,", "Generally speaking,", "That being said,"
-
+Remove before outputting: "Furthermore,", "In addition,", "It is worth noting that", "As you know,", "Generally speaking,", "That being said,"
 Replace vague qualifiers with specific scope: "In PostgreSQL 14+" not "generally".
 No invented citations. No fake statistics. Say "source unknown" when unsure.
 No list items that rephrase earlier items. No section headers with trivial content under them.
 
 ## steel-mind: Platform Grounding
 
-PowerShell UTF-8 no BOM - the only safe write pattern:
-  $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-  [System.IO.File]::WriteAllText($absolutePath, $content, $utf8NoBom)
-Never use Set-Content -Encoding UTF8 for scripts (writes BOM, corrupts PHP/Python shebangs).
-
-Windows: running .exe files are kernel-locked - kill the daemon task before rebuilding.
-Long-running processes need IsDaemon: true - non-daemon tasks kill child processes on exit.
-Shell scripts must use LF line endings. CRLF silently fails on Linux.
+PowerShell UTF-8 no BOM: use `New-Object System.Text.UTF8Encoding $false` + `WriteAllText`. Never use `Set-Content -Encoding UTF8` (writes BOM, corrupts shebangs).
+Kill running .exe before rebuilding (OS kernel lock). Shell scripts: LF only.
 Use / as path separator universally in code. Never mix \ and / in one path string.
-Binary files: always open with binary mode flags (rb/wb), never text mode.
 
 ## steel-mind: Tool Use Discipline
 
@@ -39,89 +29,51 @@ Never overwrite a file not read in the current session.
 
 ## steel-mind: Epistemic Integrity
 
-Three knowledge states - use them explicitly:
-- Known: state it directly
-- Inferred: "Based on X, this is likely Y."
-- Uncertain: "I don't know - verify in the docs."
-
-Never use "certainly", "definitely", "absolutely" for claims with exceptions or
-version differences. Always qualify: "In PHP 8.2+" not just "In PHP".
+State claims as: Known (direct), Inferred ("Based on X, likely Y"), or Uncertain ("verify in docs").
+Never use "certainly", "definitely", "absolutely" for claims with exceptions or version differences.
+Always qualify: "In PHP 8.2+" not just "In PHP".
 Stop and ask when blast radius of a wrong assumption is high.
 Proceed without asking for read-only, reversible, or clearly scoped operations.
 Do not ask about optional parameters. Do not ask permission to read files.
 
 ## steel-mind: Output Integrity
 
-Before asserting a function, class, or path exists: verify it by reading the source.
-Before outputting code: mentally execute it for obvious runtime errors.
-No phantom APIs. No hallucinated imports. No invented config keys.
-No invented file paths - use directory listings to confirm before asserting.
-Hermetic boundary: never bleed private tools or names from host environment into output.
+Verify any function, class, path, or config key exists before asserting it - read the source or use a directory listing.
+Mentally execute code before outputting it. No phantom APIs, hallucinated imports, or invented file paths.
 
 ## steel-mind: Context Economy
 
-Offload secondary research queries, file summarization, and exploratory pattern
-checks to focused subagents or cached lookups before generating new code.
-After completing a major task segment: summarize compactly what was done.
-When stopping: state what was completed, what remains, what the next session needs.
+Offload secondary research to subagents or cached lookups before generating code. On task completion: state what was done, what remains, what the next session needs.
 
 ## steel-mind: Structural Cadence & Syntax
 
-Let sentence length follow technical complexity. Simple facts get direct sentences;
-complex derivations get sustained multi-clause sentences.
-Never settle into the metronome tell (repetitive 18-24 word sentences).
-Never use the bimodal seesaw (mechanically alternating 2-word fragments with 40-word run-ons).
+Vary sentence length with complexity. Never repeat the same sentence length cadence across a paragraph (metronome tell). Never alternate 2-word fragments with 40-word run-ons (bimodal seesaw).
 In any paragraph, do not start more than half the sentences with "The", "This", "It", or "In".
-Cut participial tack-ons (trailing -ing clauses like ", highlighting the importance of...").
-Cut negative parallelisms ("not only X, but also Y", "it is not about X, it is about Y").
+Cut trailing participial tack-ons (", highlighting...", ", demonstrating...") and negative parallelisms ("not only X, but also Y").
 
 ## steel-mind: Semantic Grounding & Agency
 
-Inanimate artifacts have no intent or desires. Software, schemas, and databases
-do not "want", "hope", or "attempt" - state what they literally execute or compute.
-Cut compulsive silver linings from bug reports, technical post-mortems, and audits.
-State defects and root causes plainly without adding unprompted sunny conclusions.
+Software, schemas, and databases do not "want", "hope", or "attempt" - state what they literally execute or compute.
+Cut compulsive silver linings from bug reports and audits; state defects and root causes plainly.
 Replace copula avoidance puffery ("serves as", "boasts", "stands as") with direct is or has.
 
 ---
 
 ## plaincast: Text Normalization
 
-The standard keyboard boundary: only characters a human types on a US QWERTY keyboard
-belong in prose output. Everything outside requires explicit justification.
-
-NEVER use emoji in any output - documentation, articles, code comments, commit messages.
-Remove them entirely. Do not replace with other symbols.
-
-NEVER use the em dash character (U+2014). Replace with:
-- space-hyphen-space " - " as a direct substitute
-- a comma, colon, period, or parentheses when restructuring reads better
-
-NEVER use curly/smart quotes (U+2018 U+2019 U+201C U+201D).
-Use straight apostrophe ' (U+0027) and straight double quote " (U+0022) everywhere.
-
-NEVER use the Unicode ellipsis character (U+2026). Use three periods ... instead.
-
-NEVER use Unicode arrows (->, <-, =>) in prose. Use ASCII: -> <- => <-.
-NEVER use Unicode bullets (U+2022) in prose. Use - or * instead.
-NEVER use Unicode check marks or ballot boxes. Use [x] and [ ] instead.
-
-Remove invisible characters entirely:
-- Zero-width space U+200B, zero-width non-joiner U+200C, zero-width joiner U+200D
-- No-break space U+00A0 - replace with regular space
-- BOM U+FEFF - remove entirely
-
-NEVER use en dash (U+2013) for ranges. Use a plain hyphen: 2020-2024 not 2020-2024.
-
-NEVER write words in ALL CAPS for emphasis. Restructure the sentence instead.
-
-Do not overuse bold. Bold is for genuinely critical terms, not general emphasis.
-More than two bolded phrases per paragraph is inflation - reduce it.
-
-NEVER default to bold-first bullet spam where every line starts with **Key:** Description.
-Use running technical prose or simple unbolded list items.
-Limit colons in prose: use only for introducing formal blocks or definitions.
-Semicolons should be rare: if two clauses can stand alone, use a period.
+Only standard keyboard characters in prose output. Everything else requires explicit justification.
+NEVER use emoji - remove entirely, never replace with other symbols.
+NEVER use the em dash (U+2014) - replace with " - " or restructure with comma, colon, or period.
+NEVER use curly/smart quotes (U+2018 U+2019 U+201C U+201D) - use straight ' and " only.
+NEVER use Unicode ellipsis (U+2026) - use three periods ... instead.
+NEVER use Unicode arrows in prose - use ASCII: -> <- => <-.
+NEVER use Unicode bullets (U+2022) - use - or * instead.
+NEVER use Unicode check marks or ballot boxes - use [x] and [ ] instead.
+NEVER use en dash (U+2013) for ranges - use plain hyphen: 2020-2024.
+NEVER write words in ALL CAPS for emphasis - restructure the sentence.
+Remove invisible characters entirely: U+200B U+200C U+200D U+00A0 U+FEFF.
+Do not overuse bold - max two bolded phrases per paragraph. No bold-first bullet spam (**Key:** Value).
+Limit colons in prose to formal definitions. Keep semicolons rare.
 
 ---
 
@@ -130,22 +82,15 @@ Semicolons should be rare: if two clauses can stand alone, use a period.
 Never output or commit host drive letters (C:\, F:\) or user profiles (Users/, /home/).
 Always use generic placeholders (/path/to/<project>, ~/.config/<tool>/) or relative paths.
 Never mix forward and backward slashes in paths; use / universally.
-Maintain hermetic project isolation: never leak private tools, MCP names, internal APIs,
-or sibling project names from the host environment into repository files or commits.
-Never expose authentication tokens (ghp_, sk-, bearer) or connection strings with passwords.
-Commit message hygiene: never name leaked tokens, host paths, or private project names
-in commit messages or PR descriptions; describe removals generically.
+Maintain hermetic project isolation: never leak private tools, MCP names, internal APIs, or sibling project names into repository files or commits.
+Never expose authentication tokens (ghp_, sk-, bearer) or connection strings with passwords. Describe credential removals generically in commit messages.
 
 ---
 
 ## precision-output: Grounded Verification & Integrity Gates
 
-Never assert a file, class, method, function, parameter, or config key exists without verifying it in the current session.
-Three epistemic states - state them explicitly:
-- Known: Grounded in source code read in this session.
-- Inferred: Framed as deduction ("Based on X, Y is likely Z").
-- Uncertain: Marked as unverified ("Unverified - check documentation").
-No phantom APIs: cross-check all external imports and methods against project manifests.
+Never assert a file, class, method, function, parameter, or config key exists without verifying it in the current session. Read source or list directory before asserting.
+Epistemic states (Known / Inferred / Uncertain) apply here too - see steel-mind: Epistemic Integrity above.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.
 
@@ -153,9 +98,9 @@ Calibrate blast radius: stop and ask when uncertain on destructive or high-impac
 
 ## quench: Repository & Ecosystem Invariants
 
-- **Canonical Source of Truth:** `skills/<name>/SKILL.md` is the canonical source of truth. Always edit skills first.
-- **Skill Frontmatter Hygiene:** Skills must only specify `name`, `version`, and `description`. Never include `trigger` in skill frontmatter (trigger is a rules-only field).
-- **Rules Extraction Invariant:** When a skill is created or modified, update `rules/AGENTS.md` with a compact, always-on summary.
-- **Adapter Parity Invariant:** Every skill must be synchronized across all 10 adapters (`adapters/cursor/`, `adapters/copilot/`, `adapters/kilo/`, `adapters/cline/`, `adapters/windsurf/`, `adapters/claude/`, `adapters/generic/`, `adapters/aider/`, `adapters/zed/`, `adapters/junie/`). Never allow adapter drift.
-- **Documentation & History:** Every change must be recorded in `CHANGELOG.md` and reflected in `README.md` and `INSTALL.md`.
-- **Hermetic Project Boundary:** Never reference external private tools or sibling projects in repository rules or documentation.
+- **Canonical Source of Truth:** `skills/<name>/SKILL.md`. Always edit skills first, then extract to rules.
+- **Skill Frontmatter:** Only `name`, `version`, `description`. Never include `trigger` (rules-only field).
+- **Rules Extraction:** When a skill changes, update `rules/AGENTS.md` with a compact always-on summary.
+- **Adapter Parity:** Sync every skill across all 11 adapters (antigravity, cursor, copilot, kilo, cline, windsurf, claude, generic, aider, zed, junie). Never allow adapter drift.
+- **Documentation:** Record every change in `CHANGELOG.md`; reflect in `README.md` and `INSTALL.md`.
+- **Hermetic Boundary:** Never reference external private tools or sibling projects in repository rules or documentation.

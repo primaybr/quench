@@ -3,6 +3,71 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.5.7] 2026-09-20
+
+### Fixed
+- Gate 2 (leakguard) false-positive calibration via real open-source corpus testing
+  (shadcn-ui/ui, fastai/fastai, cli/cli - 1,430 files scanned total):
+
+  **Private LAN IP address pattern** (`scripts/validate.py`):
+  - Previous regex `\b(?:192\.168\.|10\.|172\...)[\\d.]+` matched three-part semver
+    version strings (`10.0.0`, `10.4.14`) in `package.json` and `pnpm-lock.yaml`
+    files, producing 1,486 false positives in shadcn-ui alone.
+  - Fix: Rewrote the 10.x.y.z arm to require all four octets with per-octet range
+    validation (`0-255`). Also added a negative lookbehind for version-prefix
+    characters (`>=<~^'"@`) to suppress matches inside dependency version
+    constraints.
+  - The 192.168 and 172.16-31 arms also upgraded to four-octet form for consistency.
+
+  **Unix home directory path pattern**:
+  - `/home/runner/work` and `/Users/runner/work` appeared extensively in GitHub
+    Actions workflow testdata fixtures and CI log snapshots in the cli/cli repo,
+    generating 133 false positives. The `runner` user is an ephemeral GitHub Actions
+    CI agent, not a developer personal home directory.
+  - Fix: Added `/home/runner/` and `/Users/runner/` to `WHITELISTED_PATH_SUBSTRINGS`.
+
+<!-- leakguard:ignore-start -->
+- **True positive confirmed** during calibration: cli/cli `eval-prompts.yml` contains
+  `/Users/williammartin/work` (a real developer username) in 4 locations - correctly
+  flagged by the scanner as a genuine Unix home directory leak (not suppressed).
+<!-- leakguard:ignore-end -->
+
+### Changed
+- Token budget trim of `rules/AGENTS.md` and monolithic adapter files:
+  - `rules/AGENTS.md` reduced from 8,635 bytes to 6,293 bytes (~1,573 tokens, down from ~2,160).
+  - Trimmed: Context Economy verbosity, Structural Cadence illustrative parentheticals,
+    redundant precision-output epistemic state restatement (R-02 from adversarial analysis),
+    redundant phantom-API line (R-01).
+  - Applied same trims to: `adapters/antigravity/.agents/rules/AGENTS.md`,
+    `adapters/copilot/copilot-instructions.md`, `adapters/generic/system-prompt.md`,
+    `adapters/windsurf/.windsurfrules`.
+  - Adapters with compact modular format (aider) and adapter-specific concise form (claude) unchanged.
+
+### Test results
+- All 114 tests pass across all 6 suites (test_validate, test_cli_e2e, test_precommit_hooks,
+  test_packaging, test_action_yml, test_bootstrap_scripts) with zero regressions.
+- Fixed leakguard self-scan false positives: adversarial-test-suite.md intentional
+  bad-output fixtures (fake API keys, private tool names) and the CHANGELOG true-positive
+  citation now wrapped in leakguard:ignore-start/end blocks. These are test data, not leaks.
+
+---
+
+## [1.5.6] 2026-09-20
+
+### Added
+- Adversarial test suite document (`skills/precision-output/references/adversarial-test-suite.md`):
+  - 10 adversarial prompts (3 per skill discipline, plus an extra precision-output case given its blast radius).
+  - Full analysis per prompt: baseline LLM failure mode, firing Quench rule, and binary compliance test.
+  - Coverage gap analysis: 5 genuine gaps identified (G-01 through G-05) across cadence detection,
+    bold-first list monotony, path separator mixing, false agency in code review, and BOM write elicitation.
+  - Redundancy map: 4 rule overlaps identified as consolidation candidates for the next AGENTS.md trim.
+- Gap proposals added as commented TODO blocks to skill files:
+  - `skills/steel-mind/SKILL.md`: gaps G-01 (cadence self-check gate), G-04 (agency activation note),
+    and G-05 (BOM write quick test).
+  - `skills/plaincast/SKILL.md`: gap G-02 (bold-first bullet adversarial prompt proposal).
+
+---
+
 ## [1.5.5] 2026-09-20
 
 ### Added

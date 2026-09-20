@@ -150,7 +150,16 @@ FORBIDDEN_PATH_PATTERNS = [
     (re.compile(r'(?im)^(?:DB_PASSWORD|DATABASE_PASSWORD|SECRET_KEY|APP_KEY|JWT_SECRET|AUTH_SECRET)\s*=\s*(?!["\'"]?\s*$|["\']?<|["\']?your|["\']?change|["\']?placeholder)[^\s\n]{8,}'), '.env secret assignment bleed'),
 
     # Private/internal hostnames and IPs
-    (re.compile(r'\b(?:192\.168\.|10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.)[\d.]+(?::\d+)?(?:/\S+)?\b'), 'Private LAN IP address'),
+    # 10.x.y.z requires all four octets to avoid matching semver/version strings (e.g. 10.0.0 in package.json).
+    # Negative lookbehind for version-prefix chars (>=<~^'"@) prevents matches inside version constraints.
+    (re.compile(
+        r'(?<![>=<~^\'\"@])'
+        r'\b(?:'
+        r'10\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)'
+        r'|192\.168\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)'
+        r'|172\.(?:1[6-9]|2[0-9]|3[01])\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)'
+        r')(?::\d+)?(?:/\S+)?\b'
+    ), 'Private LAN IP address'),
     (re.compile(r'(?i)\b(?:localhost|127\.0\.0\.1):\d{4,5}/(?!path/|your-|example)[a-zA-Z0-9_-]{3,}\b'), 'Localhost URL with non-generic path'),
 
     # Cross-project context bleed & ungrounded private tools
@@ -171,6 +180,9 @@ WHITELISTED_PATH_SUBSTRINGS = [
     '~/.config/kilo/',
     '~/.gemini/config/',
     '~/.claude/',
+    # GitHub Actions ephemeral CI runner paths - not real user home directories
+    '/home/runner/',
+    '/Users/runner/',
 ]
 
 # ---------------------------------------------------------------------------
