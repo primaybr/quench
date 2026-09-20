@@ -15,6 +15,21 @@ and real lessons - not copied from generic prompt engineering guides.
 
 ---
 
+## The Hardening Difference
+
+AI coding assistants naturally drift into failure modes that degrade codebase hygiene, break automated pipelines, and leak environment identities. Quench targets these deterministic failure modes with paired negative constraints and positive replacements:
+
+| Failure Mode | Default LLM Behavior | Quench Hardened Behavior | Discipline |
+|---|---|---|---|
+| **Conversational Slop** | "Certainly! I'd be happy to help! That's a great question..." | Direct technical substance. Zero filler openers or sign-offs. | `steel-mind` |
+| **Phantom APIs** | Hallucinates non-existent methods under pressure. | Mandatory verify-before-assert. Explicit epistemic tagging (`Uncertain`). | `precision-output` |
+| **Character Corruption** | Outputs typographic curly quotes, em dashes, Unicode ellipsis. | Strictly standard ASCII keyboard boundary (straight quotes, hyphens, `...`). | `plaincast` |
+| **Encoding Traps** | Generates PowerShell `Set-Content -Encoding UTF8` (writes UTF-8 BOM). | Enforces `[System.IO.File]::WriteAllText` with no-BOM constructor. | `steel-mind` |
+| **Environment Leaks** | Leaks host paths, Windows drive letters, or secret tokens. | Neutralizes to generic placeholders (`/path/to/<project>`), redacts tokens. | `leakguard` |
+| **False Agency** | Claims software "tries", "wants", or "hopes" to execute logic. | Grounded causality: states literal execution, return values, or errors. | `steel-mind` |
+
+---
+
 ## Skills
 
 | Skill | Version | Description |

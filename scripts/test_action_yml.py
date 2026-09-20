@@ -83,6 +83,22 @@ def parse_simple_action_yaml(text: str) -> Dict[str, Any]:
                         else:
                             i += 1
                     data['inputs'] = inputs_map
+                elif key == 'branding':
+                    branding_map: Dict[str, Any] = {}
+                    while i < len(lines):
+                        bline = lines[i]
+                        bstripped = bline.strip()
+                        if not bstripped or bstripped.startswith('#'):
+                            i += 1
+                            continue
+                        bindent = len(bline) - len(bline.lstrip())
+                        if bindent == 0:
+                            break
+                        if bindent == 2 and ':' in bstripped:
+                            bk, bv = bstripped.split(':', 1)
+                            branding_map[bk.strip()] = bv.strip().strip("'\"")
+                        i += 1
+                    data['branding'] = branding_map
                 elif key == 'runs':
                     runs_map: Dict[str, Any] = {}
                     while i < len(lines):
@@ -356,6 +372,17 @@ class TestActionYaml(unittest.TestCase):
         self.assertEqual(list(fallback_parsed['inputs'].keys()), list(yaml_parsed['inputs'].keys()))
         self.assertEqual(fallback_parsed['runs']['using'], yaml_parsed['runs']['using'])
         self.assertEqual(len(fallback_parsed['runs']['steps']), len(yaml_parsed['runs']['steps']))
+        if 'branding' in yaml_parsed:
+            self.assertEqual(fallback_parsed.get('branding'), yaml_parsed.get('branding'))
+
+    def test_11_branding_metadata(self):
+        """action.yml must specify valid branding icon and color for GitHub Marketplace."""
+        self.assertIn('branding', self.parsed, "Missing 'branding' key for Marketplace listing")
+        branding = self.parsed['branding']
+        self.assertIn('icon', branding, "Missing 'icon' in branding metadata")
+        self.assertIn('color', branding, "Missing 'color' in branding metadata")
+        self.assertEqual(branding['icon'], 'shield')
+        self.assertIn(branding['color'], ['blue', 'purple', 'green', 'gray-dark', 'red'])
 
 
 if __name__ == '__main__':
