@@ -10,19 +10,23 @@ Adapter files for each tool are derived from both.
 
 ## Install Options by Experience Level
 
-### Option A - Fast automated CLI (Recommended)
+### Option A - Remote One-Liner or Global CLI (Fastest)
 
-Use the zero-dependency Quench CLI to configure rules and hooks in seconds:
+Install rules into any project in seconds without manual file copying:
 
 ```bash
-# Interactive mode (prompts for tool selection)
-python quench.py init --target /your-project
+# Linux / macOS remote one-liner
+curl -fsSL https://raw.githubusercontent.com/primaybr/quench/master/scripts/install.sh | bash -s -- --tool cursor
 
-# Direct install for a specific tool (e.g. Cursor)
-python quench.py init --tool cursor --target /your-project
+# Windows PowerShell remote one-liner
+irm https://raw.githubusercontent.com/primaybr/quench/master/scripts/install.ps1 | iex
 
-# Install all adapters and git validation hooks
-python quench.py init --tool all --hooks --target /your-project
+# Or install quench globally via pipx:
+pipx install git+https://github.com/primaybr/quench.git
+
+# Then initialize anywhere:
+quench init --tool cursor --target /your-project
+quench init --tool all --hooks --target /your-project
 ```
 
 ### Option B - Full plugin (recommended for Antigravity)

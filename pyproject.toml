@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quench"
+version = "1.5.5"
+description = "Zero-dependency AI agent rules and behavioral hardening toolkit"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "Quench Maintainers"}
+]
+keywords = [
+    "ai",
+    "agents",
+    "rules",
+    "skills",
+    "validation",
+    "hardening",
+    "cli"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = []
+
+[project.scripts]
+quench = "quench:main"
+
+[project.urls]
+Homepage = "https://github.com/primaybr/quench"
+Repository = "https://github.com/primaybr/quench"
+
+[tool.setuptools]
+py-modules = ["quench"]
+
+[tool.setuptools.package-data]
+"*" = [
+    "adapters/**/*",
+    "rules/**/*",
+    "skills/**/*",
+    ".githooks/*",
+    "scripts/*",
+]

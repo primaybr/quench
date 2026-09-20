@@ -1,0 +1,44 @@
+name: quench-action
+description: Run Quench defensive integrity harness (plaincast, leakguard, parity, hygiene) on repository files
+
+inputs:
+  target:
+    description: Target directory to scan
+    required: false
+    default: "."
+  fix:
+    description: Automatically fix plaincast typography and generic path leaks
+    required: false
+    default: "false"
+  paths-only:
+    description: Only check for path leaks and credentials
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python if not available
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Run quench check
+      shell: bash
+      run: |
+        TARGET="${{ inputs.target }}"
+        FIX="${{ inputs.fix }}"
+        PATHS_ONLY="${{ inputs.paths-only }}"
+
+        ARGS=()
+        if [ -n "$TARGET" ]; then
+          ARGS+=("--target" "$TARGET")
+        fi
+        if [ "$FIX" = "true" ] || [ "$FIX" = "True" ]; then
+          ARGS+=("--fix")
+        fi
+        if [ "$PATHS_ONLY" = "true" ] || [ "$PATHS_ONLY" = "True" ]; then
+          ARGS+=("--paths-only")
+        fi
+
+        python ${{ github.action_path }}/quench.py check "${ARGS[@]}"

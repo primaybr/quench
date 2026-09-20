@@ -95,31 +95,75 @@ When a skill changes, update rules/AGENTS.md to match.
 
 ## Installation
 
-### Quench CLI (Fastest - Recommended)
+### 1. Remote One-Liner (Zero-Clone)
 
-quench includes a zero-dependency CLI (`quench.py` or `scripts/quench.py`) to initialize, validate, update, and inspect rules across any repository:
+Install Quench rules directly into your current project without pre-cloning the repository:
+
+```bash
+# Linux / macOS
+curl -fsSL https://raw.githubusercontent.com/primaybr/quench/master/scripts/install.sh | bash -s -- --tool cursor
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/primaybr/quench/master/scripts/install.ps1 | iex
+```
+
+### 2. Global CLI (pipx / pip)
+
+Install `quench` as a global command on your system `$PATH`:
+
+```bash
+pipx install git+https://github.com/primaybr/quench.git
+# or within a cloned repository:
+pip install -e .
+```
+
+Once installed, use `quench` anywhere:
 
 ```bash
 # Interactive setup: choose an adapter from a numbered menu
-python quench.py init
+quench init
 
 # Direct adapter initialization in a project directory
-python quench.py init --tool cursor --target /path/to/project
+quench init --tool cursor --target /path/to/project
 
 # Install all adapters and git validation hooks
-python quench.py init --tool all --hooks --target /path/to/project
+quench init --tool all --hooks --target /path/to/project
 
 # Validate repository integrity across all 5 gates
-python quench.py check --target /path/to/project
+quench check --target /path/to/project
 
 # Validate and auto-fix fixable plaincast and path issues
-python quench.py check --fix --target /path/to/project
+quench check --fix --target /path/to/project
 
 # Inspect active adapters and git hooks status
-python quench.py status --target /path/to/project
+quench status --target /path/to/project
 
 # Refresh existing installed adapters to latest upstream versions
-python quench.py update --target /path/to/project
+quench update --target /path/to/project
+```
+
+### 3. Pre-Commit Framework Support
+
+If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/primaybr/quench
+    rev: v1.5.5
+    hooks:
+      - id: quench-check
+      - id: quench-commit-msg
+```
+
+### 4. Reusable GitHub Action
+
+Validate pull requests and commits in GitHub Actions CI using the official composite action:
+
+```yaml
+- name: Run Quench Validation
+  uses: primaybr/quench@master
+  with:
+    target: .
 ```
 
 ### Antigravity (native - recommended)

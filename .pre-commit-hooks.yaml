@@ -1,0 +1,15 @@
+- id: quench-check
+  name: quench-check
+  description: Run Quench 5-gate integrity engine against repository files
+  entry: python scripts/quench.py check
+  language: python
+  stages: [pre-commit]
+  pass_filenames: false
+  always_run: true
+
+- id: quench-commit-msg
+  name: quench-commit-msg
+  description: Validate commit message against plaincast typography and leakguard rules
+  entry: python scripts/validate.py --check-commit-msg
+  language: python
+  stages: [commit-msg]

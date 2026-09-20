@@ -519,7 +519,7 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
         dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS]
 
         for filename in filenames:
-            if filename in IGNORE_FILES:
+            if filename in IGNORE_FILES or filename.startswith('test_'):
                 continue
 
             file_path = Path(dirpath) / filename

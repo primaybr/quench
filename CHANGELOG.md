@@ -3,6 +3,30 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.5.5] 2026-09-20
+
+### Added
+- Official Pre-Commit Framework Support (`.pre-commit-hooks.yaml`):
+  - Integrates Quench into standard pre-commit workflows with `quench-check` and `quench-commit-msg` hooks.
+  - Added `scripts/test_precommit_hooks.py` validating manifest structure, hook definitions, and stage bindings.
+- Python Packaging & Global CLI (`pyproject.toml`):
+  - PEP 517 / PEP 621 packaging with `setuptools>=61.0` and zero runtime dependencies.
+  - Installs global `quench` command directly on system `$PATH` via `pipx install git+https://github.com/primaybr/quench.git` or `pip install -e .`.
+  - Refined `quench.py` to support module importing without circular namespace collisions.
+  - Added `scripts/test_packaging.py` testing packaging metadata, module loading, and CLI entrypoint wiring.
+- Reusable GitHub Action (`action.yml`):
+  - Composite action enabling external repositories to run Quench integrity scans with `uses: primaybr/quench@master`.
+  - Configurable inputs for `target`, `fix`, and `paths-only`.
+  - Added `scripts/test_action_yml.py` validating action schema, inputs, and composite execution steps.
+- Standalone Remote Bootstrap Installers (`scripts/install.sh`, `scripts/install.ps1`):
+  - Portable POSIX sh script supporting one-liner installation (`curl -fsSL ... | bash -s -- --tool cursor`).
+  - Native Windows PowerShell script written strictly in UTF-8 without BOM (`irm ... | iex`).
+  - Added `scripts/test_bootstrap_scripts.py` verifying argument handling, source discovery, and cross-platform installation behaviors.
+- Validation engine adjustments (`scripts/validate.py`):
+  - Automatically ignores `test_*.py` test suites during repository scans to prevent false positives on synthetic test fixtures.
+
+---
+
 ## [1.5.4] 2026-09-20
 
 ### Added

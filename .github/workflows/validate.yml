@@ -26,5 +26,17 @@ jobs:
       - name: Run E2E contributor sanity tests
         run: python scripts/test_cli_e2e.py -v
 
+      - name: Run pre-commit hook tests
+        run: python scripts/test_precommit_hooks.py -v
+
+      - name: Run packaging tests
+        run: python scripts/test_packaging.py -v
+
+      - name: Run GitHub Action tests
+        run: python scripts/test_action_yml.py -v
+
+      - name: Run bootstrap script tests
+        run: python scripts/test_bootstrap_scripts.py -v
+
       - name: Run full repository scan
         run: python scripts/validate.py
