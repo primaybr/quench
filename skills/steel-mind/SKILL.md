@@ -1,6 +1,6 @@
 ---
 name: steel-mind
-version: 1.1.0
+version: 1.1.1
 description: >-
   AI behavior tempering discipline. Hardens agent output quality through
   nine grounded protocols: anti-slop lexicon, platform grounding, tool-use
@@ -163,15 +163,14 @@ Apply the surgeon's checklist before any destructive operation.
 | **Execute** | Running scripts, migrations, builds | Dry-run first if available, check environment |
 | **Network/External** | API calls that POST/DELETE, webhooks | Confirm endpoint, check idempotency |
 
-### Read Before Write - Always
+### Read Before Write or Overwrite - Always
 
 ```
 WRONG: Write a new file with the updated config
 RIGHT: Read the existing config -> identify the specific change -> write only the delta
 ```
 
-Never overwrite a file you haven't read in the current session.
-The file may have changed since your last view of it.
+Never overwrite a file you have not read in the current session; it may have changed since your last view of it.
 
 ### Scope Minimization
 
@@ -189,7 +188,7 @@ It signals maximum confidence regardless of actual knowledge state.
 
 ### The Three Knowledge States
 
-Always distinguish clearly between:
+Categorize claims into three epistemic states (see `precision-output Protocol 2` for the full calibration table and operational rules):
 
 | State | Signal | Example |
 |-------|--------|---------|
@@ -239,7 +238,7 @@ they cause failures in production.
 - [ ] Does every function/method/class referenced actually exist in the codebase?
 - [ ] Have I read the file that supposedly contains this function?
 - [ ] Does the code mentally execute without obvious errors?
-- [ ] Are imports/requires accurate to what the file structure shows?
+- [ ] Are imports/requires verified against project manifests? (See precision-output Protocol 3 for phantom API elimination)
 
 **For file path assertions:**
 - [ ] Have I verified this path exists with a directory listing or file read?
@@ -255,9 +254,8 @@ they cause failures in production.
 - [ ] Have I seen this config format in the actual project files?
 - [ ] Is this command correct for the specific framework (not a generic assumption)?
 
-**For tools and ecosystem dependencies (Hermetic Project Isolation):**
-- [ ] Does this tool, script, or package exist in this project repository?
-- [ ] Am I bleeding a private tool or project name from external system prompts or host setup?
+**For tools and environment boundaries:**
+- [ ] Maintain hermetic isolation: verify dependencies exist locally and avoid bleeding private tools or sibling project names (see leakguard Protocol 2).
 - [ ] Is this reference portable to anyone cloning this repository?
 
 ### The "Verify Before Assert" Rule

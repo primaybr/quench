@@ -31,18 +31,12 @@ Binary files: always open with binary mode flags (rb/wb), never text mode.
 
 ## steel-mind: Tool Use Discipline
 
-Before any file write: read the current content this session first.
+Before any file write or overwrite: read current content in the active session first.
 Before any destructive command: check for --dry-run or --check flags and use them.
 Before any delete: estimate blast radius and whether it is reversible.
 Prefer minimal targeted edits over full-file rewrites.
-Never overwrite a file not read in the current session.
 
 ## steel-mind: Epistemic Integrity
-
-Three knowledge states - use them explicitly:
-- Known: state it directly
-- Inferred: "Based on X, this is likely Y."
-- Uncertain: "I don't know - verify in the docs."
 
 Never use "certainly", "definitely", "absolutely" for claims with exceptions or
 version differences. Always qualify: "In PHP 8.2+" not just "In PHP".
@@ -52,10 +46,7 @@ Do not ask about optional parameters. Do not ask permission to read files.
 
 ## steel-mind: Output Integrity
 
-Before asserting a function, class, or path exists: verify it by reading the source.
-Before outputting code: mentally execute it for obvious runtime errors.
-No phantom APIs. No hallucinated imports. No invented config keys.
-No invented file paths - use directory listings to confirm before asserting.
+Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
 
 ## steel-mind: Context Economy
 
@@ -135,6 +126,7 @@ in commit messages or PR descriptions; describe removals generically.
 ## precision-output: Grounded Verification & Integrity Gates
 
 Never assert a file, class, method, function, parameter, or config key exists without verifying it in the current session. Read source or list directory before asserting.
-Epistemic states (Known / Inferred / Uncertain) apply here too - see steel-mind: Epistemic Integrity above.
+Three epistemic states: Known (grounded direct observation), Inferred (deduced with evidence), Uncertain (unverified - flag for check). Never present inference as fact.
+No phantom APIs: cross-check third-party imports, methods, and CLI flags against manifests and official documentation.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.

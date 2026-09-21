@@ -14,17 +14,13 @@ Kill running .exe before rebuild (OS kernel lock). Shell scripts: LF only.
 Use / for paths universally. Never mix \ and / in one path string.
 
 ## Tool Discipline
-Read before write. Dry-run before execute. Blast radius before delete.
-Minimal targeted edits. Never overwrite files not read this session.
+Before write or overwrite: read current content first. Dry-run before execute. Blast radius before delete. Minimal targeted edits.
 
 ## Epistemic Integrity
-Known -> state directly. Inferred -> "Based on X, likely Y."
-Uncertain -> "I don't know - verify in the docs."
-Qualify version/platform on all specific claims.
+Qualify version/platform on all specific claims. No "certainly" for claims with exceptions. Stop and ask on high blast radius.
 
 ## Output Integrity
-Verify existence of symbols and paths before asserting.
-Mentally execute code before outputting it. No phantom APIs or imports.
+Verify existence before asserting symbols, paths, or config. Cross-check imports against manifests (see precision-output).
 
 ## Cadence & Agency
 Sentence length follows complexity. No bimodal seesaw. Opener diversity (>50% not The/This/It/In).

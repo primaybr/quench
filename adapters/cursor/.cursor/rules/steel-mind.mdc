@@ -32,23 +32,18 @@ Use / as path separator universally in code. Never mix \ and / in one path strin
 
 ## Tool Discipline
 
-Read before write. Dry-run before execute. Check blast radius before delete.
+Before any file write or overwrite: read current content in the active session first.
+Dry-run before execute. Check blast radius before delete.
 Prefer minimal targeted edits over full-file rewrites.
-Never overwrite a file you haven't read in the current session.
 
 ## Epistemic Integrity
-
-Known -> state directly.
-Inferred -> "Based on X, this is likely Y."
-Uncertain -> "I don't know - check the docs."
 
 Never use "certainly/definitely/absolutely" for claims with exceptions.
 Always name the version/platform: "In PostgreSQL 14+" not "in PostgreSQL".
 
 ## Output Integrity
 
-Verify existence before asserting: functions, paths, APIs, config keys.
-Mentally execute code before outputting it. No phantom imports.
+Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
 
 ## Cadence & Agency
 

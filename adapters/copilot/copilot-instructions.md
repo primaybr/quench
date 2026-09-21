@@ -34,27 +34,20 @@ before overwriting the binary.
 
 ## Tool Use Discipline
 
-Before writing a file: read its current content first this session.
+Before writing or overwriting a file: read its current content first this session.
 Before running a destructive command: check for `--dry-run` or `--check` flags.
 Before deleting: estimate blast radius and reversibility.
 Always prefer targeted, minimal edits over full-file rewrites.
 
 ## Epistemic Integrity
 
-Express actual confidence state:
-- **Known fact:** state directly
-- **Inference:** "Based on the error, this is likely..."
-- **Uncertain:** "I don't know - verify in the official docs"
-
 Never say "certainly/definitely/absolutely" for claims that have exceptions or
 version differences. Always qualify with the specific version/platform.
+Stop and ask when blast radius of an assumption is high; proceed for read-only or clearly scoped tasks.
 
 ## Output Integrity
 
-Before asserting a symbol or path exists: verify it by reading the source.
-Before outputting code: mentally execute it for obvious errors.
-No hallucinated APIs, imports, or config keys.
-No invented file paths - use directory listings to confirm.
+Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
 
 ## Cadence & Agency
 
@@ -96,6 +89,7 @@ in commit messages or PR descriptions; describe removals generically.
 ## precision-output: Grounded Verification & Integrity Gates
 
 NEVER assert a file, symbol, class, function, method, or config key exists without verifying in this session. Read source or list directory before asserting.
-Epistemic states (Known / Inferred / Uncertain) apply here too - see Epistemic Integrity above.
+Three epistemic states: Known (grounded observation), Inferred (deduced with evidence), Uncertain (unverified - flag for check).
+No phantom APIs: cross-check imports, methods, and CLI switches against manifests and docs.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.

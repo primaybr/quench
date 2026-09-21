@@ -35,10 +35,9 @@ PYPROJECT_PATH = REPO_ROOT / 'pyproject.toml'
 QUENCH_PY = REPO_ROOT / 'quench.py'
 
 if str(SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS_DIR))
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
+    sys.path.append(str(SCRIPTS_DIR))
+sys.path.insert(0, str(REPO_ROOT))
+sys.modules.pop('quench', None)
 import quench
 
 
@@ -96,13 +95,13 @@ class TestPackagingConfiguration(unittest.TestCase):
         self.assertEqual(build_system.get('build-backend'), 'setuptools.build_meta')
 
     def test_04_project_metadata(self):
-        """Project metadata table must define name, version 1.5.8, and zero dependencies."""
+        """Project metadata table must define name, version 1.6.0, and zero dependencies."""
         if tomllib is None:
             self.skipTest("tomllib not available")
 
         project = self.parsed.get('project', {})
         self.assertEqual(project.get('name'), 'quench')
-        self.assertEqual(project.get('version'), '1.5.8')
+        self.assertEqual(project.get('version'), '1.6.0')
         self.assertIn('description', project)
         self.assertGreater(len(project['description']), 0)
         self.assertEqual(project.get('readme'), 'README.md')
@@ -143,7 +142,7 @@ class TestPackagingConfiguration(unittest.TestCase):
         """Root quench module must import cleanly and expose main and metadata."""
         self.assertTrue(hasattr(quench, '__file__'), "quench module has no __file__ attribute")
         self.assertTrue(callable(getattr(quench, 'main', None)), "quench.main is not callable")
-        self.assertEqual(getattr(quench, '__version__', None), '1.5.8')
+        self.assertEqual(getattr(quench, '__version__', None), '1.6.0')
 
     def test_08_subcommand_execution_via_entrypoint(self):
         """Entrypoint logic must handle --version cleanly without error."""

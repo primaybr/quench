@@ -305,11 +305,11 @@ class TestQuenchCliE2E(unittest.TestCase):
             self.assertEqual(refreshed_content, source_content)
 
     def test_10_version_flag(self):
-        """quench --version displays 'quench 1.5.8'."""
+        """quench --version displays 'quench 1.6.0'."""
         cmd = [sys.executable, str(QUENCH_PY), '--version']
         res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
         self.assertEqual(res.returncode, 0)
-        self.assertIn("quench 1.5.8", res.stdout.strip())
+        self.assertIn("quench 1.6.0", res.stdout.strip())
 
 
 if __name__ == '__main__':

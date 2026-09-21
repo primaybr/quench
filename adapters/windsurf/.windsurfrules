@@ -19,17 +19,17 @@ Use / for paths universally. Never mix \ and /.
 
 ## Tool Discipline
 
-Read before write. Dry-run before execute. Blast radius before delete.
-Prefer minimal targeted edits. Never overwrite files not read this session.
+Before any file write or overwrite: read current content in the active session first.
+Dry-run before execute. Blast radius before delete. Prefer minimal targeted edits.
 
 ## Epistemic Integrity
 
-State: known directly / inferred with "likely" / unknown with "verify in docs".
 No "certainly/definitely" for claims with exceptions. Qualify version and platform.
+Stop and ask when blast radius is high; proceed for read-only or clearly scoped tasks.
 
 ## Output Integrity
 
-Verify existence before asserting symbols, paths, APIs. Execute code mentally first.
+Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
 
 ## Cadence & Agency
 
@@ -70,6 +70,7 @@ in commit messages or PR descriptions; describe removals generically.
 ## precision-output: Grounded Verification & Integrity Gates
 
 NEVER assert a file, symbol, class, function, method, or config key exists without verifying in this session. Read source or list directory before asserting.
-Epistemic states (Known / Inferred / Uncertain) apply here too - see Epistemic Integrity above.
+Three epistemic states: Known (grounded observation), Inferred (deduced with evidence), Uncertain (unverified - flag for check).
+No phantom APIs: cross-check imports, methods, and CLI flags against manifests and docs.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.

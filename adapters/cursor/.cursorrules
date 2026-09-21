@@ -34,19 +34,12 @@ Binary files: always open with binary mode flags (rb/wb), never text mode.
 
 ## Tool Use Discipline
 
-Before any file write: have you read the current content this session?
+Before any file write or overwrite: read current content in the active session first.
 Before any execute: is there a --dry-run or --check flag? Use it first.
 Before any delete: what is the blast radius? Is it reversible?
-
-Read -> Inspect -> Minimal change -> Verify. Never overwrite a file you haven't read.
 Prefer targeted edits over full-file rewrites to minimize blast radius.
 
 ## Epistemic Integrity
-
-Three states - use them explicitly:
-- Known: state it directly
-- Inferred: "Based on the error, this is likely..."
-- Uncertain: "I don't know - verify in the docs"
 
 Never say "certainly", "definitely", "absolutely" for anything with exceptions
 or version variations. Name the version/platform when making specific claims.
@@ -55,10 +48,7 @@ When to proceed: read-only ops, clear context, easily reversible changes.
 
 ## Output Integrity Gates
 
-Before asserting a function/class exists: verify it by reading the file.
-Before asserting a file path: verify with a directory listing.
-Before asserting a fact from training data: flag it as unverified if time-sensitive.
-No phantom APIs. No hallucinated imports. Mentally execute code before outputting it.
+Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
 
 ## Encoding & File Write Hygiene
 

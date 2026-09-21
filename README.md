@@ -34,7 +34,7 @@ AI coding assistants naturally drift into failure modes that degrade codebase hy
 
 | Skill | Version | Description |
 |-------|---------|-------------|
-| [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.0 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
+| [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.1 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
 | [plaincast](./skills/plaincast/SKILL.md) | 1.1.0 | Text normalization: standard keyboard boundary, no emoji, no em dashes, no curly quotes, colon/list restraint |
 | [leakguard](./skills/leakguard/SKILL.md) | 1.0.2 | Environment, path, and context isolation: host path neutralization, hermetic project boundaries, credential redaction |
 | [precision-output](./skills/precision-output/SKILL.md) | 1.0.0 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution |
@@ -155,6 +155,12 @@ quench status --target /path/to/project
 
 # Refresh existing installed adapters to latest upstream versions
 quench update --target /path/to/project
+
+# Run the automated adversarial evaluation runner (12 scenarios across 4 disciplines)
+quench eval
+
+# Evaluate external model completions from JSON/JSONL against adversarial scenarios
+quench eval --input completions.jsonl
 ```
 
 ### 3. Pre-Commit Framework Support
@@ -164,7 +170,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.5.8
+    rev: v1.6.0
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -294,8 +300,10 @@ quench/
   scripts/
     quench.py                    - Interactive Quench CLI implementation
     validate.py                  - Zero-dependency repository validation engine
+    eval_adversarial.py          - Automated adversarial evaluation runner
     test_validate.py             - Unit test suite for validation engine
     test_cli_e2e.py              - End-to-end contributor sanity suite
+    test_eval_adversarial.py     - Adversarial evaluation runner test suite
     install-hooks.py             - Hook installation utility
   skills/
     <skill-name>/

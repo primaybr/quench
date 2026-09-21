@@ -3,6 +3,44 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.6.0] 2026-09-21
+
+### Added
+- Automated Adversarial Evaluation Runner (`scripts/eval_adversarial.py` and `quench eval` CLI subcommand):
+  - Zero-dependency testing engine validating LLM completions against 12 canonical adversarial scenarios across all 4 disciplines:
+    - `steel-mind`: SM-01 (Sycophancy induction), SM-02 (Invented citations), SM-03 (Silver lining compulsion).
+    - `plaincast`: PC-01 (Emoji injection), PC-02 (Em dash and curly quotes), PC-03 (Unicode arrows and checkmarks).
+    - `leakguard`: LG-01 (Host drive paths), LG-02 (Private MCP tool bleed), LG-03 (Token exposure).
+    - `precision-output`: PO-01 (Phantom SDK methods), PO-02 (Unverified config keys), PO-03 (Hallucinated CLI flags).
+  - Built-in canonical fixtures:
+    - 12 failing baseline completions mirroring default LLM failure modes (100% failure detection).
+    - 12 hardened compliant completions satisfying 100% of binary compliance rules (12/12 pass rate).
+  - CLI `quench eval` with `--self-test` (default), `--input <path>` (supports JSON and JSONL completions), and `--json` for CI automation.
+  - Generates a clean ASCII scorecard detailing scenario IDs, disciplines, rule pass/total counts, and descriptions.
+- Comprehensive Evaluation Test Suite (`scripts/test_eval_adversarial.py`):
+  - 11 unit tests verifying scenario loading, baseline failure detection, compliant completion passes, rule violation messages, CLI invocations, and external file parsing.
+  - Overall test suite expanded from 115 to 126 tests with 100% pass rate.
+
+---
+
+## [1.5.9] 2026-09-21
+
+### Changed
+- Resolved Redundancy Map candidates (R-01 through R-04) from the Adversarial Test Suite:
+  - R-01 (`steel-mind` / `precision-output`): Consolidated phantom API and manifest cross-referencing to `precision-output` as the canonical owner; streamlined `steel-mind: Output Integrity` to a concise reference pointer.
+  - R-02 (`steel-mind` / `precision-output`): Consolidated duplicate definitions of the three epistemic states (Known, Inferred, Uncertain) to `precision-output`; `steel-mind: Epistemic Integrity` focuses cleanly on confidence calibration, version qualification, and blast-radius stop/proceed gating.
+  - R-03 (`steel-mind` / `leakguard`): Replaced redundant hermetic tool isolation checklist item in `steel-mind Protocol 5` with direct reference to `leakguard Protocol 2`.
+  - R-04 (`steel-mind`): Consolidated duplicate file read/overwrite invariants in `steel-mind: Tool Use Discipline` ("read before write" and "never overwrite unread files") into a single unified rule: `Before any file write or overwrite: read current content in the active session first.`
+- Token budget reduction:
+  - `rules/AGENTS.md` streamlined with tighter phrasing across all four disciplines.
+  - Synchronized all trims across all 11 adapters (antigravity, cursor, copilot, kilo, cline, windsurf, claude, generic, aider, zed, junie) maintaining strict adapter parity.
+- CLI & Packaging consistency:
+  - Aligned dual module attributes by defining `__version__ = "1.5.9"` across both `quench.py` and `scripts/quench.py`.
+  - Hardened `scripts/test_packaging.py` import precedence so root `quench.py` is tested deterministically under test runner discovery.
+  - Bumped project version to 1.5.9 in `pyproject.toml`, `scripts/quench.py`, `quench.py`, and test suites.
+
+---
+
 ## [1.5.8] 2026-09-20
 
 ### Added

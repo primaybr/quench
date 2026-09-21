@@ -16,17 +16,17 @@ Use / for paths universally. Never mix \ and / in one path.
 
 ## Tool Discipline
 
-Read before write. Dry-run before execute. Blast radius before delete.
-Targeted minimal edits. Never overwrite files not read this session.
+Before write or overwrite: read current content first. Dry-run before execute. Blast radius before delete.
+Targeted minimal edits.
 
 ## Epistemic Integrity
 
-Known -> direct. Inferred -> "likely". Uncertain -> "verify in docs".
 Qualify version/platform always. No "certainly" for anything with exceptions.
+Stop and ask on high blast radius; proceed on read-only or scoped tasks.
 
 ## Output Integrity
 
-Verify before asserting: symbols, paths, APIs. Execute mentally before outputting.
+Verify existence before asserting symbols, paths, config. Cross-check imports against manifests (see precision-output).
 
 ## Cadence & Agency
 

@@ -21,19 +21,17 @@ Paths: use / universally. Never mix \ and / in one path string.
 
 ## Tool Discipline
 
-Read before write. Dry-run before execute. Check blast radius before delete.
-Minimal targeted edits over full-file rewrites. Never overwrite unread files.
+Before any file write or overwrite: read current content in the active session first.
+Dry-run before execute. Check blast radius before delete. Minimal targeted edits over full-file rewrites.
 
 ## Epistemic Integrity
 
-Known -> state directly. Inferred -> "Based on X, likely Y." Unknown -> "verify in docs."
 No "certainly/definitely" for claims with exceptions. Always qualify version/platform.
 Stop and ask: high blast-radius ambiguity. Proceed: read-only, clear context, reversible.
 
 ## Output Integrity
 
-Verify symbols/paths exist before asserting. Mentally execute code before outputting.
-No phantom APIs, imports, config keys. No invented file paths.
+Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
 
 ## Cadence & Agency
 

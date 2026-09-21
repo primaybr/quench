@@ -7,6 +7,7 @@ Commands:
   quench check    Run the 5-gate Quench validation engine on any target directory.
   quench update   Update installed Quench rules/adapters from source templates.
   quench status   Inspect target directory for active adapters and git hooks.
+  quench eval     Run automated adversarial evaluation runner against 12 scenarios.
 """
 
 from __future__ import annotations
@@ -28,7 +29,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.5.8"
+VERSION = "quench 1.6.0"
+__version__ = "1.6.0"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -402,6 +404,24 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_eval(args: argparse.Namespace) -> int:
+    """Handle the 'quench eval' command."""
+    import eval_adversarial
+
+    eval_argv: List[str] = []
+    if args.input_path:
+        eval_argv.extend(['--input', args.input_path])
+    elif args.self_test:
+        eval_argv.append('--self-test')
+    else:
+        eval_argv.append('--self-test')
+
+    if args.json_output:
+        eval_argv.append('--json')
+
+    return eval_adversarial.main(eval_argv)
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build command line argument parser."""
     parser = argparse.ArgumentParser(
@@ -433,6 +453,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_status = subparsers.add_parser('status', aliases=['info'], help='Inspect target directory for Quench rules and hooks')
     p_status.add_argument('-d', '--target', default='.', help='Target project directory (default: current dir)')
 
+    # eval
+    p_eval = subparsers.add_parser('eval', help='Run automated adversarial evaluation runner against 12 scenarios')
+    p_eval.add_argument('--self-test', action='store_true', default=False, help='Run built-in baseline and compliant fixtures (default)')
+    p_eval.add_argument('--input', dest='input_path', help='Path to JSON/JSONL completions file to evaluate')
+    p_eval.add_argument('--json', dest='json_output', action='store_true', help='Output machine-readable JSON results')
+
     return parser
 
 
@@ -458,6 +484,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return cmd_update(args)
     elif args.command in ('status', 'info'):
         return cmd_status(args)
+    elif args.command == 'eval':
+        return cmd_eval(args)
     else:
         parser.print_help()
         return 0

@@ -10,14 +10,13 @@ PowerShell UTF-8 no BOM: New-Object System.Text.UTF8Encoding $false. Quick-test:
 Kill .exe before rebuild. Shell scripts LF only. Use / for paths universally.
 
 ## Tool Discipline
-Read before write. Dry-run before execute. Blast radius before delete. Minimal edits.
+Before write or overwrite: read current content first. Dry-run before execute. Blast radius before delete. Minimal edits.
 
 ## Epistemic Integrity
-Known direct. Inferred "likely". Uncertain "verify in docs".
-Qualify version/platform. No "certainly" for claims with exceptions.
+Qualify version/platform. No "certainly" for claims with exceptions. Stop and ask on high blast radius.
 
 ## Output Integrity
-Verify symbols and paths before asserting. Mentally execute code before outputting.
+Verify existence before asserting symbols, paths, or config. Cross-check imports against manifests (see precision-output).
 
 ## Cadence & Agency
 Vary sentence length naturally. No bimodal seesaw. Opener diversity (>50% not The/This/It/In).

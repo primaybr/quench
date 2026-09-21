@@ -45,18 +45,12 @@ CRLF (`\r\n`) on Linux causes silent failures - the `\r` becomes part of the com
 
 ## 3. Tool Use Discipline
 
-Before writing any file: read its current content first.
+Before writing or overwriting any file: read its current content first this session.
 Before any destructive command: check for `--dry-run` or `--check` flags.
 Before any delete: estimate blast radius and whether it is reversible.
 Prefer minimal, targeted edits over full-file rewrites.
-Never overwrite a file you haven't read in the current session.
 
 ## 4. Epistemic Integrity
-
-Distinguish clearly between three knowledge states:
-- **Known:** State it directly.
-- **Inferred:** "Based on the error, this is likely X."
-- **Uncertain:** "I don't know - verify in the official docs."
 
 Never use "certainly", "definitely", "absolutely" for claims that have
 exceptions, version differences, or platform variations.
@@ -65,12 +59,12 @@ Always qualify claims with the specific version or platform:
 - Wrong: "In PHP, use `->` for object access."
 - Right: "In PHP 8.x, use `->` for object access and `::` for static."
 
+Stop and ask when blast radius is high; proceed for read-only or clearly scoped tasks.
+
 ## 5. Output Integrity Gates
 
-Before asserting a function, class, or method exists: verify it in the source.
-Before asserting a file path: confirm it with a directory listing.
-Before outputting code: mentally execute it for obvious errors.
-No phantom APIs. No hallucinated imports. No invented config keys.
+Verify existence before asserting symbols, paths, or config keys.
+Cross-check imports against manifests (see section 11: precision-output).
 
 ## 6. Context Economy
 

@@ -31,17 +31,12 @@ Binary files must use binary mode (rb/wb). Never open binary files in text mode.
 
 ## Tool Discipline
 
-Read before write - always inspect current state first.
+Before any file write or overwrite: read current content in the active session first.
 Dry-run before execute - use --dry-run or --check when available.
 Blast radius before delete - estimate scope and reversibility.
 Prefer minimal targeted edits over full-file rewrites.
-Never assert a file or symbol exists without verifying it first.
 
 ## Epistemic Integrity
-
-Known -> state directly.
-Inferred -> prefix with "Based on X, this is likely Y."
-Uncertain -> "I don't know - verify in the docs."
 
 Never use "certainly/definitely/absolutely" for claims with exceptions.
 Qualify all claims with version and platform: "In PHP 8.2+" not "In PHP".
@@ -50,9 +45,7 @@ Proceed without asking for read-only, reversible, or clearly-scoped operations.
 
 ## Output Integrity
 
-Before asserting any function, path, or API exists: verify it.
-Before outputting code: mentally execute it for obvious runtime errors.
-No phantom imports. No hallucinated config keys. No invented file paths.
+Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
 Quantitative claims without a source must be marked as estimates.
 
 ## Encoding
@@ -103,6 +96,7 @@ in commit messages or PR descriptions; describe removals generically.
 ## precision-output: Grounded Verification & Integrity Gates
 
 NEVER assert a file, symbol, class, function, method, or config key exists without verifying in this session. Read source or list directory before asserting.
-Epistemic states (Known / Inferred / Uncertain) apply here too - see Epistemic Integrity above.
+Three epistemic states: Known (grounded observation), Inferred (deduced with evidence), Uncertain (unverified - flag for check).
+No phantom APIs: cross-check third-party imports, methods, and CLI flags against manifests and official docs.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.
