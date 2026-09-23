@@ -21,27 +21,27 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Set up Python if not available
+    - name: Install Python 3.11
       uses: actions/setup-python@v5
       with:
         python-version: "3.11"
 
     - name: Run quench check
       shell: bash
+      env:
+        INPUT_TARGET: ${{ inputs.target }}
+        INPUT_FIX: ${{ inputs.fix }}
+        INPUT_PATHS_ONLY: ${{ inputs.paths-only }}
       run: |
-        TARGET="${{ inputs.target }}"
-        FIX="${{ inputs.fix }}"
-        PATHS_ONLY="${{ inputs.paths-only }}"
-
         ARGS=()
-        if [ -n "$TARGET" ]; then
-          ARGS+=("--target" "$TARGET")
+        if [ -n "$INPUT_TARGET" ]; then
+          ARGS+=("--target" "$INPUT_TARGET")
         fi
-        if [ "$FIX" = "true" ] || [ "$FIX" = "True" ]; then
+        if [ "$INPUT_FIX" = "true" ] || [ "$INPUT_FIX" = "True" ]; then
           ARGS+=("--fix")
         fi
-        if [ "$PATHS_ONLY" = "true" ] || [ "$PATHS_ONLY" = "True" ]; then
+        if [ "$INPUT_PATHS_ONLY" = "true" ] || [ "$INPUT_PATHS_ONLY" = "True" ]; then
           ARGS+=("--paths-only")
         fi
 
-        python ${{ github.action_path }}/quench.py check "${ARGS[@]}"
+        python "${{ github.action_path }}/quench.py" check "${ARGS[@]}"

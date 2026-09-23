@@ -106,17 +106,23 @@ TAXONOMY_EXEMPTIONS = {
 
 FORBIDDEN_PATH_PATTERNS = [
     # Literal workspace drives or user home folders
-    (re.compile(r'(?<![A-Za-z0-9_])[a-zA-Z]:[/\\]quench\b', re.IGNORECASE), 'Hardcoded local workspace drive path'),
-    (re.compile(r'[a-zA-Z]:[/\\]Users[/\\][A-Za-z0-9_.-]+[/\\]', re.IGNORECASE), 'Windows user profile absolute path'),
-    (re.compile(r'/(?:home|Users)/[A-Za-z0-9_.-]+/(?:projects|work|quench|code)', re.IGNORECASE), 'Unix home directory absolute path'),
+    # Two-segment pattern: catches drive-letter paths with at least two directory levels.
+    # The whitelist for C:/path/... and C:/new/file.txt prevents doc example FPs.
+    (re.compile(r'(?<![A-Za-z0-9_])[a-zA-Z]:[/\\](?!path[/\\]|new[/\\])[A-Za-z0-9_.-]+[/\\][A-Za-z0-9_.-]', re.IGNORECASE), 'Hardcoded local workspace drive path'),
+    # Single-segment drive-root workspace at end of token, e.g. a bare project-name-only path.
+    (re.compile(r'(?<![A-Za-z0-9_])[a-zA-Z]:[/\\](?!path\b|new\b)[A-Za-z][A-Za-z0-9_.-]{2,}(?=["\'\\s,;]|$)', re.IGNORECASE | re.MULTILINE), 'Hardcoded local workspace drive path'),
+    # Windows user profile: matches drive:\Users\name with or without trailing separator.
+    (re.compile(r'[a-zA-Z]:[/\\]Users[/\\][A-Za-z0-9_.-]+(?:[/\\]|$)', re.IGNORECASE | re.MULTILINE), 'Windows user profile absolute path'),
+    # Unix home: matches /home/<user>/subpath or /Users/<user>/subpath at any depth; CI runner paths whitelisted separately.
+    (re.compile(r'/(?:home|Users)/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]', re.IGNORECASE), 'Unix home directory absolute path'),
 
     # GitHub tokens
     (re.compile(r'\bghp_[A-Za-z0-9]{36}\b'), 'GitHub Personal Access Token'),
     (re.compile(r'\bgithub_pat_[A-Za-z0-9_]{82}\b'), 'GitHub Fine-grained PAT'),
 
-    # AI / LLM API keys
-    (re.compile(r'\bsk-[A-Za-z0-9_-]{20,}\b'), 'OpenAI/LLM secret key (sk- prefix)'),
+    # AI / LLM API keys - specific prefix first, then generic (avoids double-reporting sk-ant-)
     (re.compile(r'\bsk-ant-[A-Za-z0-9_-]{20,}\b'), 'Anthropic API key'),
+    (re.compile(r'\bsk-(?!ant-)[A-Za-z0-9_-]{20,}\b'), 'OpenAI/LLM secret key (sk- prefix)'),
 
     # AWS credentials
     (re.compile(r'\bAKIA[A-Z0-9]{16}\b'), 'AWS Access Key ID'),
@@ -348,6 +354,16 @@ _PATH_AUTOFIX_PATTERNS = {
     'Unix home directory absolute path',
 }
 
+# Patterns that describe path or host references (not secrets).
+# The whitelist is consulted ONLY for these - never for secret/token patterns.
+_PATH_PATTERN_DESCS = {
+    'Hardcoded local workspace drive path',
+    'Windows user profile absolute path',
+    'Unix home directory absolute path',
+    'Private LAN IP address',
+    'Localhost URL with non-generic path',
+}
+
 
 def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto_fix: bool = False) -> Optional[str]:
     """Gate 2: Detect environment path leaks and local credentials.
@@ -374,14 +390,18 @@ def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto
         if in_ignore_block or '<!-- leakguard:ignore-line -->' in line:
             continue
 
-        # Skip whitelisted sample illustrations in documentation
-        if any(w in line for w in WHITELISTED_PATH_SUBSTRINGS):
-            continue
+        # Skip whitelisted sample illustrations in documentation (only for path-type patterns;
+        # secret/token patterns always run regardless of whitelist matches on the line).
+        line_is_whitelisted = any(w in line for w in WHITELISTED_PATH_SUBSTRINGS)
 
         for pattern, desc in FORBIDDEN_PATH_PATTERNS:
+            is_path_type = desc in _PATH_PATTERN_DESCS
+            is_path_violation = desc in _PATH_AUTOFIX_PATTERNS
+            # Whitelist only suppresses path/host patterns, not secret patterns
+            if is_path_type and line_is_whitelisted:
+                continue
             for match in pattern.finditer(line):
                 matched_str = match.group(0)
-                is_path_violation = desc in _PATH_AUTOFIX_PATTERNS
                 violation_msg = f"Potential local path or secret leak: {desc}"
                 if auto_fix and not is_path_violation:
                     violation_msg += ' (manual rotation required)'
@@ -428,9 +448,46 @@ def validate_encoding_and_endings(path: Path, raw_bytes: bytes, report: Validati
                 break
 
 
-def validate_skill_frontmatter(path: Path, content: str, report: ValidationReport):
-    """Gate 4: Verify skill SKILL.md YAML frontmatter format and fields."""
+def _is_quench_repo(root: Path) -> bool:
+    """Return True only when root is the quench repository itself.
+
+    Prevents the parity gate and strict skills schema from triggering in
+    other people's repos that happen to have an adapters/ or skills/ directory.
+    """
+    return (
+        (root / 'rules' / 'AGENTS.md').exists()
+        and (root / 'skills' / 'plaincast' / 'SKILL.md').exists()
+    )
+
+
+def validate_skill_frontmatter(path: Path, content: str, report: ValidationReport, quench_repo: bool = False):
+    """Gate 4: Verify skill SKILL.md YAML frontmatter format and fields.
+
+    When quench_repo=True (scanning the quench repo itself), all three fields
+    name/version/description are required and version must be SemVer.
+    In external repos only name and description are required, matching the
+    standard Claude Code / Antigravity skill format.
+
+    Skills inside hidden tool dirs (.claude, .cursor, etc.) are exempted entirely
+    from structural validation; only the trigger-key prohibition still applies.
+    """
     if not path.name == 'SKILL.md' or 'skills' not in path.parts:
+        return
+
+    # Skills inside third-party tool config dirs use their own schemas
+    EXEMPT_PARENTS = {'.claude', '.cursor', '.kilo', '.cline', '.junie', 'node_modules'}
+    if any(part in EXEMPT_PARENTS for part in path.parts):
+        # Still parse enough to flag the trigger key
+        content_lower = content
+        if 'trigger:' in content_lower:
+            lines_check = content.splitlines()
+            for lidx, lline in enumerate(lines_check, 1):
+                if re.match(r'^\s*trigger\s*:', lline):
+                    report.add(Violation(
+                        'skills', path, lidx, 1,
+                        "Prohibited frontmatter key 'trigger' found (trigger is rules-only; skills use progressive disclosure)"
+                    ))
+                    break
         return
 
     lines = content.splitlines()
@@ -457,12 +514,13 @@ def validate_skill_frontmatter(path: Path, content: str, report: ValidationRepor
             key, val = match.groups()
             fm_dict[key.strip()] = val.strip()
 
-    # Check required fields
-    for req in ['name', 'version', 'description']:
+    # version is mandatory only in the quench repo; external skills need only name + description
+    required_fields = ['name', 'version', 'description'] if quench_repo else ['name', 'description']
+    for req in required_fields:
         if req not in fm_dict:
             report.add(Violation('skills', path, 1, 1, f"Missing required frontmatter key: '{req}'"))
 
-    # Check prohibited fields
+    # Check prohibited fields (universal)
     if 'trigger' in fm_dict:
         report.add(Violation(
             'skills',
@@ -472,7 +530,7 @@ def validate_skill_frontmatter(path: Path, content: str, report: ValidationRepor
             "Prohibited frontmatter key 'trigger' found (trigger is rules-only; skills use progressive disclosure)"
         ))
 
-    # Check SemVer
+    # Check SemVer (only relevant when version field is expected)
     if 'version' in fm_dict:
         ver = fm_dict['version']
         if not re.match(r'^\d+\.\d+\.\d+$', ver):
@@ -480,9 +538,12 @@ def validate_skill_frontmatter(path: Path, content: str, report: ValidationRepor
 
 
 def validate_adapter_parity(root: Path, report: ValidationReport):
-    """Gate 3: Ensure all 11 adapters exist and represent active skills."""
-    # Gate 3 parity check applies to Quench repository source tree
-    if not (root / 'adapters').exists():
+    """Gate 3: Ensure all 11 adapters exist and represent active skills.
+
+    This gate only runs when scanning the quench repo itself. It must not
+    fire in other repos that happen to have a directory named adapters/.
+    """
+    if not _is_quench_repo(root):
         return
 
     # 1. Verify existence of all adapter files
@@ -518,13 +579,50 @@ def validate_adapter_parity(root: Path, report: ValidationReport):
 # Main Scan Coordinator
 # ---------------------------------------------------------------------------
 
-TEXT_EXTENSIONS = {'.md', '.mdc', '.json', '.jsonc', '.txt', '.py', '.sh', '.yml', '.yaml'}
+TEXT_EXTENSIONS = {
+    # Markup / Docs
+    '.md', '.mdc', '.mdx', '.txt', '.rst', '.adoc',
+    # Data / Config
+    '.json', '.jsonc', '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf', '.xml', '.env',
+    # Web
+    '.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte',
+    '.html', '.htm', '.css', '.scss', '.sass',
+    # Backend
+    '.php', '.rb', '.go', '.java', '.kt', '.kts', '.cs', '.py', '.dart', '.rs', '.swift',
+    # Shell / CI
+    '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
+    # Infra
+    '.tf', '.hcl',
+}
+
+# Filenames with no suffix (or dotfiles) that must always be scanned
+NO_SUFFIX_SCAN_NAMES: Set[str] = {
+    'Dockerfile', 'Makefile', 'Procfile',
+    'pre-commit', 'commit-msg',
+    '.cursorrules', '.windsurfrules',
+}
+
 IGNORE_DIRS = {'.git', '__pycache__', '.pytest_cache', '.vscode', '.idea', 'venv', 'env', 'node_modules', '.kilo', 'worktrees'}
-IGNORE_FILES = {'test_validate.py', 'test_cli_e2e.py'}
+# Only skip quench's own test suite files; do NOT use startswith('test_') - that silences
+# test_*.py/js/php files in target repos, which may legitimately contain secrets.
+IGNORE_FILES = {'test_validate.py', 'test_cli_e2e.py', 'test_eval_adversarial.py', 'test_packaging.py'}
+
+
+def _should_scan(filename: str, suffix: str) -> bool:
+    """Return True if the file should be read and passed through the gates."""
+    if suffix in TEXT_EXTENSIONS:
+        return True
+    if filename in NO_SUFFIX_SCAN_NAMES:
+        return True
+    # .env.local, .env.production, .env.test etc.
+    if filename.startswith('.env'):
+        return True
+    return False
 
 
 def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool = False) -> ValidationReport:
     report = ValidationReport()
+    is_quench = _is_quench_repo(root)
 
     # Run adapter parity check first
     if not check_paths_only:
@@ -536,14 +634,14 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
         dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS]
 
         for filename in filenames:
-            if filename in IGNORE_FILES or filename.startswith('test_'):
+            if filename in IGNORE_FILES:
                 continue
 
             file_path = Path(dirpath) / filename
             rel_path = file_path.relative_to(root)
+            suffix = file_path.suffix.lower()
 
-            # Skip binaries / non-text files
-            if file_path.suffix.lower() not in TEXT_EXTENSIONS and filename not in {'pre-commit', '.windsurfrules', '.cursorrules'}:
+            if not _should_scan(filename, suffix):
                 continue
 
             report.files_scanned += 1
@@ -578,7 +676,7 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
                     file_path.write_text(fixed_content, encoding='utf-8', newline='\n')
 
                 # Gate 4: Skill Frontmatter
-                validate_skill_frontmatter(rel_path, content, report)
+                validate_skill_frontmatter(rel_path, content, report, quench_repo=is_quench)
 
     return report
 

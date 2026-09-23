@@ -1,6 +1,6 @@
 ---
 name: precision-output
-version: 1.0.0
+version: 1.0.1
 description: Hallucination prevention and output integrity discipline. Enforces verification-before-assertion gates, epistemic state calibration, and phantom API elimination across agent responses and code generation.
 ---
 

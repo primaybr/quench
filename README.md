@@ -37,7 +37,7 @@ AI coding assistants naturally drift into failure modes that degrade codebase hy
 | [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.1 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
 | [plaincast](./skills/plaincast/SKILL.md) | 1.1.0 | Text normalization: standard keyboard boundary, no emoji, no em dashes, no curly quotes, colon/list restraint |
 | [leakguard](./skills/leakguard/SKILL.md) | 1.0.2 | Environment, path, and context isolation: host path neutralization, hermetic project boundaries, credential redaction |
-| [precision-output](./skills/precision-output/SKILL.md) | 1.0.0 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution |
+| [precision-output](./skills/precision-output/SKILL.md) | 1.0.1 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution |
 
 ---
 
@@ -170,7 +170,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.6.0
+    rev: v1.6.1
     hooks:
       - id: quench-check
       - id: quench-commit-msg

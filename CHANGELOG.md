@@ -3,6 +3,27 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.6.1] 2026-09-23
+
+### Changed
+- **Skill Version Bump (`precision-output` v1.0.1):** Incremented `skills/precision-output/SKILL.md` and reference documentation to v1.0.1 following the addition of leakguard ignore markers in `skills/precision-output/references/adversarial-test-suite.md`. Updated skills table in `README.md`.
+
+### Fixed
+- **Issue 1 - File coverage too narrow:** `TEXT_EXTENSIONS` expanded to include PHP, JS/TS, Dart, Go, Ruby, Rust, Swift, Java, C#, CSS/SCSS, HTML, TOML, INI, XML, HCL, and shell variants. A new `NO_SUFFIX_SCAN_NAMES` set covers no-suffix files (Dockerfile, Makefile, Procfile, pre-commit, commit-msg). `.env.*` variants (`.env.local`, `.env.production`, `.env.test`) are matched via `startswith('.env')`. Previously `src/config.php` and `.env` files containing credentials were silently skipped.
+- **Issue 2 - `test_*` skip applied globally:** Removed the `filename.startswith('test_')` blanket skip from `scan_repository`. The explicit `IGNORE_FILES` set (covering only quench's own test suite files) is sufficient and no longer silences `test_helpers.php`, `test_config.js`, or any other target-repo test file that may legitimately contain secrets.
+- **Issue 3 - Whitelist silenced all patterns per line:** The line-level whitelist bypass in `validate_path_leaks` now scopes exclusively to path-type patterns (`Hardcoded local workspace drive path`, `Windows user profile absolute path`, `Unix home directory absolute path`, `Private LAN IP address`, `Localhost URL with non-generic path`). Secret and token patterns (GitHub PAT, `sk-`, Anthropic, AWS, Stripe, etc.) run unconditionally regardless of whitelisted path substrings appearing elsewhere on the same line.
+- **Issue 4 - Path detection too narrow:** Three path patterns widened:
+  - Drive-letter pattern now catches any two-segment absolute path (previously only `*:\quench` was matched). A second single-segment pattern catches bare workspace roots at end of token (e.g. `D:\quench`).
+  - Windows user profile pattern now accepts end-of-line as a valid terminator, catching user-profile paths that lack a trailing separator.
+  - Unix home pattern simplified from requiring specific suffix segments to matching any home-relative subdirectory path at any depth.
+- **Issue 5 - Parity gate triggered on any repo with `adapters/` dir:** Added `_is_quench_repo(root)` sentinel that checks for both `rules/AGENTS.md` and `skills/plaincast/SKILL.md`. The parity gate now returns early unless both are present, preventing 28 false violations in third-party repos with a directory named `adapters/`.
+- **Issue 6 - Skills gate rejected valid external skills:** `validate_skill_frontmatter` now accepts an optional `quench_repo` flag (passed from `scan_repository`). When `quench_repo=True`, all three fields (`name`, `version`, `description`) are required. In external repos, only `name` and `description` are required, matching standard Claude Code / Antigravity skill format. Skills inside `.claude`, `.cursor`, `.kilo`, `.cline`, `.junie`, or `node_modules` are fully exempted from structural validation; only the `trigger` key prohibition still applies universally.
+- **Issue 7 - `sk-ant-` keys reported twice:** Reordered `FORBIDDEN_PATH_PATTERNS` so the Anthropic-specific `sk-ant-` pattern precedes the generic `sk-` pattern. Added `(?!ant-)` negative lookahead to the generic pattern to prevent double-reporting when an Anthropic key is present.
+- **action.yml injection fix:** All three user inputs (`target`, `fix`, `paths-only`) are now passed through `env:` as `INPUT_TARGET`, `INPUT_FIX`, `INPUT_PATHS_ONLY` and read via environment variables in the run script. Direct `${{ inputs.* }}` interpolation inside `run:` is removed, closing a shell injection vector when untrusted data (branch names, PR titles) is passed as the `target` input. The Python setup step is renamed from "Set up Python if not available" to "Install Python 3.11" to accurately reflect that `actions/setup-python` always overrides the PATH.
+- **Adversarial test suite doc:** Added `<!-- leakguard:ignore-start/end -->` markers around the intentional bad-example paths in `skills/precision-output/references/adversarial-test-suite.md` so the tool does not flag its own illustrative LG-01 prompt examples.
+
+---
+
 ## [1.6.0] 2026-09-21
 
 ### Added

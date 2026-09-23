@@ -29,7 +29,7 @@ else:
         print("quench CLI: scripts/quench.py not found.")
         return 1
 
-__version__ = "1.6.0"
+__version__ = "1.6.1"
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -324,19 +324,21 @@ class TestActionYaml(unittest.TestCase):
         self.assertIsNotNone(quench_step, "Missing step executing quench.py check")
         run_text = quench_step['run']
 
-        # Verifying step command invokes python ${{ github.action_path }}/quench.py check
-        expected_cmd = 'python ${{ github.action_path }}/quench.py check'
+        # Verifying step command invokes python "${{ github.action_path }}/quench.py" check
+        expected_cmd = 'python "${{ github.action_path }}/quench.py" check'
         self.assertIn(
             expected_cmd, run_text,
             f"Expected command '{expected_cmd}' not found in run step:\n{run_text}"
         )
 
-        # Verifying inputs are referenced
-        self.assertIn('inputs.target', run_text, "Step command does not reference inputs.target")
-        self.assertIn('inputs.fix', run_text, "Step command does not reference inputs.fix")
-        self.assertIn('inputs.paths-only', run_text, "Step command does not reference inputs.paths-only")
+        # Inputs must be passed through env: for injection safety, not interpolated directly in run:
+        step_env = quench_step.get('env', {})
+        self.assertIn('INPUT_TARGET', step_env, "inputs.target must be mapped via env: as INPUT_TARGET")
+        self.assertIn('INPUT_FIX', step_env, "inputs.fix must be mapped via env: as INPUT_FIX")
+        self.assertIn('INPUT_PATHS_ONLY', step_env, "inputs.paths-only must be mapped via env: as INPUT_PATHS_ONLY")
 
-        # Verifying CLI flags are constructed
+        # Verifying CLI flags are constructed from env vars (not direct interpolation)
+        self.assertIn('INPUT_TARGET', run_text, "Step command does not use $INPUT_TARGET")
         self.assertIn('--target', run_text, "Step command does not pass --target flag")
         self.assertIn('--fix', run_text, "Step command does not handle --fix flag")
         self.assertIn('--paths-only', run_text, "Step command does not handle --paths-only flag")
