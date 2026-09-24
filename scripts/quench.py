@@ -29,8 +29,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.6.2"
-__version__ = "1.6.2"
+VERSION = "quench 1.6.3"
+__version__ = "1.6.3"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -273,9 +273,24 @@ def install_git_hooks(quench_root: Path, target: Path, force: bool = False) -> T
     return len(installed), installed
 
 
+def _refuse_source_repo(target: Path, command: str) -> bool:
+    """Return True (after printing why) if target is the quench source repo itself.
+
+    The source repo's CLAUDE.md and kilo.jsonc read rules/AGENTS.md live. Copying
+    adapter templates over them would replace live rules with a stale snapshot.
+    """
+    if target.resolve() != REPO_ROOT.resolve():
+        return False
+    print(f"Refusing 'quench {command}' on the quench source repo: its CLAUDE.md and kilo.jsonc "
+          "load rules/AGENTS.md live and need no copies. Target another project directory.")
+    return True
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     """Handle the 'quench init' command."""
     target = Path(args.target).resolve()
+    if _refuse_source_repo(target, 'init'):
+        return 1
     target.mkdir(parents=True, exist_ok=True)
     tool = args.tool
 
@@ -340,6 +355,8 @@ def cmd_update(args: argparse.Namespace) -> int:
     target = Path(args.target).resolve()
     if not target.exists():
         print(f"Error: Target path does not exist: {target}")
+        return 1
+    if _refuse_source_repo(target, 'update'):
         return 1
 
     print(f"Checking for installed Quench adapters in: {target}")

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  // Dogfooding: Kilo reads the live rules from this repo, so rule edits apply
+  // to the next session with no copy to refresh. Global instructions still load first.
+  "instructions": [
+    "rules/AGENTS.md"
+  ]
+}

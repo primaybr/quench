@@ -23,6 +23,9 @@ $RECYCLE.BIN/
 *.log
 logs/
 
+# Personal agent instructions (CLAUDE.md is shared and committed; this one is not)
+CLAUDE.local.md
+
 # Temp / scratch
 *.tmp
 *.bak

@@ -3,6 +3,16 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.6.3] 2026-09-24
+
+### Added
+- **Dogfooding - agent rules:** The repo root now has a `CLAUDE.md` (Claude Code) that imports `rules/AGENTS.md` with `@rules/AGENTS.md`, and a `kilo.jsonc` (Kilo) whose `instructions` point at `rules/AGENTS.md`. Both read the rules live, so rule edits apply to the next session with no copy to refresh, the same way the Antigravity plugin entry reads the repo directly.
+- **Dogfooding - CI runs the published Action:** `validate.yml` now runs `uses: ./` on the repo (must pass) and on a fixture containing a configured private term (must fail), so `action.yml` and its `private-terms` input are tested end to end.
+
+### Changed
+- **`quench init` / `quench update` refuse the quench source repo:** Run on the source repo itself, they would overwrite the live `CLAUDE.md` / `kilo.jsonc` with stale adapter copies. They now exit with an explanation.
+- **`.gitignore`:** Ignores `CLAUDE.local.md`, Claude Code's per-user instruction file, so personal instructions are never committed next to the shared `CLAUDE.md`.
+
 ## [1.6.2] 2026-09-24
 
 ### Fixed

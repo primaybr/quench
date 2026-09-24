@@ -40,3 +40,30 @@ jobs:
 
       - name: Run full repository scan
         run: python scripts/validate.py
+
+      # Dogfooding: run the published composite Action (action.yml) the way users do.
+      - name: Run quench Action on this repo
+        uses: ./
+        with:
+          target: .
+
+      # The Action must fail on a leak. The private-term fixture also proves the
+      # private-terms input reaches the scanner. It is built outside the workspace.
+      - name: Create leaking fixture
+        run: |
+          mkdir -p "$RUNNER_TEMP/quench-leaky"
+          printf 'Look up cached data with hushcache_search first.\n' > "$RUNNER_TEMP/quench-leaky/CONTRIBUTING.md"
+
+      - name: Run quench Action on the leaking fixture
+        id: action_negative
+        continue-on-error: true
+        uses: ./
+        with:
+          target: ${{ runner.temp }}/quench-leaky
+          private-terms: hushcache
+
+      - name: Assert the Action rejected the fixture
+        if: steps.action_negative.outcome != 'failure'
+        run: |
+          echo "::error::quench Action passed a fixture containing a configured private term"
+          exit 1
