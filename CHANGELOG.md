@@ -3,7 +3,7 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
-## [Unreleased]
+## [1.8.0] 2026-09-24 - Automatic Releases & Self-Updating Global Install
 
 ### Added
 - **Automatic releases:** `.github/workflows/release.yml` runs when a `vX.Y.Z` tag is pushed. It checks the tag against the `pyproject.toml` version and requires a matching `CHANGELOG.md` section (`scripts/release_notes.py`, 9 tests in `scripts/test_release_notes.py`), runs the full test suite, moves the floating major tag (`v1`) to the release commit, and publishes the GitHub Release with that section as notes. An optional `- Title` after the date in the section heading becomes the release title. An existing release for the tag is left unchanged.

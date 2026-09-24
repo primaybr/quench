@@ -173,7 +173,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.7.0
+    rev: v1.8.0
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -190,7 +190,7 @@ Validate pull requests and commits in GitHub Actions CI using the official compo
     target: .
 ```
 
-`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.7.0`) if you want fully reproducible CI.
+`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.8.0`) if you want fully reproducible CI.
 
 Violations are reported as `::error` annotations, so they appear inline on the PR diff. With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes.
 
@@ -249,7 +249,7 @@ session. It is silent otherwise, gives up after a short timeout when offline, ne
 blocks a session, and never touches a clone with local edits. Opt out with
 `quench update --global --no-auto-update` (which also removes the hook).
 
-Options: `--ref v1.7.0` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
+Options: `--ref v1.8.0` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
 moves the clone, `--no-claude` updates the clone only.
 
 Run `/memory` in a new session to confirm the import is listed, and `/skills` to
