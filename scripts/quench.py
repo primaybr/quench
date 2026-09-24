@@ -6,6 +6,7 @@ Commands:
   quench init     Initialize quench in any project repository.
   quench check    Run the 5-gate Quench validation engine on any target directory.
   quench update   Update installed Quench rules/adapters from source templates.
+                  With --global: follow the latest release in ~/.quench and wire Claude Code.
   quench status   Inspect target directory for active adapters and git hooks.
   quench eval     Run automated adversarial evaluation runner against 12 scenarios.
 """
@@ -14,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -29,8 +31,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.6.3"
-__version__ = "1.6.3"
+VERSION = "quench 1.7.0"
+__version__ = "1.7.0"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -350,8 +352,170 @@ def cmd_check(args: argparse.Namespace) -> int:
         return 1
 
 
+# ---------------------------------------------------------------------------
+# Global install: a stable clone that follows a release tag, wired into Claude Code
+# ---------------------------------------------------------------------------
+
+DEFAULT_REPO_URL = 'https://github.com/primaybr/quench'
+DEFAULT_GLOBAL_REF = 'v1'
+GLOBAL_IMPORT_RE = re.compile(r'^@(?P<path>.+[/\\]rules[/\\]AGENTS\.md)\s*$')
+
+
+def _default_global_home() -> Path:
+    return Path(os.environ.get('QUENCH_HOME') or (Path.home() / '.quench'))
+
+
+def _default_claude_dir() -> Path:
+    # Claude Code honours CLAUDE_CONFIG_DIR; fall back to ~/.claude
+    return Path(os.environ.get('CLAUDE_CONFIG_DIR') or (Path.home() / '.claude'))
+
+
+def _git(args: List[str], cwd: Optional[Path] = None) -> subprocess.CompletedProcess:
+    return subprocess.run(['git', *args], cwd=str(cwd) if cwd else None,
+                          capture_output=True, text=True, encoding='utf-8', errors='replace')
+
+
+def _same_path(a: str, b: Path) -> bool:
+    a = a[4:] if a.startswith('\\\\?\\') else a  # Windows junction targets may carry \\?\
+    return os.path.normcase(os.path.abspath(a)) == os.path.normcase(os.path.abspath(str(b)))
+
+
+def _link_target(path: Path) -> Optional[str]:
+    """Return where a symlink or Windows junction points, or None if path is not a link."""
+    is_junction = getattr(os.path, 'isjunction', lambda _p: False)(path)
+    if path.is_symlink() or is_junction:
+        try:
+            return os.readlink(path)
+        except OSError:
+            return None
+    return None
+
+
+def _make_dir_link(link: Path, target: Path) -> None:
+    """Create a directory link: a junction on Windows (no admin needed), a symlink elsewhere."""
+    if os.name == 'nt':
+        res = subprocess.run(['cmd', '/c', 'mklink', '/J', str(link), str(target)],
+                             capture_output=True, text=True)
+        if res.returncode != 0:
+            raise OSError(res.stderr.strip() or res.stdout.strip())
+    else:
+        os.symlink(target, link, target_is_directory=True)
+
+
+def _sync_global_clone(home: Path, repo_url: str, ref: str) -> Tuple[bool, str]:
+    """Clone or update the stable clone at home and check out ref. Returns (ok, message)."""
+    if not (home / '.git').exists():
+        if home.exists() and any(home.iterdir()):
+            return False, f"{home} exists and is not a git clone; move it or pass --home."
+        home.parent.mkdir(parents=True, exist_ok=True)
+        res = _git(['clone', '--quiet', repo_url, str(home)])
+        if res.returncode != 0:
+            return False, f"git clone failed: {res.stderr.strip()}"
+    else:
+        dirty = _git(['status', '--porcelain', '--untracked-files=no'], cwd=home)
+        if dirty.returncode != 0:
+            return False, f"{home} is not a usable git clone: {dirty.stderr.strip()}"
+        if dirty.stdout.strip():
+            return False, (f"{home} has local changes; refusing to overwrite them. "
+                           "Commit, stash or discard them, then run again.")
+        # --force moves floating tags such as v1 to their new release commit
+        res = _git(['fetch', '--quiet', '--tags', '--force', 'origin'], cwd=home)
+        if res.returncode != 0:
+            return False, f"git fetch failed: {res.stderr.strip()}"
+
+    res = _git(['-c', 'advice.detachedHead=false', 'checkout', '--quiet', '--detach', ref], cwd=home)
+    if res.returncode != 0:
+        return False, f"git checkout {ref} failed: {res.stderr.strip()}"
+    # Name the exact release (v1.6.3), not the floating tag (v1) that points at it
+    exact = _git(['describe', '--tags', '--exact-match', '--match', 'v[0-9]*.[0-9]*.[0-9]*'], cwd=home)
+    if exact.returncode == 0:
+        return True, exact.stdout.strip()
+    return True, _git(['describe', '--tags', '--always'], cwd=home).stdout.strip()
+
+
+def _wire_claude_rules(home: Path, claude_dir: Path) -> str:
+    """Make ~/.claude/CLAUDE.md import home/rules/AGENTS.md, without touching other content."""
+    rules = home / 'rules' / 'AGENTS.md'
+    claude_md = claude_dir / 'CLAUDE.md'
+    text = claude_md.read_text(encoding='utf-8') if claude_md.exists() else ''
+    for line in text.splitlines():
+        m = GLOBAL_IMPORT_RE.match(line.strip())
+        if m:
+            if _same_path(os.path.expanduser(m.group('path')), rules):
+                return f"rules: already imported in {claude_md}"
+            return (f"rules: {claude_md} already imports quench rules from {m.group('path')}; "
+                    "left unchanged (edit that line to switch to the stable clone)")
+    claude_dir.mkdir(parents=True, exist_ok=True)
+    # Prefer a ~/ path: it is what Claude Code documents for home imports, and it keeps
+    # spaces in the user folder name (common on Windows) out of the import line.
+    try:
+        import_path = '~/' + rules.resolve().relative_to(Path.home().resolve()).as_posix()
+    except ValueError:
+        import_path = rules.as_posix()
+    warning = ''
+    if ' ' in import_path:
+        warning = f" (warning: the path contains a space; if /memory does not list it, move the clone with --home)"
+    block = ("\n# quench rules (managed by 'quench update --global')\n"
+             f"@{import_path}\n")
+    with open(claude_md, 'a', encoding='utf-8', newline='\n') as f:
+        f.write(block if text.endswith('\n') or not text else '\n' + block)
+    return f"rules: added import of {import_path} to {claude_md}{warning}"
+
+
+def _wire_claude_skills(home: Path, claude_dir: Path) -> List[str]:
+    """Link each home/skills/<name> into claude_dir/skills/<name>; never replace real folders."""
+    skills_dir = claude_dir / 'skills'
+    skills_dir.mkdir(parents=True, exist_ok=True)
+    notes = []
+    for skill in sorted(p for p in (home / 'skills').iterdir() if (p / 'SKILL.md').is_file()):
+        link = skills_dir / skill.name
+        current = _link_target(link)
+        if current is not None and _same_path(current, skill):
+            notes.append(f"skill {skill.name}: already linked")
+            continue
+        if current is not None:
+            notes.append(f"skill {skill.name}: {link} links to {current}; left unchanged")
+            continue
+        if link.exists():
+            notes.append(f"skill {skill.name}: {link} is a real folder; left unchanged")
+            continue
+        try:
+            _make_dir_link(link, skill)
+            notes.append(f"skill {skill.name}: linked")
+        except OSError as e:
+            notes.append(f"skill {skill.name}: could not link ({e})")
+    return notes
+
+
+def cmd_update_global(args: argparse.Namespace) -> int:
+    """Handle 'quench update --global': follow a release tag and wire Claude Code to it."""
+    home = Path(args.home).expanduser().resolve() if args.home else _default_global_home().resolve()
+    claude_dir = Path(args.claude_dir).expanduser() if args.claude_dir else _default_claude_dir()
+
+    print(f"Updating global quench clone: {home} (ref {args.ref})")
+    ok, message = _sync_global_clone(home, args.repo, args.ref)
+    if not ok:
+        print(f"Error: {message}")
+        return 1
+    print(f"  checked out: {message}")
+
+    if args.no_claude:
+        return 0
+    if not (home / 'rules' / 'AGENTS.md').is_file() or not (home / 'skills').is_dir():
+        print(f"Error: {home} has no rules/AGENTS.md or skills/; is --repo a quench repository?")
+        return 1
+    print(f"Wiring Claude Code: {claude_dir}")
+    print(f"  {_wire_claude_rules(home, claude_dir)}")
+    for note in _wire_claude_skills(home, claude_dir):
+        print(f"  {note}")
+    print("\nDone. New Claude Code sessions use this release; re-run after each release to update.")
+    return 0
+
+
 def cmd_update(args: argparse.Namespace) -> int:
     """Handle the 'quench update' command."""
+    if getattr(args, 'global_', False):
+        return cmd_update_global(args)
     target = Path(args.target).resolve()
     if not target.exists():
         print(f"Error: Target path does not exist: {target}")
@@ -472,6 +636,15 @@ def build_parser() -> argparse.ArgumentParser:
     # update
     p_update = subparsers.add_parser('update', help='Update existing installed adapters from source templates')
     p_update.add_argument('-d', '--target', default='.', help='Target project directory (default: current dir)')
+    p_update.add_argument('--global', dest='global_', action='store_true',
+                          help='Update the stable global clone (default ~/.quench or $QUENCH_HOME) to the '
+                               'latest release and wire it into Claude Code (~/.claude)')
+    p_update.add_argument('--ref', default=DEFAULT_GLOBAL_REF,
+                          help=f'With --global: tag or branch to follow (default: {DEFAULT_GLOBAL_REF}, the latest 1.x release)')
+    p_update.add_argument('--home', help='With --global: location of the stable clone')
+    p_update.add_argument('--repo', default=DEFAULT_REPO_URL, help='With --global: repository to clone')
+    p_update.add_argument('--claude-dir', help='With --global: Claude Code config dir (default ~/.claude or $CLAUDE_CONFIG_DIR)')
+    p_update.add_argument('--no-claude', action='store_true', help='With --global: update the clone only')
 
     # status / info
     p_status = subparsers.add_parser('status', aliases=['info'], help='Inspect target directory for Quench rules and hooks')

@@ -3,6 +3,15 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.7.0] 2026-09-24
+
+### Fixed
+- **Repo-only invariants shipped to users:** The "Repository & Ecosystem Invariants" section (adapter parity, skill version bumps, CHANGELOG updates) was part of `rules/AGENTS.md` and the Antigravity adapter, so `quench init` copied quench's own maintenance rules into user projects. It now lives in a new root `AGENTS.md` that is not shipped; the repo's `CLAUDE.md` imports it and Kilo loads it automatically.
+
+### Added
+- **`quench update --global`:** Keeps a stable clone (default `~/.quench`, or `$QUENCH_HOME` / `--home`) on the `v1` tag, so it follows the latest 1.x release rather than `master`, and wires it into Claude Code: an import of `rules/AGENTS.md` in `~/.claude/CLAUDE.md` and one link per skill in `~/.claude/skills/` (a symlink, or a junction on Windows). Safe to re-run: existing `CLAUDE.md` content, an import from another clone, real skill folders and links to other clones are left unchanged, and a clone with local edits is refused. `--ref` pins another tag, `--no-claude` updates the clone only, `--claude-dir` (or `$CLAUDE_CONFIG_DIR`) targets another config dir. Covered by `scripts/test_update_global.py` (13 tests, run in CI). Imports under the user's home are written as `@~/...`, which keeps spaces in the user folder name (common on Windows) out of the import line, and the command reports the exact release (`v1.7.0`), not the floating `v1` tag.
+- **README: Claude Code global setup:** Recommends `quench update --global` (release-following) for users, and documents pointing `~/.claude` at a working clone for people developing quench.
+
 ## [1.6.3] 2026-09-24
 
 ### Added

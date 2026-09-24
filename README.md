@@ -156,6 +156,9 @@ quench status --target /path/to/project
 # Refresh existing installed adapters to latest upstream versions
 quench update --target /path/to/project
 
+# Follow the latest release globally and wire it into Claude Code (~/.quench, ~/.claude)
+quench update --global
+
 # Run the automated adversarial evaluation runner (12 scenarios across 4 disciplines)
 quench eval
 
@@ -170,7 +173,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.6.3
+    rev: v1.7.0
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -187,7 +190,7 @@ Validate pull requests and commits in GitHub Actions CI using the official compo
     target: .
 ```
 
-`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.6.3`) if you want fully reproducible CI.
+`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.7.0`) if you want fully reproducible CI.
 
 Violations are reported as `::error` annotations, so they appear inline on the PR diff. With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes.
 
@@ -221,6 +224,54 @@ This registers quench as an Antigravity plugin. On every session:
 
 Copy the `.agents/` structure or reference quench via `plugins.json` at the
 project root. See [INSTALL.md](./INSTALL.md) for full per-tool instructions.
+
+### Claude Code (global)
+
+**Recommended: follow the latest release.** One command keeps a stable clone in
+`~/.quench` on the `v1` tag (the latest 1.x release) and wires it into Claude Code
+for every project:
+
+```bash
+quench update --global
+```
+
+It clones quench on first run (later runs fetch the moved `v1` tag), adds an
+import of `~/.quench/rules/AGENTS.md` to `~/.claude/CLAUDE.md` for the always-on rules, and
+links each skill into `~/.claude/skills/` for the full protocols on demand. Re-run
+it after each release to update. It is safe to repeat: existing `CLAUDE.md` content,
+real skill folders and links to other clones are left unchanged, and a clone with
+local edits is refused rather than overwritten.
+
+Options: `--ref v1.7.0` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
+moves the clone, `--no-claude` updates the clone only.
+
+Run `/memory` in a new session to confirm the import is listed, and `/skills` to
+confirm the four skills.
+
+**Developing quench? Point at your working clone instead.** Claude Code then reads
+your checkout directly, so uncommitted edits apply to every project from the next
+session (useful for dogfooding, but a broken edit affects all projects too):
+
+```markdown
+<!-- ~/.claude/CLAUDE.md -->
+@/path/to/quench/rules/AGENTS.md
+```
+
+Claude Code only discovers skills one level deep, so link each skill, not the parent folder:
+
+```bash
+# Linux / macOS
+for s in steel-mind plaincast leakguard precision-output; do
+  ln -s /path/to/quench/skills/$s ~/.claude/skills/$s
+done
+```
+
+```powershell
+# Windows (directory junctions need no admin rights)
+foreach ($s in 'steel-mind','plaincast','leakguard','precision-output') {
+  New-Item -ItemType Junction -Path "$HOME\.claude\skills\$s" -Target "C:\path\to\quench\skills\$s"
+}
+```
 
 ### Other AI tools
 

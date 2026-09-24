@@ -38,6 +38,9 @@ jobs:
       - name: Run bootstrap script tests
         run: python scripts/test_bootstrap_scripts.py -v
 
+      - name: Run global update tests
+        run: python scripts/test_update_global.py -v
+
       - name: Run full repository scan
         run: python scripts/validate.py
 

@@ -93,14 +93,3 @@ Three epistemic states: Known (grounded direct observation), Inferred (deduced w
 No phantom APIs: cross-check third-party imports, methods, and CLI flags against manifests and official documentation.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.
-
----
-
-## quench: Repository & Ecosystem Invariants
-
-- **Canonical Source of Truth:** `skills/<name>/SKILL.md`. Always edit skills first, then extract to rules.
-- **Skill Frontmatter:** Only `name`, `version`, `description`. Never include `trigger` (rules-only field).
-- **Rules Extraction:** When a skill changes, update `rules/AGENTS.md` with a compact always-on summary.
-- **Adapter Parity:** Sync every skill across all 11 adapters (antigravity, cursor, copilot, kilo, cline, windsurf, claude, generic, aider, zed, junie). Never allow adapter drift.
-- **Skill Versioning & Documentation:** Whenever modifying any skill, always increment its frontmatter `version` (`skills/<name>/SKILL.md`), record the changes in `CHANGELOG.md`, and update version tables in `README.md`.
-- **Hermetic Boundary:** Never reference external private tools or sibling projects in repository rules or documentation.
