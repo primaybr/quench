@@ -3,6 +3,15 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [Unreleased]
+
+### Added
+- **Automatic releases:** `.github/workflows/release.yml` runs when a `vX.Y.Z` tag is pushed. It checks the tag against the `pyproject.toml` version and requires a matching `CHANGELOG.md` section (`scripts/release_notes.py`, 9 tests in `scripts/test_release_notes.py`), runs the full test suite, moves the floating major tag (`v1`) to the release commit, and publishes the GitHub Release with that section as notes. An optional `- Title` after the date in the section heading becomes the release title. An existing release for the tag is left unchanged.
+- **Automatic updates for `quench update --global`:** The command now also installs a Claude Code `SessionStart` hook in `~/.claude/settings.json`. At session start it checks at most once a day (`QUENCH_AUTO_UPDATE_INTERVAL` seconds to change) whether the followed tag moved and updates the clone, printing one line only when a new release was installed. It uses a 20-second fetch timeout, never prompts for credentials, always exits 0 so a session is never blocked, and skips a clone with local edits. Other settings and hooks are preserved, and an unparseable `settings.json` is left unchanged. `--no-auto-update` removes the hook. The hook is not installed, and any existing one is removed, when the checked-out release does not support it, because an older CLI would reject the hook's arguments with exit code 2, which blocks sessions. Covered by 8 new tests in `scripts/test_update_global.py` (21 in total).
+
+### Changed
+- **Repo invariants (`AGENTS.md`):** Documents the tag-driven release process and that `v1` is moved only by the release workflow.
+
 ## [1.7.0] 2026-09-24
 
 ### Fixed

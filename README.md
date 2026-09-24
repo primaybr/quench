@@ -237,10 +237,17 @@ quench update --global
 
 It clones quench on first run (later runs fetch the moved `v1` tag), adds an
 import of `~/.quench/rules/AGENTS.md` to `~/.claude/CLAUDE.md` for the always-on rules, and
-links each skill into `~/.claude/skills/` for the full protocols on demand. Re-run
-it after each release to update. It is safe to repeat: existing `CLAUDE.md` content,
-real skill folders and links to other clones are left unchanged, and a clone with
-local edits is refused rather than overwritten.
+links each skill into `~/.claude/skills/` for the full protocols on demand. It is
+safe to repeat: existing `CLAUDE.md` content, real skill folders and links to other
+clones are left unchanged, and a clone with local edits is refused rather than overwritten.
+
+**New releases install automatically.** The command also adds a Claude Code
+`SessionStart` hook to `~/.claude/settings.json`. When a session starts, the hook
+checks at most once a day whether `v1` has moved and, if so, updates the clone; you
+see one line ("quench updated to vX.Y.Z") and the new rules apply from the next
+session. It is silent otherwise, gives up after a short timeout when offline, never
+blocks a session, and never touches a clone with local edits. Opt out with
+`quench update --global --no-auto-update` (which also removes the hook).
 
 Options: `--ref v1.7.0` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
 moves the clone, `--no-claude` updates the clone only.

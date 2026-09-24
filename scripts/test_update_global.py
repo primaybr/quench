@@ -29,8 +29,9 @@ def write(path: Path, text: str):
     path.write_text(text, encoding='utf-8', newline='\n')
 
 
-@unittest.skipUnless(shutil.which('git'), "git not available")
-class TestUpdateGlobal(unittest.TestCase):
+class _GlobalFixture:
+    """A throwaway quench-like source repo tagged v1, plus empty clone and Claude dirs."""
+
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix='quench-global-')).resolve()
         self.src = self.tmp / 'src'
@@ -61,6 +62,16 @@ class TestUpdateGlobal(unittest.TestCase):
 
     def import_line(self) -> str:
         return '@~/home/rules/AGENTS.md'
+
+
+@unittest.skipUnless(shutil.which('git'), "git not available")
+class TestUpdateGlobal(_GlobalFixture, unittest.TestCase):
+    def test_hook_not_installed_when_release_lacks_auto_update(self):
+        # This fixture's clone has no scripts/quench.py, like a release older than the feature
+        res = self.run_update()
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        self.assertIn("auto-update: not available", res.stdout)
+        self.assertFalse((self.claude / 'settings.json').exists())
 
     def test_import_uses_absolute_path_outside_home(self):
         other_home = self.tmp / 'elsewhere'
@@ -166,6 +177,108 @@ class TestUpdateGlobal(unittest.TestCase):
         res = self.run_update('--ref', 'v99')
         self.assertEqual(res.returncode, 1)
         self.assertIn("checkout v99 failed", res.stdout)
+
+
+@unittest.skipUnless(shutil.which('git'), "git not available")
+class TestAutoUpdateHook(_GlobalFixture, unittest.TestCase):
+    """The SessionStart hook that installs new releases automatically."""
+
+    def setUp(self):
+        super().setUp()
+        # A clone whose CLI supports --auto (this repo's current scripts)
+        (self.src / 'scripts').mkdir()
+        for name in ('quench.py', 'validate.py'):
+            shutil.copy(SCRIPTS_DIR / name, self.src / 'scripts' / name)
+        git('add', '-A', cwd=self.src)
+        git('commit', '-q', '-m', 'cli', cwd=self.src)
+        git('tag', '-f', 'v1', cwd=self.src)
+
+    def settings(self) -> dict:
+        import json
+        return json.loads((self.claude / 'settings.json').read_text(encoding='utf-8'))
+
+    def our_hooks(self):
+        entries = self.settings().get('hooks', {}).get('SessionStart', [])
+        return [h for e in entries for h in e['hooks'] if 'update --global --auto' in h['command']]
+
+    def run_auto(self, interval='0'):
+        env = dict(os.environ, QUENCH_AUTO_UPDATE_INTERVAL=interval)
+        cmd = [sys.executable, str(self.home / 'scripts' / 'quench.py'), 'update', '--global', '--auto',
+               '--home', str(self.home)]
+        return subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', env=env)
+
+    def release(self, text):
+        write(self.src / 'rules' / 'AGENTS.md', text)
+        git('commit', '-q', '-am', text.strip(), cwd=self.src)
+        git('tag', '-f', 'v1', cwd=self.src)
+
+    def test_hook_installed_once_and_settings_preserved(self):
+        import json
+        write(self.claude / 'settings.json', json.dumps({
+            'theme': 'dark',
+            'hooks': {'SessionStart': [{'hooks': [{'type': 'command', 'command': 'echo mine'}]}]}}))
+        self.run_update()
+        res = self.run_update()
+        self.assertIn("auto-update: already enabled", res.stdout)
+        self.assertEqual(self.settings()['theme'], 'dark')
+        self.assertEqual(len(self.our_hooks()), 1)
+        commands = [h['command'] for e in self.settings()['hooks']['SessionStart'] for h in e['hooks']]
+        self.assertIn('echo mine', commands)
+        self.assertIn(f'--home "{self.home.as_posix()}"', self.our_hooks()[0]['command'])
+
+    def test_no_auto_update_removes_only_our_hook(self):
+        import json
+        write(self.claude / 'settings.json', json.dumps({'theme': 'dark'}))
+        self.run_update()
+        res = self.run_update('--no-auto-update')
+        self.assertIn("auto-update: disabled", res.stdout)
+        self.assertEqual(self.settings(), {'theme': 'dark'})
+
+    def test_invalid_settings_left_unchanged(self):
+        write(self.claude / 'settings.json', "{ not json")
+        res = self.run_update()
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        self.assertIn("could not parse", res.stdout)
+        self.assertEqual((self.claude / 'settings.json').read_text(encoding='utf-8'), "{ not json")
+
+    def test_hook_command_runs_and_installs_new_release(self):
+        self.run_update()
+        self.release("# rules v1.1\n")
+        cmd = self.our_hooks()[0]['command']
+        env = dict(os.environ, QUENCH_AUTO_UPDATE_INTERVAL='0')
+        # shell=True on purpose: this checks the exact command string Claude Code hands to a
+        # shell. It is built only from this test's own temp paths, so there is no untrusted input.
+        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding='utf-8', errors='replace', env=env)
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        self.assertIn("quench updated to", res.stdout)
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1.1\n")
+
+    def test_auto_is_silent_when_nothing_changed(self):
+        self.run_update()
+        res = self.run_auto()
+        self.assertEqual((res.returncode, res.stdout), (0, ''))
+
+    def test_auto_is_throttled(self):
+        self.run_update()
+        self.run_auto()                     # stamps the check
+        self.release("# rules v1.2\n")
+        res = self.run_auto(interval='3600')
+        self.assertEqual(res.stdout, '')
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1\n")
+        res = self.run_auto(interval='0')
+        self.assertIn("quench updated to", res.stdout)
+
+    def test_auto_never_fails_the_session(self):
+        self.run_update()
+        git('remote', 'set-url', 'origin', str(self.tmp / 'gone'), cwd=self.home)
+        res = self.run_auto()
+        self.assertEqual((res.returncode, res.stdout), (0, ''))
+        write(self.home / 'rules' / 'AGENTS.md', "# local edit\n")   # dirty clone
+        git('remote', 'set-url', 'origin', str(self.src), cwd=self.home)
+        self.release("# rules v1.3\n")
+        res = self.run_auto()
+        self.assertEqual((res.returncode, res.stdout), (0, ''))
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# local edit\n")
 
 
 if __name__ == '__main__':

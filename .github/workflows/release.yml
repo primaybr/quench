@@ -1,0 +1,70 @@
+name: Release
+
+# Pushing a version tag (git tag v1.7.1 && git push origin v1.7.1) publishes the release:
+# it checks the tag matches pyproject.toml, runs the tests, moves the floating major
+# tag (v1) to this commit, and creates the GitHub Release from the CHANGELOG section.
+# Moving v1 does not re-trigger this workflow: only vX.Y.Z tags match, and pushes made
+# with GITHUB_TOKEN never start new workflow runs.
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check tag, version and CHANGELOG
+        env:
+          TAG: ${{ github.ref_name }}
+        run: python scripts/release_notes.py "$TAG" --notes-out "$RUNNER_TEMP/notes.md" --title-out "$RUNNER_TEMP/title.txt"
+
+      - name: Run tests
+        run: |
+          for t in test_validate test_cli_e2e test_precommit_hooks test_packaging test_action_yml \
+                   test_bootstrap_scripts test_eval_adversarial test_update_global test_release_notes; do
+            python "scripts/$t.py"
+          done
+          python scripts/validate.py
+
+      - name: Move floating major tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          MAJOR="${TAG%%.*}"
+          git tag -f "$MAJOR" "$GITHUB_SHA"
+          git push -f origin "refs/tags/$MAJOR"
+          echo "Moved $MAJOR to $GITHUB_SHA"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; leaving it unchanged."
+          else
+            gh release create "$TAG" --verify-tag --latest \
+              --title "$(cat "$RUNNER_TEMP/title.txt")" \
+              --notes-file "$RUNNER_TEMP/notes.md"
+          fi

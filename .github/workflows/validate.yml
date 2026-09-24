@@ -41,6 +41,9 @@ jobs:
       - name: Run global update tests
         run: python scripts/test_update_global.py -v
 
+      - name: Run release helper tests
+        run: python scripts/test_release_notes.py -v
+
       - name: Run full repository scan
         run: python scripts/validate.py
 

@@ -14,12 +14,14 @@ Commands:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shutil
 import stat
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -370,8 +372,10 @@ def _default_claude_dir() -> Path:
     return Path(os.environ.get('CLAUDE_CONFIG_DIR') or (Path.home() / '.claude'))
 
 
-def _git(args: List[str], cwd: Optional[Path] = None) -> subprocess.CompletedProcess:
-    return subprocess.run(['git', *args], cwd=str(cwd) if cwd else None,
+def _git(args: List[str], cwd: Optional[Path] = None, timeout: Optional[float] = None) -> subprocess.CompletedProcess:
+    # GIT_TERMINAL_PROMPT=0: never wait for credentials (the update hook runs unattended)
+    env = dict(os.environ, GIT_TERMINAL_PROMPT='0')
+    return subprocess.run(['git', *args], cwd=str(cwd) if cwd else None, env=env, timeout=timeout,
                           capture_output=True, text=True, encoding='utf-8', errors='replace')
 
 
@@ -402,7 +406,7 @@ def _make_dir_link(link: Path, target: Path) -> None:
         os.symlink(target, link, target_is_directory=True)
 
 
-def _sync_global_clone(home: Path, repo_url: str, ref: str) -> Tuple[bool, str]:
+def _sync_global_clone(home: Path, repo_url: str, ref: str, timeout: Optional[float] = None) -> Tuple[bool, str]:
     """Clone or update the stable clone at home and check out ref. Returns (ok, message)."""
     if not (home / '.git').exists():
         if home.exists() and any(home.iterdir()):
@@ -419,7 +423,7 @@ def _sync_global_clone(home: Path, repo_url: str, ref: str) -> Tuple[bool, str]:
             return False, (f"{home} has local changes; refusing to overwrite them. "
                            "Commit, stash or discard them, then run again.")
         # --force moves floating tags such as v1 to their new release commit
-        res = _git(['fetch', '--quiet', '--tags', '--force', 'origin'], cwd=home)
+        res = _git(['fetch', '--quiet', '--tags', '--force', 'origin'], cwd=home, timeout=timeout)
         if res.returncode != 0:
             return False, f"git fetch failed: {res.stderr.strip()}"
 
@@ -487,10 +491,104 @@ def _wire_claude_skills(home: Path, claude_dir: Path) -> List[str]:
     return notes
 
 
+# Identifies the SessionStart hook this command manages inside ~/.claude/settings.json
+AUTO_HOOK_MARKER = 'update --global --auto'
+AUTO_STAMP_NAME = 'quench-auto-update-stamp'
+AUTO_FETCH_TIMEOUT = 20  # seconds; the hook must never hold up session start for long
+
+
+def _auto_update_interval() -> float:
+    try:
+        return float(os.environ.get('QUENCH_AUTO_UPDATE_INTERVAL', 24 * 3600))
+    except ValueError:
+        return 24 * 3600
+
+
+def _hook_command(home: Path, ref: str) -> str:
+    python = Path(sys.executable).resolve().as_posix()
+    script = (home / 'scripts' / 'quench.py').as_posix()
+    cmd = f'"{python}" "{script}" {AUTO_HOOK_MARKER} --home "{home.as_posix()}"'
+    return cmd if ref == DEFAULT_GLOBAL_REF else f'{cmd} --ref {ref}'
+
+
+def _is_our_hook(entry: dict) -> bool:
+    return any(AUTO_HOOK_MARKER in str(h.get('command', '')) for h in entry.get('hooks', []) if isinstance(h, dict))
+
+
+def _load_settings(settings_path: Path) -> Tuple[Optional[dict], str]:
+    if not settings_path.exists():
+        return {}, ''
+    try:
+        data = json.loads(settings_path.read_text(encoding='utf-8'))
+    except (ValueError, OSError) as e:
+        return None, f"could not parse {settings_path} ({e}); left unchanged"
+    if not isinstance(data, dict):
+        return None, f"{settings_path} is not a JSON object; left unchanged"
+    return data, ''
+
+
+def _set_auto_hook(claude_dir: Path, home: Path, ref: str, enable: bool) -> str:
+    """Install (enable=True) or remove the SessionStart auto-update hook in settings.json."""
+    settings_path = claude_dir / 'settings.json'
+    data, error = _load_settings(settings_path)
+    if data is None:
+        return f"auto-update: {error}"
+    hooks = data.get('hooks') if isinstance(data.get('hooks'), dict) else {}
+    entries = [e for e in hooks.get('SessionStart', []) if isinstance(e, dict)]
+    others = [e for e in entries if not _is_our_hook(e)]
+    wanted = {'matcher': 'startup',
+              'hooks': [{'type': 'command', 'command': _hook_command(home, ref), 'timeout': 60}]}
+    new_entries = others + [wanted] if enable else others
+    if new_entries == entries:
+        return "auto-update: " + ("already enabled" if enable else "not enabled")
+    if new_entries:
+        hooks['SessionStart'] = new_entries
+    else:
+        hooks.pop('SessionStart', None)
+    if hooks:
+        data['hooks'] = hooks
+    else:
+        data.pop('hooks', None)
+    claude_dir.mkdir(parents=True, exist_ok=True)
+    settings_path.write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8', newline='\n')
+    if enable:
+        return f"auto-update: enabled (SessionStart hook in {settings_path}, checks at most once a day)"
+    return f"auto-update: disabled (hook removed from {settings_path})"
+
+
+def _auto_update(home: Path, ref: str) -> None:
+    """Hook entry point: quietly move the clone to the latest release, at most once per interval.
+
+    Prints one line only when the release changed (SessionStart output is shown to Claude)
+    and never fails the session: every problem is swallowed and retried after the interval.
+    """
+    stamp = home / '.git' / AUTO_STAMP_NAME
+    if not stamp.parent.is_dir():
+        return
+    try:
+        if time.time() - stamp.stat().st_mtime < _auto_update_interval():
+            return
+    except OSError:
+        pass
+    try:
+        stamp.touch()  # before fetching, so an offline machine does not retry every session
+        before = _git(['rev-parse', 'HEAD'], cwd=home, timeout=10).stdout.strip()
+        ok, now = _sync_global_clone(home, DEFAULT_REPO_URL, ref, timeout=AUTO_FETCH_TIMEOUT)
+        after = _git(['rev-parse', 'HEAD'], cwd=home, timeout=10).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return
+    if ok and after != before:
+        print(f"quench updated to {now}; its rules and skills apply from the next session.")
+
+
 def cmd_update_global(args: argparse.Namespace) -> int:
     """Handle 'quench update --global': follow a release tag and wire Claude Code to it."""
     home = Path(args.home).expanduser().resolve() if args.home else _default_global_home().resolve()
     claude_dir = Path(args.claude_dir).expanduser() if args.claude_dir else _default_claude_dir()
+
+    if args.auto:
+        _auto_update(home, args.ref)
+        return 0
 
     print(f"Updating global quench clone: {home} (ref {args.ref})")
     ok, message = _sync_global_clone(home, args.repo, args.ref)
@@ -508,7 +606,21 @@ def cmd_update_global(args: argparse.Namespace) -> int:
     print(f"  {_wire_claude_rules(home, claude_dir)}")
     for note in _wire_claude_skills(home, claude_dir):
         print(f"  {note}")
-    print("\nDone. New Claude Code sessions use this release; re-run after each release to update.")
+    clone_cli = home / 'scripts' / 'quench.py'
+    supports_auto = clone_cli.is_file() and "add_argument('--auto'" in clone_cli.read_text(encoding='utf-8', errors='replace')
+    if not args.no_auto_update and not supports_auto:
+        # An older release would reject --auto with exit code 2, which blocks Claude Code
+        # sessions, so any existing hook is removed rather than left pointing at it.
+        _set_auto_hook(claude_dir, home, args.ref, enable=False)
+        print(f"  auto-update: not available in {message}; hook not installed")
+        args.no_auto_update = True
+    else:
+        print(f"  {_set_auto_hook(claude_dir, home, args.ref, enable=not args.no_auto_update)}")
+    if args.no_auto_update:
+        print("\nDone. New Claude Code sessions use this release; re-run after each release to update.")
+    else:
+        print("\nDone. New Claude Code sessions use this release, and new releases install automatically "
+              "(checked at most once a day). Opt out with --no-auto-update.")
     return 0
 
 
@@ -645,6 +757,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_update.add_argument('--repo', default=DEFAULT_REPO_URL, help='With --global: repository to clone')
     p_update.add_argument('--claude-dir', help='With --global: Claude Code config dir (default ~/.claude or $CLAUDE_CONFIG_DIR)')
     p_update.add_argument('--no-claude', action='store_true', help='With --global: update the clone only')
+    p_update.add_argument('--no-auto-update', action='store_true',
+                          help='With --global: do not install (or remove) the Claude Code hook that '
+                               'installs new releases automatically, at most once a day')
+    # Internal: run by that SessionStart hook. Throttled, silent unless a new release was installed.
+    p_update.add_argument('--auto', action='store_true', help=argparse.SUPPRESS)
 
     # status / info
     p_status = subparsers.add_parser('status', aliases=['info'], help='Inspect target directory for Quench rules and hooks')
