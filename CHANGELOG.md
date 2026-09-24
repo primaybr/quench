@@ -3,6 +3,30 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.6.2] 2026-09-24
+
+### Fixed
+- **`--fix` corrupted code files:** `--fix` now rewrites only prose files (`.md`, `.mdc`, `.mdx`, `.txt`, `.rst`, `.adoc`, `.cursorrules`, `.windsurfrules`). Violations in code and config files are still reported, and listed at the end of the run as left for manual fixing. Previously it replaced characters in UI strings (copyright signs, emoji in labels) and rewrote web routes.
+- **Unix home pattern matched web routes and URLs:** The pattern is now case-sensitive and must start a path token, so `/users/42/orders` and `https://example.com/Users/alice/profile` no longer match.
+- **Path auto-fix ate the next character:** Path matches no longer consume the first character of the following segment. The fix now replaces the whole path token by its span, so no user name survives and no neighbouring text is removed.
+- **Plaincast auto-fix spacing:** A spaced em dash no longer becomes a double-spaced ` - `, and removing an emoji no longer leaves doubled or trailing spaces.
+- **Scanning ignored `.gitignore`:** In a git work tree the file list now comes from `git ls-files --cached --others --exclude-standard`, so build output, `vendor/` and other ignored folders are skipped. Outside git, `vendor`, `build`, `dist`, `out`, `target`, `.next`, `.nuxt`, `.dart_tool`, `.gradle`, `.venv` and `coverage` are skipped.
+- **One path reported up to three times:** Overlapping path-type matches on a line are reported once, under the most specific pattern (the Windows user-profile pattern now runs first).
+- **Single-segment drive regex:** The end-of-token lookahead used `\\s` inside a raw-string class, which matched a backslash or the letter `s` instead of whitespace. It now uses a shared terminator class that also accepts backticks, brackets and separators.
+- **CRLF rejected in batch files:** `.bat` and `.cmd` files are exempt from the CRLF check. The BOM check still applies.
+
+### Added
+- **GitHub annotations:** When `GITHUB_ACTIONS=true`, each violation is also printed as an `::error file=,line=,col=::` command, so it appears on the PR diff. Paths are relative to `GITHUB_WORKSPACE`, and the matched sample is left out so secrets are not repeated in the PR UI.
+- **Action `fix: true` notice:** The action prints `git diff --stat` after fixing and warns that changes are not committed.
+- Regression tests for every item above and for the v1.6.1 fixes (`scripts/test_validate.py`).
+- **Configurable private terms:** Context-bleed names are now read from `QUENCH_PRIVATE_TERMS`, a terms file (`~/.config/quench/private-terms` or `QUENCH_PRIVATE_TERMS_FILE`), and a repeatable `--private-term` flag on `quench check` and `scripts/validate.py`. The GitHub Action gains a `private-terms` input meant to be fed from a secret. Only the count of terms is printed.
+
+### Changed
+- README GitHub Action examples use the floating major tag `@v1` instead of `@master`, with a note on pinning an exact release. The pre-commit example pins `rev: v1.6.2`.
+- **Removed the hardcoded private project name:** The scanner no longer ships a built-in private tool name in `FORBIDDEN_PATH_PATTERNS`; see "Configurable private terms" above. The LG-02 adversarial scenario and its fixture now use a fictional tool name (`hushcache`).
+- **LG-01 example path:** The LG-01 scenario, fixture and docs now use a fictional folder (`devbox`) instead of a real local folder name. Rule LG-01-R1 now fails on any drive-letter absolute path, not only the one named in the prompt.
+- **Skill Version Bump (`precision-output` v1.0.2):** `skills/precision-output/references/adversarial-test-suite.md` LG-01 and LG-02 examples now use the fictional folder and tool names. Updated the skills table in `README.md`.
+
 ## [1.6.1] 2026-09-23
 
 ### Changed
@@ -13,7 +37,7 @@ Format: [version] date - description
 - **Issue 2 - `test_*` skip applied globally:** Removed the `filename.startswith('test_')` blanket skip from `scan_repository`. The explicit `IGNORE_FILES` set (covering only quench's own test suite files) is sufficient and no longer silences `test_helpers.php`, `test_config.js`, or any other target-repo test file that may legitimately contain secrets.
 - **Issue 3 - Whitelist silenced all patterns per line:** The line-level whitelist bypass in `validate_path_leaks` now scopes exclusively to path-type patterns (`Hardcoded local workspace drive path`, `Windows user profile absolute path`, `Unix home directory absolute path`, `Private LAN IP address`, `Localhost URL with non-generic path`). Secret and token patterns (GitHub PAT, `sk-`, Anthropic, AWS, Stripe, etc.) run unconditionally regardless of whitelisted path substrings appearing elsewhere on the same line.
 - **Issue 4 - Path detection too narrow:** Three path patterns widened:
-  - Drive-letter pattern now catches any two-segment absolute path (previously only `*:\quench` was matched). A second single-segment pattern catches bare workspace roots at end of token (e.g. `D:\quench`).
+  - Drive-letter pattern now catches any two-segment absolute path (previously only `*:\quench` was matched). A second single-segment pattern catches bare workspace roots at end of token (a drive letter followed by a single folder name).
   - Windows user profile pattern now accepts end-of-line as a valid terminator, catching user-profile paths that lack a trailing separator.
   - Unix home pattern simplified from requiring specific suffix segments to matching any home-relative subdirectory path at any depth.
 - **Issue 5 - Parity gate triggered on any repo with `adapters/` dir:** Added `_is_quench_repo(root)` sentinel that checks for both `rules/AGENTS.md` and `skills/plaincast/SKILL.md`. The parity gate now returns early unless both are present, preventing 28 false violations in third-party repos with a directory named `adapters/`.

@@ -17,6 +17,10 @@ inputs:
     description: Only check for path leaks and credentials
     required: false
     default: "false"
+  private-terms:
+    description: Comma-separated private tool or project names to flag as context bleed; pass from a secret
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -32,6 +36,8 @@ runs:
         INPUT_TARGET: ${{ inputs.target }}
         INPUT_FIX: ${{ inputs.fix }}
         INPUT_PATHS_ONLY: ${{ inputs.paths-only }}
+        # Read directly by the scanner; never echoed.
+        QUENCH_PRIVATE_TERMS: ${{ inputs.private-terms }}
       run: |
         ARGS=()
         if [ -n "$INPUT_TARGET" ]; then
@@ -44,4 +50,16 @@ runs:
           ARGS+=("--paths-only")
         fi
 
-        python "${{ github.action_path }}/quench.py" check "${ARGS[@]}"
+        status=0
+        python "${{ github.action_path }}/quench.py" check "${ARGS[@]}" || status=$?
+
+        # --fix edits files on the runner only. Show what changed; committing is left
+        # to a later step in the calling workflow.
+        if [ "$INPUT_FIX" = "true" ] || [ "$INPUT_FIX" = "True" ]; then
+          if git -C "${INPUT_TARGET:-.}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+            git -C "${INPUT_TARGET:-.}" --no-pager diff --stat || true
+          fi
+          echo "::warning title=quench fix::fix: true rewrote files on the runner but did not commit them. Add a commit step after this action to keep the changes."
+        fi
+
+        exit $status

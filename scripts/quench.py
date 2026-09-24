@@ -29,8 +29,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.6.1"
-__version__ = "1.6.1"
+VERSION = "quench 1.6.2"
+__version__ = "1.6.2"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -316,8 +316,13 @@ def cmd_check(args: argparse.Namespace) -> int:
         print("Auto-fix mode: ENABLED")
     if args.paths_only:
         print("Mode: Paths and secret leaks only")
+    private_terms = validate.load_private_terms(getattr(args, 'private_term', None))
+    if private_terms:
+        # Count only: printing the terms would leak them into CI logs.
+        print(f"Private terms: {len(private_terms)} configured")
 
-    report = validate.scan_repository(target, check_paths_only=args.paths_only, auto_fix=args.fix)
+    report = validate.scan_repository(target, check_paths_only=args.paths_only, auto_fix=args.fix,
+                                      private_terms=private_terms)
     print(f"\nScanned {report.files_scanned} files across repository.")
 
     if report.passed:
@@ -325,8 +330,7 @@ def cmd_check(args: argparse.Namespace) -> int:
         return 0
     else:
         print(f"\n[FAIL] Found {len(report.violations)} violation(s):\n")
-        for v in report.violations:
-            print(f"  {v}")
+        validate.print_violations(report, target)
         print("\nPlease resolve all violations before committing.")
         return 1
 
@@ -444,6 +448,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_check.add_argument('-d', '--target', default='.', help='Directory to validate (default: current dir)')
     p_check.add_argument('--fix', action='store_true', help='Automatically fix plaincast and path issues')
     p_check.add_argument('--paths-only', action='store_true', help='Only check path leaks and secrets')
+    p_check.add_argument('--private-term', action='append', default=[], metavar='TERM',
+                         help='Private tool/project name to flag as context bleed (repeatable; '
+                              'also read from $QUENCH_PRIVATE_TERMS and $QUENCH_PRIVATE_TERMS_FILE)')
 
     # update
     p_update = subparsers.add_parser('update', help='Update existing installed adapters from source templates')

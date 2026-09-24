@@ -37,7 +37,7 @@ AI coding assistants naturally drift into failure modes that degrade codebase hy
 | [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.1 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
 | [plaincast](./skills/plaincast/SKILL.md) | 1.1.0 | Text normalization: standard keyboard boundary, no emoji, no em dashes, no curly quotes, colon/list restraint |
 | [leakguard](./skills/leakguard/SKILL.md) | 1.0.2 | Environment, path, and context isolation: host path neutralization, hermetic project boundaries, credential redaction |
-| [precision-output](./skills/precision-output/SKILL.md) | 1.0.1 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution |
+| [precision-output](./skills/precision-output/SKILL.md) | 1.0.2 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution |
 
 ---
 
@@ -170,7 +170,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.6.1
+    rev: v1.6.2
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -182,10 +182,16 @@ Validate pull requests and commits in GitHub Actions CI using the official compo
 
 ```yaml
 - name: Run Quench Validation
-  uses: primaybr/quench@master
+  uses: primaybr/quench@v1
   with:
     target: .
 ```
+
+`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.6.2`) if you want fully reproducible CI.
+
+Violations are reported as `::error` annotations, so they appear inline on the PR diff. With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes.
+
+The scanner honours `.gitignore` when the target is a git work tree, so build output and vendored dependencies are not scanned. `--fix` only rewrites prose files (`.md`, `.mdc`, `.mdx`, `.txt`, `.rst`, `.adoc`); violations in code and config files are reported but left for you to fix by hand.
 
 ### Antigravity (native - recommended)
 
@@ -242,10 +248,26 @@ quench includes a zero-dependency repository verification tool (`scripts/validat
 enforcing strict repository quality and cleanliness before commits:
 
 - **Gate 1 (Plaincast Character Boundary):** Flags banned emojis, typographic dashes (em dash, en dash), curly quotes, Unicode ellipsis, and zero-width or invisible characters. Supports `--fix` for automatic conversion to ASCII equivalents.
-- **Gate 2 (Leakguard & Path Sanitization):** Scans for hardcoded local drives (`C:`, `F:`, etc.), user profile paths, absolute home directories, and accidental secret leaks (API tokens, PATs).
+- **Gate 2 (Leakguard & Path Sanitization):** Scans for hardcoded local drives (`C:`, `F:`, etc.), user profile paths, absolute home directories, and accidental secret leaks (API tokens, PATs). It can also flag your own private tool, sibling-project or internal host names (see below).
 - **Gate 3 (Multi-Tool Adapter Parity):** Verifies all 11 adapters exist and stay synchronized with active skills.
 - **Gate 4 (Skill Frontmatter Schema):** Validates YAML frontmatter on all `skills/*/SKILL.md` files (requires `name`, SemVer `version`, `description`; rejects illegal fields like `trigger`).
 - **Gate 5 (Encoding & Line Endings):** Verifies UTF-8 encoding without BOM and rejects CRLF line endings.
+
+### Private terms (context bleed)
+
+Quench ships no private names. To stop names of your own private tools, sibling projects or internal hosts from leaking into a repo, configure them outside the repo; a list committed to a public repo would leak the names itself. Sources are merged:
+
+- `~/.config/quench/private-terms` (or the file named by `QUENCH_PRIVATE_TERMS_FILE`): one term per line, `#` starts a comment.
+- `QUENCH_PRIVATE_TERMS`: comma-separated terms, e.g. from a CI secret. The GitHub Action exposes this as the `private-terms` input.
+- `--private-term TERM` on `quench check` or `scripts/validate.py` (repeatable).
+
+Each term matches as a whole word, case-insensitively, including tool-style suffixes (`term_search`). Only the number of configured terms is printed, never the terms.
+
+```yaml
+- uses: primaybr/quench@v1
+  with:
+    private-terms: ${{ secrets.QUENCH_PRIVATE_TERMS }}
+```
 
 ### Running Validation
 

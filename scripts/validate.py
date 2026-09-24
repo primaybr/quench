@@ -12,12 +12,14 @@ Checks:
 """
 
 import argparse
+import functools
 import os
 import re
+import subprocess
 import sys
 import unicodedata
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 # ---------------------------------------------------------------------------
 # Plaincast Character Taxonomy & Replacements
@@ -104,17 +106,24 @@ TAXONOMY_EXEMPTIONS = {
 # Path & Secret Leak Patterns
 # ---------------------------------------------------------------------------
 
+# Characters that end a path token (lookahead only, never consumed).
+_PATH_END = r'(?=[/\\"\'`\s,;:)\]}>|]|$)'
+
 FORBIDDEN_PATH_PATTERNS = [
-    # Literal workspace drives or user home folders
+    # Literal workspace drives or user home folders.
+    # Path patterns are ordered most-specific first: overlapping path matches on the
+    # same line are reported once, under the first pattern that matched.
+    # Windows user profile: drive:\Users\name with or without trailing separator.
+    (re.compile(r'(?<![A-Za-z0-9_])[a-zA-Z]:[/\\]Users[/\\][A-Za-z0-9_.-]+' + _PATH_END, re.IGNORECASE), 'Windows user profile absolute path'),
     # Two-segment pattern: catches drive-letter paths with at least two directory levels.
     # The whitelist for C:/path/... and C:/new/file.txt prevents doc example FPs.
-    (re.compile(r'(?<![A-Za-z0-9_])[a-zA-Z]:[/\\](?!path[/\\]|new[/\\])[A-Za-z0-9_.-]+[/\\][A-Za-z0-9_.-]', re.IGNORECASE), 'Hardcoded local workspace drive path'),
+    (re.compile(r'(?<![A-Za-z0-9_])[a-zA-Z]:[/\\](?!path[/\\]|new[/\\])[A-Za-z0-9_.-]+[/\\](?=[A-Za-z0-9_.-])', re.IGNORECASE), 'Hardcoded local workspace drive path'),
     # Single-segment drive-root workspace at end of token, e.g. a bare project-name-only path.
-    (re.compile(r'(?<![A-Za-z0-9_])[a-zA-Z]:[/\\](?!path\b|new\b)[A-Za-z][A-Za-z0-9_.-]{2,}(?=["\'\\s,;]|$)', re.IGNORECASE | re.MULTILINE), 'Hardcoded local workspace drive path'),
-    # Windows user profile: matches drive:\Users\name with or without trailing separator.
-    (re.compile(r'[a-zA-Z]:[/\\]Users[/\\][A-Za-z0-9_.-]+(?:[/\\]|$)', re.IGNORECASE | re.MULTILINE), 'Windows user profile absolute path'),
-    # Unix home: matches /home/<user>/subpath or /Users/<user>/subpath at any depth; CI runner paths whitelisted separately.
-    (re.compile(r'/(?:home|Users)/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]', re.IGNORECASE), 'Unix home directory absolute path'),
+    (re.compile(r'(?<![A-Za-z0-9_])[a-zA-Z]:[/\\](?!path\b|new\b)[A-Za-z][A-Za-z0-9_.-]{2,}' + _PATH_END, re.IGNORECASE), 'Hardcoded local workspace drive path'),
+    # Unix home: /home/<user>/subpath or /Users/<user>/subpath at any depth; CI runner paths whitelisted separately.
+    # Case-sensitive and must start a token, so web routes (/users/42/orders) and URL
+    # paths (https://host/Users/alice/profile) do not match.
+    (re.compile(r'(?<![A-Za-z0-9_.~-])/(?:home|Users)/[A-Za-z0-9_.-]+/(?=[A-Za-z0-9_.-])'), 'Unix home directory absolute path'),
 
     # GitHub tokens
     (re.compile(r'\bghp_[A-Za-z0-9]{36}\b'), 'GitHub Personal Access Token'),
@@ -172,10 +181,67 @@ FORBIDDEN_PATH_PATTERNS = [
     # health, docs, metrics, mf-manifest, mf-). Private service paths (e.g.
     # localhost:PORT/internal-dashboard) are still flagged.
     (re.compile(r'(?i)\b(?:localhost|127\.0\.0\.1):\d{4,5}/(?!path/|your-|example|api\b|graphql\b|graph\b|webhook\b|stripe\b|health\b|docs\b|metrics\b|mf-)[a-zA-Z0-9_-]{3,}\b'), 'Localhost URL with non-generic path'),
-
-    # Cross-project context bleed & ungrounded private tools
-    (re.compile(r'\b' + 'hush' + 'cache' + r'(?:_[a-z0-9_]+)?\b', re.IGNORECASE), 'Cross-project context bleed / private environment tool'),
 ]
+
+# ---------------------------------------------------------------------------
+# Private Terms (cross-project context bleed)
+# ---------------------------------------------------------------------------
+# Names of private tools, sibling projects or internal hosts that must never
+# appear in this repo. They are configured outside the repo on purpose: a term
+# list committed to a public repo would itself leak the names it protects.
+#
+# Sources, merged in order:
+#   1. QUENCH_PRIVATE_TERMS       comma- or newline-separated terms (e.g. a CI secret)
+#   2. QUENCH_PRIVATE_TERMS_FILE  path to a file, one term per line, '#' comments
+#      (defaults to ~/.config/quench/private-terms when that file exists)
+#   3. --private-term TERM        CLI flag, repeatable
+
+PRIVATE_TERMS_ENV = 'QUENCH_PRIVATE_TERMS'
+PRIVATE_TERMS_FILE_ENV = 'QUENCH_PRIVATE_TERMS_FILE'
+DEFAULT_PRIVATE_TERMS_FILE = Path('~/.config/quench/private-terms')
+PRIVATE_TERM_DESC = 'Cross-project context bleed / private environment tool'
+
+
+def _split_terms(text: str) -> List[str]:
+    terms = []
+    for line in text.splitlines():
+        line = line.split('#', 1)[0]
+        terms.extend(t.strip() for t in line.split(','))
+    return [t for t in terms if t]
+
+
+def load_private_terms(extra: Optional[Sequence[str]] = None) -> List[str]:
+    """Collect private terms from the environment, the terms file and extra (CLI) values."""
+    terms = _split_terms(os.environ.get(PRIVATE_TERMS_ENV, ''))
+
+    file_setting = os.environ.get(PRIVATE_TERMS_FILE_ENV)
+    terms_file = Path(file_setting).expanduser() if file_setting else DEFAULT_PRIVATE_TERMS_FILE.expanduser()
+    if terms_file.is_file():
+        terms.extend(_split_terms(terms_file.read_text(encoding='utf-8-sig')))
+    elif file_setting:
+        print(f"Warning: {PRIVATE_TERMS_FILE_ENV} points to a missing file: {terms_file}", file=sys.stderr)
+
+    for value in extra or []:
+        terms.extend(_split_terms(value))
+
+    # Keep order, drop case-insensitive duplicates
+    seen: Set[str] = set()
+    unique = []
+    for t in terms:
+        if t.lower() not in seen:
+            seen.add(t.lower())
+            unique.append(t)
+    return unique
+
+
+@functools.lru_cache(maxsize=32)
+def _private_term_patterns(terms: Tuple[str, ...]) -> List[Tuple['re.Pattern[str]', str]]:
+    """Compile each term as a whole word, also matching tool-style suffixes (term_ask)."""
+    return [
+        (re.compile(r'(?<![A-Za-z0-9_])' + re.escape(t) + r'(?:_[A-Za-z0-9_]+)?(?![A-Za-z0-9_])', re.IGNORECASE),
+         PRIVATE_TERM_DESC)
+        for t in terms
+    ]
 
 # Illustrative documentation examples allowed
 WHITELISTED_PATH_SUBSTRINGS = [
@@ -257,6 +323,8 @@ class ValidationReport:
     def __init__(self):
         self.violations: List[Violation] = []
         self.files_scanned = 0
+        # Files with violations that --fix left untouched because they are code, not prose.
+        self.fix_skipped: List[Path] = []
 
     def add(self, violation: Violation):
         self.violations.append(violation)
@@ -264,6 +332,51 @@ class ValidationReport:
     @property
     def passed(self) -> bool:
         return len(self.violations) == 0
+
+
+def _escape_annotation(value: str, is_property: bool = False) -> str:
+    """Escape text for a GitHub Actions workflow command."""
+    value = value.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+    if is_property:
+        value = value.replace(':', '%3A').replace(',', '%2C')
+    return value
+
+
+def github_annotation(violation: Violation, root: Path) -> str:
+    """Format a violation as a GitHub Actions ::error command so it shows on the PR diff.
+
+    File paths are made relative to GITHUB_WORKSPACE (the repo root), because the
+    scan root may be a subdirectory. The matched sample is left out on purpose: an
+    annotation must not repeat a secret in the PR UI.
+    """
+    file_path = Path(violation.file_path)
+    if not file_path.is_absolute():
+        file_path = root / file_path
+    workspace = os.environ.get('GITHUB_WORKSPACE')
+    try:
+        shown = file_path.resolve().relative_to(Path(workspace).resolve()) if workspace else file_path
+    except ValueError:
+        shown = file_path
+    props = [f"file={_escape_annotation(shown.as_posix(), True)}"]
+    if violation.line > 0:
+        props.append(f"line={violation.line}")
+        props.append(f"col={max(violation.col, 1)}")
+    props.append(f"title={_escape_annotation('quench ' + violation.gate, True)}")
+    return f"::error {','.join(props)}::{_escape_annotation(violation.message)}"
+
+
+def print_violations(report: ValidationReport, root: Path) -> None:
+    """Print each violation, plus a GitHub annotation when running in GitHub Actions."""
+    in_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
+    for v in report.violations:
+        print(f"  {v}")
+        if in_actions:
+            print(github_annotation(v, root))
+    if report.fix_skipped:
+        print(f"\n--fix left {len(report.fix_skipped)} code/config file(s) unchanged; "
+              "only prose files (.md, .mdc, .mdx, .txt, .rst, .adoc) are rewritten. Fix these by hand:")
+        for p in report.fix_skipped:
+            print(f"  {Path(p).as_posix()}")
 
 
 # ---------------------------------------------------------------------------
@@ -312,7 +425,9 @@ def validate_plaincast(path: Path, content: str, report: ValidationReport, auto_
             fixed_lines.append(line)
             continue
 
-        new_chars = []
+        new_chars: List[str] = []
+        # Set after an emoji is removed so the space it leaves behind is not doubled.
+        collapse_space = False
         for col_idx, ch in enumerate(line, 1):
             if ch in CHAR_MAP:
                 rep, cat = CHAR_MAP[ch]
@@ -324,8 +439,14 @@ def validate_plaincast(path: Path, content: str, report: ValidationReport, auto_
                     message=f"Banned typographic character '{ch}' ({cat}) -> replace with '{rep}'",
                     sample=ch
                 ))
+                # ' - ' must not double the spaces already around a spaced em dash.
+                if rep.startswith(' ') and new_chars and new_chars[-1].endswith(' '):
+                    rep = rep[1:]
+                if rep.endswith(' ') and line[col_idx:col_idx + 1] == ' ':
+                    rep = rep[:-1]
                 new_chars.append(rep)
                 has_changes = True
+                collapse_space = False
             elif is_emoji(ch):
                 report.add(Violation(
                     gate='plaincast',
@@ -336,11 +457,19 @@ def validate_plaincast(path: Path, content: str, report: ValidationReport, auto_
                     sample=ch
                 ))
                 has_changes = True
+                collapse_space = True
                 # do not append emoji when fixing
+            elif ch == ' ' and collapse_space and (not new_chars or new_chars[-1].endswith(' ')):
+                continue
             else:
                 new_chars.append(ch)
+                collapse_space = False
 
-        fixed_lines.append(''.join(new_chars))
+        fixed_line = ''.join(new_chars)
+        # Removing a trailing emoji ("Sale 50% X") must not leave trailing whitespace behind.
+        if fixed_line != line and line == line.rstrip():
+            fixed_line = fixed_line.rstrip()
+        fixed_lines.append(fixed_line)
 
     if auto_fix and has_changes:
         return '\n'.join(fixed_lines)
@@ -364,9 +493,16 @@ _PATH_PATTERN_DESCS = {
     'Localhost URL with non-generic path',
 }
 
+# Characters that continue a path token past the matched prefix (used by --fix).
+_PATH_TOKEN_CHAR = re.compile(r'[A-Za-z0-9_.~/\\-]')
 
-def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto_fix: bool = False) -> Optional[str]:
+
+def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto_fix: bool = False,
+                        private_terms: Sequence[str] = ()) -> Optional[str]:
     """Gate 2: Detect environment path leaks and local credentials.
+
+    private_terms are extra names (private tools, sibling projects) flagged as
+    context bleed; see load_private_terms() for where callers get them.
 
     When auto_fix=True:
     - Local drive/home path matches are replaced with /path/to/<project>
@@ -375,6 +511,7 @@ def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto
     Returns the fixed content string when auto_fix=True and edits were made,
     or None otherwise.
     """
+    patterns = FORBIDDEN_PATH_PATTERNS + _private_term_patterns(tuple(private_terms))
     lines = content.split('\n')
     fixed_lines = list(lines)
     has_changes = False
@@ -393,15 +530,23 @@ def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto
         # Skip whitelisted sample illustrations in documentation (only for path-type patterns;
         # secret/token patterns always run regardless of whitelist matches on the line).
         line_is_whitelisted = any(w in line for w in WHITELISTED_PATH_SUBSTRINGS)
+        # Spans already reported by a path-type pattern on this line. One Windows
+        # user-profile path matches several path patterns; it is reported once.
+        path_spans: List[Tuple[int, int]] = []
+        fix_spans: List[Tuple[int, int]] = []
 
-        for pattern, desc in FORBIDDEN_PATH_PATTERNS:
+        for pattern, desc in patterns:
             is_path_type = desc in _PATH_PATTERN_DESCS
             is_path_violation = desc in _PATH_AUTOFIX_PATTERNS
             # Whitelist only suppresses path/host patterns, not secret patterns
             if is_path_type and line_is_whitelisted:
                 continue
             for match in pattern.finditer(line):
-                matched_str = match.group(0)
+                start, end = match.span()
+                if is_path_type:
+                    if any(start < s_end and s_start < end for s_start, s_end in path_spans):
+                        continue
+                    path_spans.append((start, end))
                 violation_msg = f"Potential local path or secret leak: {desc}"
                 if auto_fix and not is_path_violation:
                     violation_msg += ' (manual rotation required)'
@@ -409,21 +554,42 @@ def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto
                     gate='leakguard',
                     file_path=path,
                     line=line_idx,
-                    col=match.start() + 1,
+                    col=start + 1,
                     message=violation_msg,
-                    sample=matched_str
+                    sample=match.group(0)
                 ))
                 if auto_fix and is_path_violation:
-                    fixed_lines[line_idx - 1] = fixed_lines[line_idx - 1].replace(matched_str, '/path/to/<project>', 1)
-                    has_changes = True
+                    # Replace the whole path token, not just the matched prefix, so no
+                    # user name or project segment survives and no neighbouring text is eaten.
+                    token_end = end
+                    while token_end < len(line) and _PATH_TOKEN_CHAR.match(line[token_end]):
+                        token_end += 1
+                    fix_spans.append((start, token_end))
+
+        if fix_spans:
+            merged: List[Tuple[int, int]] = []
+            for start, token_end in sorted(fix_spans):
+                if merged and start <= merged[-1][1]:
+                    merged[-1] = (merged[-1][0], max(merged[-1][1], token_end))
+                else:
+                    merged.append((start, token_end))
+            fixed = line
+            for start, token_end in reversed(merged):
+                fixed = fixed[:start] + '/path/to/<project>' + fixed[token_end:]
+            fixed_lines[line_idx - 1] = fixed
+            has_changes = True
 
     if auto_fix and has_changes:
         return '\n'.join(fixed_lines)
     return None
 
 
+# Windows batch files legitimately need CRLF (commonly `*.bat text eol=crlf` in .gitattributes).
+CRLF_ALLOWED_SUFFIXES = {'.bat', '.cmd'}
+
+
 def validate_encoding_and_endings(path: Path, raw_bytes: bytes, report: ValidationReport):
-    """Gate 5: Verify no UTF-8 BOM and strictly LF line endings."""
+    """Gate 5: Verify no UTF-8 BOM and strictly LF line endings (batch files may use CRLF)."""
     if raw_bytes.startswith(b'\xef\xbb\xbf'):
         report.add(Violation(
             gate='hygiene',
@@ -433,7 +599,7 @@ def validate_encoding_and_endings(path: Path, raw_bytes: bytes, report: Validati
             message="File starts with UTF-8 BOM (EF BB BF); must be UTF-8 no BOM"
         ))
 
-    if b'\r\n' in raw_bytes:
+    if b'\r\n' in raw_bytes and path.suffix.lower() not in CRLF_ALLOWED_SUFFIXES:
         # report first CRLF occurrence
         lines = raw_bytes.split(b'\n')
         for i, l in enumerate(lines, 1):
@@ -603,9 +769,18 @@ NO_SUFFIX_SCAN_NAMES: Set[str] = {
 }
 
 IGNORE_DIRS = {'.git', '__pycache__', '.pytest_cache', '.vscode', '.idea', 'venv', 'env', 'node_modules', '.kilo', 'worktrees'}
+# Build output and dependency folders, skipped only when the target is not a git
+# work tree. In a git work tree, .gitignore decides instead (see _list_files).
+GENERATED_DIRS = {'vendor', 'build', 'dist', 'out', 'target', '.next', '.nuxt', '.dart_tool', '.gradle', '.venv', 'coverage'}
 # Only skip quench's own test suite files; do NOT use startswith('test_') - that silences
 # test_*.py/js/php files in target repos, which may legitimately contain secrets.
 IGNORE_FILES = {'test_validate.py', 'test_cli_e2e.py', 'test_eval_adversarial.py', 'test_packaging.py'}
+
+# --fix rewrites only prose files. In code, a "banned" character may be UI text
+# (a copyright sign in a footer, an emoji in a label) and a path-like string may be
+# a route, so code-file violations are reported but never rewritten.
+FIXABLE_EXTENSIONS = {'.md', '.mdc', '.mdx', '.txt', '.rst', '.adoc'}
+FIXABLE_NAMES = {'.cursorrules', '.windsurfrules'}
 
 
 def _should_scan(filename: str, suffix: str) -> bool:
@@ -620,69 +795,119 @@ def _should_scan(filename: str, suffix: str) -> bool:
     return False
 
 
-def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool = False) -> ValidationReport:
+def _is_fixable(filename: str, suffix: str) -> bool:
+    """Return True if --fix may rewrite this file (prose/docs only)."""
+    return suffix in FIXABLE_EXTENSIONS or filename in FIXABLE_NAMES
+
+
+def _git_list_files(root: Path) -> Optional[List[Path]]:
+    """List tracked plus untracked-but-not-ignored files under root, relative to root.
+
+    Returns None when root is not inside a git work tree or git is unavailable,
+    so the caller falls back to walking the filesystem.
+    """
+    try:
+        result = subprocess.run(
+            ['git', '-C', str(root), 'ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+            capture_output=True, timeout=120,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    names = result.stdout.decode('utf-8', errors='surrogateescape').split('\0')
+    return sorted({Path(n) for n in names if n})
+
+
+def _list_files(root: Path) -> List[Path]:
+    """Return candidate files relative to root, honouring .gitignore in git work trees."""
+    git_files = _git_list_files(root)
+    if git_files:
+        # --cached still lists files deleted from the work tree; skip them and submodule dirs.
+        return [p for p in git_files
+                if not any(part in IGNORE_DIRS for part in p.parts[:-1]) and (root / p).is_file()]
+
+    files: List[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        # Exclude ignored directories in-place
+        dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS and d not in GENERATED_DIRS]
+        for filename in filenames:
+            files.append((Path(dirpath) / filename).relative_to(root))
+    return files
+
+
+def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool = False,
+                    private_terms: Optional[Sequence[str]] = None) -> ValidationReport:
+    """Scan root with all gates. private_terms=None loads them via load_private_terms()."""
     report = ValidationReport()
     is_quench = _is_quench_repo(root)
+    if private_terms is None:
+        private_terms = load_private_terms()
 
     # Run adapter parity check first
     if not check_paths_only:
         validate_adapter_parity(root, report)
 
-    # Walk repository files
-    for dirpath, dirnames, filenames in os.walk(root):
-        # Exclude ignored directories in-place
-        dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS]
+    for rel_path in _list_files(root):
+        filename = rel_path.name
+        if filename in IGNORE_FILES:
+            continue
 
-        for filename in filenames:
-            if filename in IGNORE_FILES:
-                continue
+        file_path = root / rel_path
+        suffix = file_path.suffix.lower()
 
-            file_path = Path(dirpath) / filename
-            rel_path = file_path.relative_to(root)
-            suffix = file_path.suffix.lower()
+        if not _should_scan(filename, suffix):
+            continue
 
-            if not _should_scan(filename, suffix):
-                continue
+        report.files_scanned += 1
+        fix_file = auto_fix and _is_fixable(filename, suffix)
+        violations_before = len(report.violations)
 
-            report.files_scanned += 1
+        try:
+            raw_bytes = file_path.read_bytes()
+        except Exception as e:
+            report.add(Violation('io', rel_path, 0, 0, f"Failed to read file: {e}"))
+            continue
 
-            try:
-                raw_bytes = file_path.read_bytes()
-            except Exception as e:
-                report.add(Violation('io', rel_path, 0, 0, f"Failed to read file: {e}"))
-                continue
+        # Gate 5: Encoding & Endings
+        if not check_paths_only:
+            validate_encoding_and_endings(rel_path, raw_bytes, report)
 
-            # Gate 5: Encoding & Endings
-            if not check_paths_only:
-                validate_encoding_and_endings(rel_path, raw_bytes, report)
+        # Decode text
+        try:
+            content = raw_bytes.decode('utf-8')
+        except UnicodeDecodeError as e:
+            report.add(Violation('encoding', rel_path, 0, 0, f"Invalid UTF-8 sequence: {e}"))
+            continue
 
-            # Decode text
-            try:
-                content = raw_bytes.decode('utf-8')
-            except UnicodeDecodeError as e:
-                report.add(Violation('encoding', rel_path, 0, 0, f"Invalid UTF-8 sequence: {e}"))
-                continue
+        # Gate 2: Path & Leak Validation
+        gate2_fixed = validate_path_leaks(rel_path, content, report, auto_fix=fix_file,
+                                          private_terms=private_terms)
+        if fix_file and gate2_fixed is not None and gate2_fixed != content:
+            file_path.write_text(gate2_fixed, encoding='utf-8', newline='\n')
+            content = gate2_fixed
 
-            # Gate 2: Path & Leak Validation
-            gate2_fixed = validate_path_leaks(rel_path, content, report, auto_fix=auto_fix)
-            if auto_fix and gate2_fixed is not None and gate2_fixed != content:
-                file_path.write_text(gate2_fixed, encoding='utf-8', newline='\n')
-                content = gate2_fixed
+        if not check_paths_only:
+            # Gate 1: Plaincast
+            fixed_content = validate_plaincast(rel_path, content, report, auto_fix=fix_file)
+            if fix_file and fixed_content is not None and fixed_content != content:
+                file_path.write_text(fixed_content, encoding='utf-8', newline='\n')
 
-            if not check_paths_only:
-                # Gate 1: Plaincast
-                fixed_content = validate_plaincast(rel_path, content, report, auto_fix=auto_fix)
-                if auto_fix and fixed_content is not None and fixed_content != content:
-                    file_path.write_text(fixed_content, encoding='utf-8', newline='\n')
+            # Gate 4: Skill Frontmatter
+            validate_skill_frontmatter(rel_path, content, report, quench_repo=is_quench)
 
-                # Gate 4: Skill Frontmatter
-                validate_skill_frontmatter(rel_path, content, report, quench_repo=is_quench)
+        if auto_fix and not fix_file and len(report.violations) > violations_before:
+            report.fix_skipped.append(rel_path)
 
     return report
 
 
-def validate_commit_message(msg_path: Path, report: ValidationReport):
-    """Validate a commit message for leaks, banned characters, and encoding."""
+def validate_commit_message(msg_path: Path, report: ValidationReport,
+                            private_terms: Optional[Sequence[str]] = None):
+    """Validate a commit message for leaks, banned characters, and encoding.
+
+    private_terms=None loads them via load_private_terms().
+    """
     try:
         raw_bytes = msg_path.read_bytes()
     except Exception as e:
@@ -709,7 +934,9 @@ def validate_commit_message(msg_path: Path, report: ValidationReport):
     validate_plaincast(Path('COMMIT_MSG'), effective_msg, report, auto_fix=False)
 
     # Gate 2: Leakguard
-    validate_path_leaks(Path('COMMIT_MSG'), effective_msg, report)
+    if private_terms is None:
+        private_terms = load_private_terms()
+    validate_path_leaks(Path('COMMIT_MSG'), effective_msg, report, private_terms=private_terms)
 
 
 def main():
@@ -723,13 +950,17 @@ def main():
     parser.add_argument('--fix', action='store_true', help="Automatically fix plaincast character violations")
     parser.add_argument('--check-paths-only', action='store_true', help="Only run Gate 2 (Path & Secret leak checks)")
     parser.add_argument('--check-commit-msg', type=str, help="Validate commit message file from git commit-msg hook")
+    parser.add_argument('--private-term', action='append', default=[], metavar='TERM',
+                        help=f"Private tool/project name to flag as context bleed (repeatable; "
+                             f"also read from ${PRIVATE_TERMS_ENV} and ${PRIVATE_TERMS_FILE_ENV})")
     parser.add_argument('--verbose', action='store_true', help="Show verbose scan information")
     args = parser.parse_args()
+    private_terms = load_private_terms(args.private_term)
 
     if args.check_commit_msg:
         msg_file = Path(args.check_commit_msg)
         report = ValidationReport()
-        validate_commit_message(msg_file, report)
+        validate_commit_message(msg_file, report, private_terms=private_terms)
         if report.passed:
             print("[PASS] Commit message is clean.")
             sys.exit(0)
@@ -746,8 +977,12 @@ def main():
         print("Auto-fix mode: ENABLED")
     if args.check_paths_only:
         print("Mode: Paths and secret leaks only")
+    if private_terms:
+        # Count only: printing the terms would leak them into CI logs.
+        print(f"Private terms: {len(private_terms)} configured")
 
-    report = scan_repository(repo_root, check_paths_only=args.check_paths_only, auto_fix=args.fix)
+    report = scan_repository(repo_root, check_paths_only=args.check_paths_only, auto_fix=args.fix,
+                             private_terms=private_terms)
 
     print(f"\nScanned {report.files_scanned} files across repository.")
 
@@ -756,8 +991,7 @@ def main():
         sys.exit(0)
     else:
         print(f"\n[FAIL] Found {len(report.violations)} violation(s):\n")
-        for v in report.violations:
-            print(f"  {v}")
+        print_violations(report, repo_root)
         print("\nPlease resolve all violations before committing or publishing.")
         sys.exit(1)
 
