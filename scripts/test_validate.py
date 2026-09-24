@@ -611,6 +611,103 @@ class TestGithubAnnotations(unittest.TestCase):
             self.assertEqual('::error ' in buf.getvalue(), expected)
 
 
+@unittest.skipUnless(shutil.which('git'), "git not available")
+class TestGitAwareLineEndings(_TempRepoCase):
+    """CRLF only in a Windows working copy is not a violation when git stores LF (v1.8.0 item 1)."""
+
+    def setUp(self):
+        super().setUp()
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+
+    def git(self, *args):
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=t', '-c', 'user.email=t@e.com', *args],
+                       check=True, capture_output=True)
+
+    def hygiene(self):
+        report = validate.scan_repository(self.root)
+        return sorted(Path(v.file_path).as_posix() for v in report.violations if v.gate == 'hygiene')
+
+    def test_autocrlf_working_copy_is_not_reported(self):
+        self.git('config', 'core.autocrlf', 'false')
+        _write(self.root, 'a.md', data=b"one\ntwo\n")
+        self.git('add', 'a.md')
+        self.git('commit', '-qm', 'lf')
+        (self.root / 'a.md').write_bytes(b"one\r\ntwo\r\n")   # what a Windows checkout looks like
+        self.git('config', 'core.autocrlf', 'true')
+        self.assertEqual(self.hygiene(), [])
+
+    def test_text_attribute_normalizes_untracked_file(self):
+        _write(self.root, '.gitattributes', "* text=auto eol=lf\n")
+        _write(self.root, 'new.md', data=b"x\r\n")
+        self.assertEqual(self.hygiene(), [])
+
+    def test_crlf_committed_in_index_is_reported(self):
+        self.git('config', 'core.autocrlf', 'false')
+        _write(self.root, 'b.md', data=b"x\r\n")
+        self.git('add', 'b.md')
+        self.assertEqual(self.hygiene(), ['b.md'])
+
+    def test_crlf_without_normalization_is_reported(self):
+        self.git('config', 'core.autocrlf', 'false')
+        _write(self.root, 'c.md', data=b"x\r\n")                 # untracked, nothing will convert it
+        self.assertEqual(self.hygiene(), ['c.md'])
+
+    def test_binary_attribute_keeps_bytes_check(self):
+        self.git('config', 'core.autocrlf', 'true')
+        _write(self.root, '.gitattributes', "*.md -text\n")
+        _write(self.root, 'd.md', data=b"x\r\n")
+        self.assertEqual(self.hygiene(), ['d.md'])
+
+    def test_decision_table(self):
+        f = validate._crlf_reaches_commit
+        self.assertTrue(f(('crlf', 'lf', ''), 'true'))
+        self.assertTrue(f(('mixed', 'crlf', 'text=auto'), 'true'))
+        self.assertFalse(f(('lf', 'crlf', ''), 'input'))
+        self.assertFalse(f(('', 'crlf', 'text=auto eol=lf'), ''))
+        self.assertTrue(f(('', 'crlf', ''), 'false'))
+        self.assertFalse(f(('lf', 'lf', ''), ''))
+
+
+class TestCidrRanges(unittest.TestCase):
+    """Network ranges in SSRF guards are not host leaks (v1.8.0 item 2)."""
+
+    def leaks(self, text):
+        report = validate.ValidationReport()
+        validate.validate_path_leaks(Path('Client.php'), text, report)
+        return [v.sample for v in report.violations]
+
+    def test_network_ranges_not_reported(self):
+        self.assertEqual(self.leaks("$blocked = ['10.0.0.0/8', '172.16.0.0/12', '192.168.1.0/24'];\n"), [])
+
+    def test_hosts_still_reported(self):
+        self.assertEqual(self.leaks("connect to 192.168.1.20 now\n"), ['192.168.1.20'])
+        self.assertEqual(self.leaks("address: 192.168.1.5/24\n"), ['192.168.1.5/24'])  # host with prefix
+
+
+class TestCommitSubject(unittest.TestCase):
+    """Placeholder subjects such as '...' are rejected (commit-msg hook)."""
+
+    def check(self, text):
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', delete=False) as f:
+            f.write(text)
+        try:
+            report = validate.ValidationReport()
+            validate.validate_commit_message(Path(f.name), report, private_terms=[])
+            return report
+        finally:
+            Path(f.name).unlink(missing_ok=True)
+
+    def test_placeholders_rejected(self):
+        for msg in ("...\n", "-\n", "x\n", "..\n\nbody text that is long\n"):
+            with self.subTest(msg=msg):
+                self.assertTrue(any("does not describe the change" in v.message for v in self.check(msg).violations))
+
+    def test_short_real_subjects_pass(self):
+        for msg in ("wip\n", "Quench v1.8.1\n", "fix: typo\n"):
+            with self.subTest(msg=msg):
+                self.assertTrue(self.check(msg).passed, [str(v) for v in self.check(msg).violations])
+
+
 class TestPrivateTerms(_TempRepoCase):
     """Private names come from config outside the repo, never from the scanner source."""
 

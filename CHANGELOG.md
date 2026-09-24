@@ -3,6 +3,23 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.9.0] 2026-09-24 - Opt-In Verified Auto-Update, Git-Aware Line Endings & Scrubbed History
+
+### Security
+- **Auto-update is opt-in:** `quench update --global` no longer installs the SessionStart hook by default; `--auto-update` opts in and `--no-auto-update` removes it (a re-run with neither keeps the current state, so 1.8.0 installs keep their hook). The clone supplies the always-on rules and its `quench.py` runs at session start, so enabling it means trusting every future release.
+- **Auto-update never downgrades and only installs releases:** The hook installs a commit only if it carries a `vX.Y.Z` tag and is not older than the installed release. The installed version is recorded in the clone, so the check holds even if tags are re-pointed. Each update prints the old and new release, the commit range and a GitHub compare link.
+- **Scrubbed history:** A private tool name, a private folder name and machine identifiers (a Windows user folder, a user name and a local dev path, used as test data) were replaced with fictional values throughout the git history, so every published commit and tag has new SHAs; tag names and releases are unchanged. The current test fixtures use the same fictional values.
+- **Release workflow split by permission:** `release.yml` verifies and tests in a read-only job; only the `publish` job, which `needs` it, gets `contents: write`.
+
+### Fixed
+- **CRLF false positives on Windows checkouts:** In a git work tree the hygiene gate now reads `git ls-files --eol`. It reports CRLF only if it is already committed (`i/crlf`, `i/mixed`) or would be committed (no `text` attribute, no `core.autocrlf`, or `-text`). CRLF that exists only in a working copy that git normalizes on commit is no longer reported; on a real repository with `core.autocrlf=true` this removed about 639 false positives. Outside git, the working-tree bytes still decide.
+- **CIDR ranges flagged as private hosts:** A network address with a prefix (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.1.0/24`), as used in SSRF guards and firewall rules, is no longer reported. Hosts still are, including a host address written with a prefix (last octet not 0).
+- **`v1` could move backwards:** Pushing an older-line tag (for example `v1.6.4` after `v1.8.0`) no longer moves `v1` or marks the release Latest; `scripts/release_notes.py --is-newest` decides, with numeric version ordering.
+- **Placeholder commit messages:** The commit-msg hook rejects a subject with fewer than 3 letters or digits (such as `...`).
+
+### Changed
+- **Node.js 24 actions:** `actions/checkout@v7` and `actions/setup-python@v7` in `action.yml` and both workflows, which removes GitHub's Node.js 20 deprecation warning for the Action's users.
+
 ## [1.8.0] 2026-09-24 - Automatic Releases & Self-Updating Global Install
 
 ### Added

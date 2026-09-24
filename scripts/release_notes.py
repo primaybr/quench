@@ -17,6 +17,7 @@ Exit code 1 with a message on any mismatch, so the release job stops before publ
 
 import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, Tuple
@@ -65,6 +66,19 @@ def changelog_section(text: str, version: str) -> Tuple[Optional[str], str]:
     return (title_m.group(1) if title_m else None), body + '\n'
 
 
+def is_newest(tag: str, all_tags) -> bool:
+    """True when tag is the highest vX.Y.Z within its major version.
+
+    Only then may the floating major tag (v1) move and the release be marked Latest;
+    a hotfix for an older line (v1.6.4 after v1.8.0) must not move v1 backwards.
+    """
+    version = tuple(int(x) for x in version_from_tag(tag).split('.'))
+    same_major = [tuple(int(x) for x in m.group(1).split('.'))
+                  for m in (TAG_RE.match(t.strip()) for t in all_tags) if m]
+    same_major = [v for v in same_major if v[0] == version[0]]
+    return version >= max(same_major, default=version)
+
+
 def build_release(tag: str, root: Path = REPO_ROOT) -> Tuple[str, str]:
     """Validate tag against the repo and return (title, notes)."""
     version = version_from_tag(tag)
@@ -79,10 +93,23 @@ def build_release(tag: str, root: Path = REPO_ROOT) -> Tuple[str, str]:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     parser.add_argument('tag')
-    parser.add_argument('--notes-out', required=True)
-    parser.add_argument('--title-out', required=True)
+    parser.add_argument('--notes-out')
+    parser.add_argument('--title-out')
     parser.add_argument('--root', default=str(REPO_ROOT))
+    parser.add_argument('--is-newest', action='store_true',
+                        help="Print 'true' if tag is the highest vX.Y.Z of its major version (reads git tags)")
     args = parser.parse_args(argv)
+    if args.is_newest:
+        try:
+            tags = subprocess.run(['git', '-C', args.root, 'tag', '--list'], capture_output=True,
+                                  text=True, check=True).stdout.split()
+            print('true' if is_newest(args.tag, tags) else 'false')
+        except (ReleaseError, OSError, subprocess.CalledProcessError) as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
+        return 0
+    if not (args.notes_out and args.title_out):
+        parser.error('--notes-out and --title-out are required')
     try:
         title, notes = build_release(args.tag, Path(args.root))
     except ReleaseError as e:

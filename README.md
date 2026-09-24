@@ -173,7 +173,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.8.0
+    rev: v1.9.0
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -190,7 +190,7 @@ Validate pull requests and commits in GitHub Actions CI using the official compo
     target: .
 ```
 
-`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.8.0`) if you want fully reproducible CI.
+`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.0`) if you want fully reproducible CI.
 
 Violations are reported as `::error` annotations, so they appear inline on the PR diff. With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes.
 
@@ -241,15 +241,28 @@ links each skill into `~/.claude/skills/` for the full protocols on demand. It i
 safe to repeat: existing `CLAUDE.md` content, real skill folders and links to other
 clones are left unchanged, and a clone with local edits is refused rather than overwritten.
 
-**New releases install automatically.** The command also adds a Claude Code
-`SessionStart` hook to `~/.claude/settings.json`. When a session starts, the hook
-checks at most once a day whether `v1` has moved and, if so, updates the clone; you
-see one line ("quench updated to vX.Y.Z") and the new rules apply from the next
-session. It is silent otherwise, gives up after a short timeout when offline, never
-blocks a session, and never touches a clone with local edits. Opt out with
-`quench update --global --no-auto-update` (which also removes the hook).
+**Optional: install new releases automatically.** Add `--auto-update` to also add a
+Claude Code `SessionStart` hook to `~/.claude/settings.json`:
 
-Options: `--ref v1.8.0` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
+```bash
+quench update --global --auto-update
+```
+
+When a session starts, the hook checks at most once a day whether `v1` has moved and,
+if so, updates the clone. It prints one line with the old and new release, the commit
+range and a GitHub compare link, so you can review what was installed; the new rules
+apply from the next session. It only installs commits that carry a `vX.Y.Z` release
+tag, never moves to an older release than the one installed, gives up after a short
+timeout when offline, never blocks a session, and never touches a clone with local
+edits. `--no-auto-update` removes the hook; re-running without either flag keeps
+whatever you chose.
+
+Auto-update is opt-in because the clone supplies your agent's always-on rules and its
+`quench.py` runs at session start: enabling it means trusting every future release
+of this repository. Without it, re-run `quench update --global` when you want a new
+release.
+
+Options: `--ref v1.9.0` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
 moves the clone, `--no-claude` updates the clone only.
 
 Run `/memory` in a new session to confirm the import is listed, and `/skills` to
@@ -309,7 +322,7 @@ enforcing strict repository quality and cleanliness before commits:
 - **Gate 2 (Leakguard & Path Sanitization):** Scans for hardcoded local drives (`C:`, `F:`, etc.), user profile paths, absolute home directories, and accidental secret leaks (API tokens, PATs). It can also flag your own private tool, sibling-project or internal host names (see below).
 - **Gate 3 (Multi-Tool Adapter Parity):** Verifies all 11 adapters exist and stay synchronized with active skills.
 - **Gate 4 (Skill Frontmatter Schema):** Validates YAML frontmatter on all `skills/*/SKILL.md` files (requires `name`, SemVer `version`, `description`; rejects illegal fields like `trigger`).
-- **Gate 5 (Encoding & Line Endings):** Verifies UTF-8 encoding without BOM and rejects CRLF line endings.
+- **Gate 5 (Encoding & Line Endings):** Verifies UTF-8 encoding without BOM and rejects CRLF line endings in what gets committed. In a git work tree it reads `git ls-files --eol`, so CRLF that exists only in a Windows working copy (`core.autocrlf`, a `text` attribute) is not reported; `.bat` and `.cmd` files may use CRLF.
 
 ### Private terms (context bleed)
 

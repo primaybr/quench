@@ -91,6 +91,15 @@ class TestReleaseNotes(unittest.TestCase):
         self.assertEqual(title.read_text(encoding='utf-8'), 'v1.8.0 - Faster Scans\n')
         self.assertIn('Thing one.', notes.read_text(encoding='utf-8'))
 
+    def test_is_newest_within_major(self):
+        tags = ['v1', 'v1.6.3', 'v1.8.0', 'v1.10.0-rc1', 'v2.0.0', 'notes']
+        self.assertTrue(rn.is_newest('v1.8.1', tags))           # new patch on the newest line
+        self.assertTrue(rn.is_newest('v1.8.0', tags))           # re-run for the current newest
+        self.assertFalse(rn.is_newest('v1.6.4', tags))          # old-line hotfix must not move v1
+        self.assertTrue(rn.is_newest('v1.10.0', tags + ['v1.9.0']))  # numeric, not string, order
+        self.assertTrue(rn.is_newest('v2.0.0', tags))           # other majors are independent
+        self.assertTrue(rn.is_newest('v3.0.0', []))
+
     def test_current_repo_release_is_consistent(self):
         """The repo's own pyproject version must have a CHANGELOG section."""
         version = rn.pyproject_version((REPO_ROOT / 'pyproject.toml').read_text(encoding='utf-8'))

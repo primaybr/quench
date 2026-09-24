@@ -179,9 +179,8 @@ class TestUpdateGlobal(_GlobalFixture, unittest.TestCase):
         self.assertIn("checkout v99 failed", res.stdout)
 
 
-@unittest.skipUnless(shutil.which('git'), "git not available")
-class TestAutoUpdateHook(_GlobalFixture, unittest.TestCase):
-    """The SessionStart hook that installs new releases automatically."""
+class _HookFixture(_GlobalFixture):
+    """Fixture whose clone has a CLI that supports the auto-update hook."""
 
     def setUp(self):
         super().setUp()
@@ -191,7 +190,9 @@ class TestAutoUpdateHook(_GlobalFixture, unittest.TestCase):
             shutil.copy(SCRIPTS_DIR / name, self.src / 'scripts' / name)
         git('add', '-A', cwd=self.src)
         git('commit', '-q', '-m', 'cli', cwd=self.src)
+        git('tag', 'v1.0.0', cwd=self.src)
         git('tag', '-f', 'v1', cwd=self.src)
+        self.next_minor = 1
 
     def settings(self) -> dict:
         import json
@@ -207,17 +208,28 @@ class TestAutoUpdateHook(_GlobalFixture, unittest.TestCase):
                '--home', str(self.home)]
         return subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', env=env)
 
-    def release(self, text):
+    def release(self, text, version=None):
+        """Publish a release the way release.yml does: a vX.Y.Z tag, then move v1."""
         write(self.src / 'rules' / 'AGENTS.md', text)
         git('commit', '-q', '-am', text.strip(), cwd=self.src)
+        if version is None:
+            version = f'v1.{self.next_minor}.0'
+            self.next_minor += 1
+        git('tag', version, cwd=self.src)
         git('tag', '-f', 'v1', cwd=self.src)
+        return version
+
+
+@unittest.skipUnless(shutil.which('git'), "git not available")
+class TestAutoUpdateHook(_HookFixture, unittest.TestCase):
+    """The SessionStart hook that installs new releases automatically."""
 
     def test_hook_installed_once_and_settings_preserved(self):
         import json
         write(self.claude / 'settings.json', json.dumps({
             'theme': 'dark',
             'hooks': {'SessionStart': [{'hooks': [{'type': 'command', 'command': 'echo mine'}]}]}}))
-        self.run_update()
+        self.run_update('--auto-update')
         res = self.run_update()
         self.assertIn("auto-update: already enabled", res.stdout)
         self.assertEqual(self.settings()['theme'], 'dark')
@@ -229,20 +241,20 @@ class TestAutoUpdateHook(_GlobalFixture, unittest.TestCase):
     def test_no_auto_update_removes_only_our_hook(self):
         import json
         write(self.claude / 'settings.json', json.dumps({'theme': 'dark'}))
-        self.run_update()
+        self.run_update('--auto-update')
         res = self.run_update('--no-auto-update')
         self.assertIn("auto-update: disabled", res.stdout)
         self.assertEqual(self.settings(), {'theme': 'dark'})
 
     def test_invalid_settings_left_unchanged(self):
         write(self.claude / 'settings.json', "{ not json")
-        res = self.run_update()
+        res = self.run_update('--auto-update')
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
         self.assertIn("could not parse", res.stdout)
         self.assertEqual((self.claude / 'settings.json').read_text(encoding='utf-8'), "{ not json")
 
     def test_hook_command_runs_and_installs_new_release(self):
-        self.run_update()
+        self.run_update('--auto-update')
         self.release("# rules v1.1\n")
         cmd = self.our_hooks()[0]['command']
         env = dict(os.environ, QUENCH_AUTO_UPDATE_INTERVAL='0')
@@ -250,26 +262,26 @@ class TestAutoUpdateHook(_GlobalFixture, unittest.TestCase):
         # shell. It is built only from this test's own temp paths, so there is no untrusted input.
         res = subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding='utf-8', errors='replace', env=env)
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
-        self.assertIn("quench updated to", res.stdout)
+        self.assertIn("quench updated v1.0.0 -> v1.1.0", res.stdout)
         self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1.1\n")
 
     def test_auto_is_silent_when_nothing_changed(self):
-        self.run_update()
+        self.run_update('--auto-update')
         res = self.run_auto()
         self.assertEqual((res.returncode, res.stdout), (0, ''))
 
     def test_auto_is_throttled(self):
-        self.run_update()
+        self.run_update('--auto-update')
         self.run_auto()                     # stamps the check
         self.release("# rules v1.2\n")
         res = self.run_auto(interval='3600')
         self.assertEqual(res.stdout, '')
         self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1\n")
         res = self.run_auto(interval='0')
-        self.assertIn("quench updated to", res.stdout)
+        self.assertIn("quench updated v1.0.0 -> v1.1.0", res.stdout)
 
     def test_auto_never_fails_the_session(self):
-        self.run_update()
+        self.run_update('--auto-update')
         git('remote', 'set-url', 'origin', str(self.tmp / 'gone'), cwd=self.home)
         res = self.run_auto()
         self.assertEqual((res.returncode, res.stdout), (0, ''))
@@ -279,6 +291,66 @@ class TestAutoUpdateHook(_GlobalFixture, unittest.TestCase):
         res = self.run_auto()
         self.assertEqual((res.returncode, res.stdout), (0, ''))
         self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# local edit\n")
+
+
+@unittest.skipUnless(shutil.which('git'), "git not available")
+class TestAutoUpdateSafety(_HookFixture, unittest.TestCase):
+    """Opt-in, no downgrades, and a reviewable commit range (re-analysis of v1.8.0, item 3/4)."""
+
+    def test_off_by_default(self):
+        res = self.run_update()
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+        self.assertIn("auto-update: off (opt in with --auto-update)", res.stdout)
+        self.assertFalse((self.claude / 'settings.json').exists())
+
+    def test_plain_rerun_keeps_existing_hook(self):
+        self.run_update('--auto-update')
+        res = self.run_update()
+        self.assertIn("already enabled", res.stdout)
+        self.assertEqual(len(self.our_hooks()), 1)
+
+    def test_flags_are_mutually_exclusive(self):
+        res = self.run_update('--auto-update', '--no-auto-update')
+        self.assertEqual(res.returncode, 2)
+
+    def test_update_message_shows_version_and_commit_range(self):
+        self.run_update('--auto-update')
+        before = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=self.home, capture_output=True, text=True).stdout.strip()
+        version = self.release("# rules v1.1\n")
+        res = self.run_auto()
+        after = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=self.home, capture_output=True, text=True).stdout.strip()
+        self.assertIn(f"quench updated v1.0.0 -> {version}", res.stdout)
+        self.assertIn(f"commits {before[:12]}..{after[:12]}", res.stdout)
+
+    def test_backwards_moved_tag_is_not_installed(self):
+        self.run_update('--auto-update')
+        self.release("# rules v1.1\n")
+        self.run_auto()                                  # now on v1.1.0
+        # v1 moved back to the v1.0.0 commit, e.g. an old-line hotfix tagged by mistake
+        git('tag', '-f', 'v1', 'v1.0.0', cwd=self.src)
+        res = self.run_auto()
+        self.assertIn("not downgrading", res.stdout)
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1.1\n")
+
+    def test_recorded_version_survives_retagging(self):
+        """After a history rewrite the old HEAD has no tags; the recorded version still guards."""
+        self.run_update('--auto-update')
+        self.release("# rules v1.1\n")
+        self.run_auto()                                  # records v1.1.0
+        git('tag', '-d', 'v1.1.0', cwd=self.src)         # the old commit loses its tag
+        git('fetch', '--quiet', '--prune', '--prune-tags', '--force', 'origin', cwd=self.home)
+        git('tag', '-f', 'v1', 'v1.0.0', cwd=self.src)
+        res = self.run_auto()
+        self.assertIn("not downgrading", res.stdout)
+
+    def test_untagged_target_is_not_installed(self):
+        self.run_update('--auto-update')
+        write(self.src / 'rules' / 'AGENTS.md', "# unreleased\n")
+        git('commit', '-q', '-am', 'unreleased', cwd=self.src)
+        git('tag', '-f', 'v1', cwd=self.src)             # v1 moved to a commit with no release tag
+        res = self.run_auto()
+        self.assertIn("untagged commit", res.stdout)
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1\n")
 
 
 if __name__ == '__main__':

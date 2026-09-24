@@ -493,6 +493,17 @@ _PATH_PATTERN_DESCS = {
     'Localhost URL with non-generic path',
 }
 
+_CIDR_NETWORK_RE = re.compile(r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.0)/(\d{1,2})$')
+
+
+def _is_cidr_network(sample: str) -> bool:
+    """True for a range definition such as 10.0.0.0/8 or 192.168.1.0/24 (SSRF guards,
+    firewall rules), which names a network rather than a host. A host address written
+    with a prefix (last octet not 0) is still reported."""
+    m = _CIDR_NETWORK_RE.match(sample)
+    return bool(m) and int(m.group(2)) <= 32
+
+
 # Characters that continue a path token past the matched prefix (used by --fix).
 _PATH_TOKEN_CHAR = re.compile(r'[A-Za-z0-9_.~/\\-]')
 
@@ -543,6 +554,8 @@ def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto
                 continue
             for match in pattern.finditer(line):
                 start, end = match.span()
+                if desc == 'Private LAN IP address' and _is_cidr_network(match.group(0)):
+                    continue
                 if is_path_type:
                     if any(start < s_end and s_start < end for s_start, s_end in path_spans):
                         continue
@@ -588,8 +601,35 @@ def validate_path_leaks(path: Path, content: str, report: ValidationReport, auto
 CRLF_ALLOWED_SUFFIXES = {'.bat', '.cmd'}
 
 
-def validate_encoding_and_endings(path: Path, raw_bytes: bytes, report: ValidationReport):
-    """Gate 5: Verify no UTF-8 BOM and strictly LF line endings (batch files may use CRLF)."""
+def _crlf_reaches_commit(git_eol: Tuple[str, str, str], autocrlf: str) -> Optional[bool]:
+    """Decide from `git ls-files --eol` data whether CRLF would be committed.
+
+    git_eol is (index, worktree, attr), e.g. ('lf', 'crlf', 'text=auto eol=lf').
+    Returns True/False when git settles it, None when only the working-tree bytes can tell.
+    """
+    index_eol, work_eol, attr = git_eol
+    if index_eol in ('crlf', 'mixed'):
+        return True                      # already committed with CRLF
+    if work_eol not in ('crlf', 'mixed'):
+        return False
+    attrs = attr.split()
+    if '-text' in attrs or 'binary' in attrs:
+        return True                      # git stores the bytes as they are
+    if any(a == 'text' or a.startswith('text=') or a.startswith('eol=') for a in attrs):
+        return False                     # normalized to LF on commit
+    if autocrlf in ('true', 'input'):
+        return False                     # core.autocrlf converts CRLF to LF on commit
+    return True
+
+
+def validate_encoding_and_endings(path: Path, raw_bytes: bytes, report: ValidationReport,
+                                  git_eol: Optional[Tuple[str, str, str]] = None, autocrlf: str = ''):
+    """Gate 5: Verify no UTF-8 BOM and LF line endings in what gets committed.
+
+    With git_eol (from `git ls-files --eol`), CRLF that exists only in a Windows working
+    copy and that git normalizes to LF on commit (core.autocrlf, a text attribute) is not
+    reported. Without it, the working-tree bytes decide. Batch files may use CRLF.
+    """
     if raw_bytes.startswith(b'\xef\xbb\xbf'):
         report.add(Violation(
             gate='hygiene',
@@ -599,6 +639,9 @@ def validate_encoding_and_endings(path: Path, raw_bytes: bytes, report: Validati
             message="File starts with UTF-8 BOM (EF BB BF); must be UTF-8 no BOM"
         ))
 
+    crlf_committed = _crlf_reaches_commit(git_eol, autocrlf) if git_eol else None
+    if crlf_committed is False:
+        return
     if b'\r\n' in raw_bytes and path.suffix.lower() not in CRLF_ALLOWED_SUFFIXES:
         # report first CRLF occurrence
         lines = raw_bytes.split(b'\n')
@@ -819,6 +862,34 @@ def _git_list_files(root: Path) -> Optional[List[Path]]:
     return sorted({Path(n) for n in names if n})
 
 
+def _git_eol_info(root: Path) -> Tuple[Dict[Path, Tuple[str, str, str]], str]:
+    """Return ({path: (index_eol, worktree_eol, attr)}, core.autocrlf) for a git work tree.
+
+    Parses `git ls-files --eol`, whose lines look like
+    'i/lf    w/crlf  attr/text=auto eol=lf<TAB>path'. Empty when not in a git work tree.
+    """
+    info: Dict[Path, Tuple[str, str, str]] = {}
+    try:
+        result = subprocess.run(
+            ['git', '-C', str(root), 'ls-files', '-z', '--eol', '--cached', '--others', '--exclude-standard'],
+            capture_output=True, timeout=120,
+        )
+        autocrlf = subprocess.run(['git', '-C', str(root), 'config', '--get', 'core.autocrlf'],
+                                  capture_output=True, text=True, timeout=30).stdout.strip().lower()
+    except (OSError, subprocess.SubprocessError):
+        return info, ''
+    if result.returncode != 0:
+        return info, ''
+    for entry in result.stdout.decode('utf-8', errors='surrogateescape').split('\0'):
+        meta, sep, name = entry.partition('\t')
+        if not sep or not name:
+            continue
+        fields = meta.split(None, 2)
+        values = {f.split('/', 1)[0]: (f.split('/', 1)[1] if '/' in f else '').strip() for f in fields}
+        info[Path(name)] = (values.get('i', ''), values.get('w', ''), values.get('attr', ''))
+    return info, autocrlf
+
+
 def _list_files(root: Path) -> List[Path]:
     """Return candidate files relative to root, honouring .gitignore in git work trees."""
     git_files = _git_list_files(root)
@@ -848,6 +919,8 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
     if not check_paths_only:
         validate_adapter_parity(root, report)
 
+    eol_info, autocrlf = _git_eol_info(root) if not check_paths_only else ({}, '')
+
     for rel_path in _list_files(root):
         filename = rel_path.name
         if filename in IGNORE_FILES:
@@ -871,7 +944,8 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
 
         # Gate 5: Encoding & Endings
         if not check_paths_only:
-            validate_encoding_and_endings(rel_path, raw_bytes, report)
+            validate_encoding_and_endings(rel_path, raw_bytes, report,
+                                          git_eol=eol_info.get(rel_path), autocrlf=autocrlf)
 
         # Decode text
         try:
@@ -902,6 +976,9 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
     return report
 
 
+MIN_SUBJECT_ALNUM = 3
+
+
 def validate_commit_message(msg_path: Path, report: ValidationReport,
                             private_terms: Optional[Sequence[str]] = None):
     """Validate a commit message for leaks, banned characters, and encoding.
@@ -929,6 +1006,13 @@ def validate_commit_message(msg_path: Path, report: ValidationReport,
     if not effective_msg:
         report.add(Violation('commit-msg', msg_path, 1, 1, "Commit message is empty"))
         return
+
+    # A placeholder such as "..." or "-" says nothing about the change
+    subject = effective_msg.splitlines()[0]
+    if sum(ch.isalnum() for ch in subject) < MIN_SUBJECT_ALNUM:
+        report.add(Violation('commit-msg', msg_path, 1, 1,
+                             f"Commit subject {subject.strip()!r} does not describe the change "
+                             f"(needs at least {MIN_SUBJECT_ALNUM} letters or digits)"))
 
     # Gate 1: Plaincast
     validate_plaincast(Path('COMMIT_MSG'), effective_msg, report, auto_fix=False)

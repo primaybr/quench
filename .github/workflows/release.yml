@@ -2,7 +2,8 @@ name: Release
 
 # Pushing a version tag (git tag v1.7.1 && git push origin v1.7.1) publishes the release:
 # it checks the tag matches pyproject.toml, runs the tests, moves the floating major
-# tag (v1) to this commit, and creates the GitHub Release from the CHANGELOG section.
+# tag (v1) to this commit when it is the highest v1.x.y, and creates the GitHub Release
+# from the CHANGELOG section.
 # Moving v1 does not re-trigger this workflow: only vX.Y.Z tags match, and pushes made
 # with GITHUB_TOKEN never start new workflow runs.
 
@@ -11,26 +12,24 @@ on:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
 
+# Read-only by default; only the publish job below may write.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release
   cancel-in-progress: false
 
 jobs:
-  release:
-    name: Publish release
+  test:
+    name: Verify release
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -47,11 +46,48 @@ jobs:
           done
           python scripts/validate.py
 
-      - name: Move floating major tag
+  publish:
+    name: Publish release
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Build release notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: python scripts/release_notes.py "$TAG" --notes-out "$RUNNER_TEMP/notes.md" --title-out "$RUNNER_TEMP/title.txt"
+
+      - name: Decide whether this is the newest release of its major version
+        id: newest
         env:
           TAG: ${{ github.ref_name }}
         run: |
           MAJOR="${TAG%%.*}"
+          NEWEST="$(python scripts/release_notes.py "$TAG" --is-newest)"
+          echo "major=$MAJOR" >> "$GITHUB_OUTPUT"
+          echo "is_newest=$NEWEST" >> "$GITHUB_OUTPUT"
+          if [ "$NEWEST" = "true" ]; then
+            echo "$TAG is the newest $MAJOR release"
+          else
+            echo "$TAG is older than an existing $MAJOR release: $MAJOR stays where it is and the release is not marked Latest"
+          fi
+
+      - name: Move floating major tag
+        if: steps.newest.outputs.is_newest == 'true'
+        env:
+          MAJOR: ${{ steps.newest.outputs.major }}
+        run: |
           git tag -f "$MAJOR" "$GITHUB_SHA"
           git push -f origin "refs/tags/$MAJOR"
           echo "Moved $MAJOR to $GITHUB_SHA"
@@ -60,11 +96,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
+          LATEST: ${{ steps.newest.outputs.is_newest }}
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists; leaving it unchanged."
           else
-            gh release create "$TAG" --verify-tag --latest \
+            gh release create "$TAG" --verify-tag --latest="$LATEST" \
               --title "$(cat "$RUNNER_TEMP/title.txt")" \
               --notes-file "$RUNNER_TEMP/notes.md"
           fi

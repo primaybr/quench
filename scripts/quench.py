@@ -33,8 +33,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.8.0"
-__version__ = "1.8.0"
+VERSION = "quench 1.9.0"
+__version__ = "1.9.0"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -571,14 +571,67 @@ def _auto_update(home: Path, ref: str) -> None:
     except OSError:
         pass
     try:
+        # The stamp records the last installed release, so the no-downgrade check below
+        # still works if tags are re-pointed (for example after a history rewrite).
+        recorded = stamp.read_text(encoding='utf-8').strip() if stamp.is_file() else ''
         stamp.touch()  # before fetching, so an offline machine does not retry every session
+        if _git(['status', '--porcelain', '--untracked-files=no'], cwd=home, timeout=10).stdout.strip():
+            return  # local edits: never overwrite them
         before = _git(['rev-parse', 'HEAD'], cwd=home, timeout=10).stdout.strip()
-        ok, now = _sync_global_clone(home, DEFAULT_REPO_URL, ref, timeout=AUTO_FETCH_TIMEOUT)
-        after = _git(['rev-parse', 'HEAD'], cwd=home, timeout=10).stdout.strip()
+        before_ver = _parse_release(recorded) or _release_version(home, 'HEAD')
+        if _git(['fetch', '--quiet', '--tags', '--force', 'origin'], cwd=home,
+                timeout=AUTO_FETCH_TIMEOUT).returncode != 0:
+            return
+        target = _git(['rev-parse', '--verify', '--quiet', f'{ref}^{{commit}}'], cwd=home, timeout=10).stdout.strip()
+        if not target or target == before:
+            return
+        target_ver = _release_version(home, target)
+        if not target_ver:
+            # Releases always carry a vX.Y.Z tag; anything else was not published by release.yml
+            print(f"quench: {ref} now points at untagged commit {target[:12]}; not installing it.")
+            return
+        if before_ver and target_ver < before_ver:
+            print(f"quench: {ref} now points at {_fmt_release(target_ver) or target[:12]}, "
+                  f"older than the installed {_fmt_release(before_ver)}; not downgrading.")
+            return
+        if _git(['-c', 'advice.detachedHead=false', 'checkout', '--quiet', '--detach', target],
+                cwd=home, timeout=30).returncode != 0:
+            return
+        if target_ver:
+            stamp.write_text(_fmt_release(target_ver) + '\n', encoding='utf-8')
+        compare = _compare_url(home, before, target)
+        print(f"quench updated {_fmt_release(before_ver) or before[:12]} -> {_fmt_release(target_ver) or target[:12]} "
+              f"(commits {before[:12]}..{target[:12]}{'; review: ' + compare if compare else ''}). "
+              "New rules and skills apply from the next session.")
     except (OSError, subprocess.SubprocessError):
         return
-    if ok and after != before:
-        print(f"quench updated to {now}; its rules and skills apply from the next session.")
+
+
+_RELEASE_TAG_RE = re.compile(r'^v(\d+)\.(\d+)\.(\d+)$')
+
+
+def _parse_release(tag: str) -> Optional[Tuple[int, int, int]]:
+    m = _RELEASE_TAG_RE.match(tag.strip())
+    return tuple(int(x) for x in m.groups()) if m else None  # type: ignore[return-value]
+
+
+def _fmt_release(version: Optional[Tuple[int, int, int]]) -> str:
+    return 'v' + '.'.join(map(str, version)) if version else ''
+
+
+def _release_version(home: Path, rev: str) -> Optional[Tuple[int, int, int]]:
+    """Highest vX.Y.Z tag pointing at rev, or None when rev carries no release tag."""
+    tags = _git(['tag', '--points-at', rev], cwd=home, timeout=10).stdout.split()
+    versions = [v for v in (_parse_release(t) for t in tags) if v]
+    return max(versions) if versions else None
+
+
+def _compare_url(home: Path, before: str, after: str) -> str:
+    """GitHub compare link for the installed range, when origin is a GitHub https URL."""
+    url = _git(['remote', 'get-url', 'origin'], cwd=home, timeout=10).stdout.strip()
+    if not url.startswith('https://github.com/'):
+        return ''
+    return f"{url[:-4] if url.endswith('.git') else url}/compare/{before[:12]}...{after[:12]}"
 
 
 def cmd_update_global(args: argparse.Namespace) -> int:
@@ -596,6 +649,13 @@ def cmd_update_global(args: argparse.Namespace) -> int:
         print(f"Error: {message}")
         return 1
     print(f"  checked out: {message}")
+    # Record the installed release for the auto-update no-downgrade check. Written
+    # without touching the throttle meaning: a manual run counts as today's check.
+    if _parse_release(message):
+        try:
+            (home / '.git' / AUTO_STAMP_NAME).write_text(message + '\n', encoding='utf-8')
+        except OSError:
+            pass
 
     if args.no_claude:
         return 0
@@ -608,20 +668,35 @@ def cmd_update_global(args: argparse.Namespace) -> int:
         print(f"  {note}")
     clone_cli = home / 'scripts' / 'quench.py'
     supports_auto = clone_cli.is_file() and "add_argument('--auto'" in clone_cli.read_text(encoding='utf-8', errors='replace')
-    if not args.no_auto_update and not supports_auto:
+    installed = _auto_hook_installed(claude_dir)
+    if args.no_auto_update:
+        print(f"  {_set_auto_hook(claude_dir, home, args.ref, enable=False)}")
+    elif not supports_auto:
         # An older release would reject --auto with exit code 2, which blocks Claude Code
         # sessions, so any existing hook is removed rather than left pointing at it.
         _set_auto_hook(claude_dir, home, args.ref, enable=False)
         print(f"  auto-update: not available in {message}; hook not installed")
-        args.no_auto_update = True
+        installed = False
+    elif args.auto_update:
+        print(f"  {_set_auto_hook(claude_dir, home, args.ref, enable=True)}")
+        installed = True
+    elif installed:
+        print(f"  {_set_auto_hook(claude_dir, home, args.ref, enable=True)} (disable with --no-auto-update)")
     else:
-        print(f"  {_set_auto_hook(claude_dir, home, args.ref, enable=not args.no_auto_update)}")
-    if args.no_auto_update:
+        print("  auto-update: off (opt in with --auto-update)")
+
+    if args.no_auto_update or not installed:
         print("\nDone. New Claude Code sessions use this release; re-run after each release to update.")
     else:
-        print("\nDone. New Claude Code sessions use this release, and new releases install automatically "
-              "(checked at most once a day). Opt out with --no-auto-update.")
+        print("\nDone. New Claude Code sessions use this release. New releases install automatically "
+              "(checked at most once a day, never downgrading); disable with --no-auto-update.")
     return 0
+
+
+def _auto_hook_installed(claude_dir: Path) -> bool:
+    data, _ = _load_settings(claude_dir / 'settings.json')
+    hooks = data.get('hooks') if isinstance(data, dict) and isinstance(data.get('hooks'), dict) else {}
+    return any(isinstance(e, dict) and _is_our_hook(e) for e in hooks.get('SessionStart', []))
 
 
 def cmd_update(args: argparse.Namespace) -> int:
@@ -757,9 +832,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_update.add_argument('--repo', default=DEFAULT_REPO_URL, help='With --global: repository to clone')
     p_update.add_argument('--claude-dir', help='With --global: Claude Code config dir (default ~/.claude or $CLAUDE_CONFIG_DIR)')
     p_update.add_argument('--no-claude', action='store_true', help='With --global: update the clone only')
-    p_update.add_argument('--no-auto-update', action='store_true',
-                          help='With --global: do not install (or remove) the Claude Code hook that '
-                               'installs new releases automatically, at most once a day')
+    auto_group = p_update.add_mutually_exclusive_group()
+    auto_group.add_argument('--auto-update', action='store_true',
+                            help='With --global: opt in to a Claude Code SessionStart hook that installs new '
+                                 'releases automatically (at most once a day, never downgrading)')
+    auto_group.add_argument('--no-auto-update', action='store_true',
+                            help='With --global: remove that hook. Without either flag, the current state is kept')
     # Internal: run by that SessionStart hook. Throttled, silent unless a new release was installed.
     p_update.add_argument('--auto', action='store_true', help=argparse.SUPPRESS)
 
