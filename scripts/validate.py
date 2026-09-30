@@ -407,12 +407,16 @@ def github_annotation(violation: Violation, root: Path) -> str:
     return f"::error {','.join(props)}::{_escape_annotation(violation.message)}"
 
 
-def print_violations(report: ValidationReport, root: Path) -> None:
-    """Print each violation, plus a GitHub annotation when running in GitHub Actions."""
-    in_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
+def print_violations(report: ValidationReport, root: Path, fmt: str = 'text') -> None:
+    """Print violations. fmt is 'text' or 'github'.
+
+    When fmt='github', emit a GitHub Actions ::error workflow command after
+    each human-readable line so violations appear inline on PR diffs.
+    """
+    emit_annotations = (fmt == 'github')
     for v in report.violations:
         print(f"  {v}")
-        if in_actions:
+        if emit_annotations:
             print(github_annotation(v, root))
     if report.fix_skipped:
         print(f"\n--fix left {len(report.fix_skipped)} code/config file(s) unchanged; "
@@ -1120,8 +1124,19 @@ def main():
     parser.add_argument('--verbose', action='store_true', help="Show verbose scan information")
     parser.add_argument('--no-ignore', action='store_true',
                         help="Ignore .quenchignore and scan all files (for CI audits)")
+    parser.add_argument(
+        '--format', dest='output_format', default=None,
+        choices=['text', 'github'],
+        help="Output format: 'text' (default) or 'github' (emit ::error annotations for GitHub Actions PR diffs). "
+             "Defaults to 'github' when GITHUB_ACTIONS=true."
+    )
     args = parser.parse_args()
     private_terms = load_private_terms(args.private_term)
+
+    if args.output_format is not None:
+        output_format = args.output_format
+    else:
+        output_format = 'github' if os.environ.get('GITHUB_ACTIONS') == 'true' else 'text'
 
     if args.check_commit_msg:
         msg_file = Path(args.check_commit_msg)
@@ -1148,6 +1163,8 @@ def main():
     if private_terms:
         # Count only: printing the terms would leak them into CI logs.
         print(f"Private terms: {len(private_terms)} configured")
+    if output_format == 'github':
+        print("Output format: github (::error annotations enabled)")
     ignore_patterns = frozenset() if args.no_ignore else load_quench_ignore(repo_root)
     if ignore_patterns:
         print(f"Ignore patterns: {len(ignore_patterns)} from .quenchignore")
@@ -1163,9 +1180,10 @@ def main():
         sys.exit(0)
     else:
         print(f"\n[FAIL] Found {len(report.violations)} violation(s):\n")
-        print_violations(report, repo_root)
+        print_violations(report, repo_root, fmt=output_format)
         print("\nPlease resolve all violations before committing or publishing.")
         sys.exit(1)
+
 
 
 if __name__ == '__main__':

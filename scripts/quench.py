@@ -6,6 +6,7 @@ Commands:
   quench init     Initialize quench in any project repository.
   quench check    Run the 5-gate Quench validation engine on any target directory.
                   Use --no-ignore to bypass .quenchignore and scan all files.
+                  Use --format github to emit ::error annotations for GitHub Actions PR diffs.
   quench update   Update installed Quench rules/adapters from source templates.
                   With --global: follow the latest release in ~/.quench and wire Claude Code.
   quench status   Inspect target directory for active adapters and git hooks.
@@ -360,6 +361,10 @@ def cmd_check(args: argparse.Namespace) -> int:
         print(f"Private terms: {len(private_terms)} configured")
     no_ignore = bool(getattr(args, 'no_ignore', False))
 
+    output_format = args.output_format
+    if output_format is None:
+        output_format = 'github' if os.environ.get('GITHUB_ACTIONS') == 'true' else 'text'
+
     report = validate.scan_repository(target, check_paths_only=args.paths_only, auto_fix=args.fix,
                                       private_terms=private_terms, staged_only=staged_only,
                                       no_ignore=no_ignore)
@@ -370,9 +375,10 @@ def cmd_check(args: argparse.Namespace) -> int:
         return 0
     else:
         print(f"\n[FAIL] Found {len(report.violations)} violation(s):\n")
-        validate.print_violations(report, target)
+        validate.print_violations(report, target, fmt=output_format)
         print("\nPlease resolve all violations before committing.")
         return 1
+
 
 
 # ---------------------------------------------------------------------------
@@ -843,7 +849,11 @@ def build_parser() -> argparse.ArgumentParser:
                               'also read from $QUENCH_PRIVATE_TERMS and $QUENCH_PRIVATE_TERMS_FILE)')
     p_check.add_argument('--no-ignore', action='store_true',
                          help='Bypass .quenchignore and scan all files')
-
+    p_check.add_argument(
+        '--format', dest='output_format', default=None,
+        choices=['text', 'github'],
+        help="Output format: 'text' or 'github' (::error annotations). Defaults to 'github' when GITHUB_ACTIONS=true."
+    )
     # update
     p_update = subparsers.add_parser('update', help='Update existing installed adapters from source templates')
     p_update.add_argument('-d', '--target', default='.', help='Target project directory (default: current dir)')

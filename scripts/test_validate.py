@@ -790,5 +790,89 @@ class TestStagedScan(_TempRepoCase):
         self.assertEqual(full_report.files_scanned, 2)
 
 
+class TestGithubAnnotations(unittest.TestCase):
+    """Tests for --format github annotation output."""
+
+    def _make_violation(self, gate='plaincast', fname='test.md', line=3, col=5, msg='em-dash found'):
+        return validate.Violation(gate, Path(fname), line, col, msg)
+
+    def test_annotation_format_string(self):
+        """github_annotation produces a valid ::error workflow command."""
+        v = self._make_violation()
+        root = Path('.')
+        ann = validate.github_annotation(v, root)
+        self.assertTrue(ann.startswith('::error '), f"Expected ::error prefix, got: {ann!r}")
+        self.assertIn('file=', ann)
+        self.assertIn('line=3', ann)
+        self.assertIn('col=5', ann)
+        self.assertIn('title=quench plaincast', ann)
+        self.assertIn('em-dash found', ann)
+
+    def test_annotation_no_line(self):
+        """Violations with line=0 omit line/col from annotation properties."""
+        v = validate.Violation('leakguard', Path('foo.md'), 0, 0, 'path leak')
+        ann = validate.github_annotation(v, Path('.'))
+        self.assertNotIn('line=', ann)
+        self.assertNotIn('col=', ann)
+
+    def test_print_violations_github_format(self):
+        """print_violations with fmt='github' emits annotation after each violation line."""
+        import io
+        report = validate.ValidationReport()
+        report.add(self._make_violation())
+        buf = io.StringIO()
+        import unittest.mock as mock
+        with mock.patch('builtins.print', side_effect=lambda *a, **k: buf.write(' '.join(str(x) for x in a) + '\n')):
+            validate.print_violations(report, Path('.'), fmt='github')
+        output = buf.getvalue()
+        lines = [l for l in output.splitlines() if l.strip()]
+        # Should have 2 lines: the human-readable line + the ::error line
+        annotation_lines = [l for l in lines if l.startswith('::error')]
+        self.assertEqual(len(annotation_lines), 1, f"Expected 1 ::error line, got: {lines}")
+
+    def test_print_violations_text_format_no_annotations(self):
+        """print_violations with fmt='text' emits no ::error lines."""
+        import io
+        report = validate.ValidationReport()
+        report.add(self._make_violation())
+        buf = io.StringIO()
+        import unittest.mock as mock
+        with mock.patch('builtins.print', side_effect=lambda *a, **k: buf.write(' '.join(str(x) for x in a) + '\n')):
+            validate.print_violations(report, Path('.'), fmt='text')
+        output = buf.getvalue()
+        self.assertNotIn('::error', output)
+
+    def test_cli_format_github_flag(self):
+        """validate.py --format github emits ::error annotations in output."""
+        import subprocess, tempfile
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td)
+            # Write a file with an em-dash to trigger a violation
+            (p / 'bad.md').write_text('This has an em\u2014dash.', encoding='utf-8')
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS_DIR / 'validate.py'),
+                 '--root', td, '--format', 'github'],
+                capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('::error', result.stdout)
+
+    def test_cli_format_text_flag_no_annotations(self):
+        """validate.py --format text suppresses ::error annotations even when GITHUB_ACTIONS=true."""
+        import subprocess, tempfile
+        env = os.environ.copy()
+        env['GITHUB_ACTIONS'] = 'true'
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td)
+            (p / 'bad.md').write_text('This has an em\u2014dash.', encoding='utf-8')
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS_DIR / 'validate.py'),
+                 '--root', td, '--format', 'text'],
+                capture_output=True, text=True, env=env
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertNotIn('::error', result.stdout)
+
+
 if __name__ == '__main__':
     unittest.main()

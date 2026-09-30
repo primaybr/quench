@@ -267,6 +267,10 @@ class TestActionYaml(unittest.TestCase):
                 'desc': 'Only check for path leaks and credentials',
                 'default': 'false',
             },
+            'format': {
+                'desc': "Output format: 'text' for plain lines only, 'github' to also emit ::error annotations on PR diffs (default: github)",
+                'default': 'github',
+            },
         }
 
         for input_name, spec in expected_inputs.items():
@@ -336,6 +340,7 @@ class TestActionYaml(unittest.TestCase):
         self.assertIn('INPUT_TARGET', step_env, "inputs.target must be mapped via env: as INPUT_TARGET")
         self.assertIn('INPUT_FIX', step_env, "inputs.fix must be mapped via env: as INPUT_FIX")
         self.assertIn('INPUT_PATHS_ONLY', step_env, "inputs.paths-only must be mapped via env: as INPUT_PATHS_ONLY")
+        self.assertIn('INPUT_FORMAT', step_env, "inputs.format must be mapped via env: as INPUT_FORMAT")
 
         # Verifying CLI flags are constructed from env vars (not direct interpolation)
         self.assertIn('INPUT_TARGET', run_text, "Step command does not use $INPUT_TARGET")

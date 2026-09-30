@@ -21,6 +21,10 @@ inputs:
     description: Comma-separated private tool or project names to flag as context bleed; pass from a secret
     required: false
     default: ""
+  format:
+    description: "Output format: 'text' for plain lines only, 'github' to also emit ::error annotations on PR diffs (default: github)"
+    required: false
+    default: "github"
 
 runs:
   using: composite
@@ -36,6 +40,7 @@ runs:
         INPUT_TARGET: ${{ inputs.target }}
         INPUT_FIX: ${{ inputs.fix }}
         INPUT_PATHS_ONLY: ${{ inputs.paths-only }}
+        INPUT_FORMAT: ${{ inputs.format }}
         # Read directly by the scanner; never echoed.
         QUENCH_PRIVATE_TERMS: ${{ inputs.private-terms }}
       run: |
@@ -48,6 +53,9 @@ runs:
         fi
         if [ "$INPUT_PATHS_ONLY" = "true" ] || [ "$INPUT_PATHS_ONLY" = "True" ]; then
           ARGS+=("--paths-only")
+        fi
+        if [ -n "$INPUT_FORMAT" ]; then
+          ARGS+=("--format" "$INPUT_FORMAT")
         fi
 
         status=0
