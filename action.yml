@@ -1,4 +1,4 @@
-name: quench-action
+name: Quench Action
 description: Run Quench defensive integrity harness (plaincast, leakguard, parity, hygiene) on repository files
 branding:
   icon: 'shield'

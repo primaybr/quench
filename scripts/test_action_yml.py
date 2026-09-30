@@ -243,7 +243,7 @@ class TestActionYaml(unittest.TestCase):
 
     def test_04_metadata_exact_values(self):
         """Action name and description must match project specification."""
-        self.assertEqual(self.parsed['name'], 'quench-action')
+        self.assertEqual(self.parsed['name'], 'Quench Action')
         expected_desc = (
             'Run Quench defensive integrity harness (plaincast, leakguard, parity, hygiene) on repository files'
         )
