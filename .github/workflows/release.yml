@@ -41,7 +41,8 @@ jobs:
       - name: Run tests
         run: |
           for t in test_validate test_cli_e2e test_precommit_hooks test_packaging test_action_yml \
-                   test_bootstrap_scripts test_eval_adversarial test_update_global test_release_notes; do
+                   test_bootstrap_scripts test_eval_adversarial test_update_global test_release_notes \
+                   test_ignore_file; do
             python "scripts/$t.py"
           done
           python scripts/validate.py

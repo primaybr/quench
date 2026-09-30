@@ -12,6 +12,7 @@ Checks:
 """
 
 import argparse
+import fnmatch
 import functools
 import os
 import re
@@ -19,7 +20,7 @@ import subprocess
 import sys
 import unicodedata
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Set, Tuple
+from typing import Dict, FrozenSet, List, Optional, Sequence, Set, Tuple
 
 # ---------------------------------------------------------------------------
 # Plaincast Character Taxonomy & Replacements
@@ -232,6 +233,47 @@ def load_private_terms(extra: Optional[Sequence[str]] = None) -> List[str]:
             seen.add(t.lower())
             unique.append(t)
     return unique
+
+
+def load_quench_ignore(root: Path) -> FrozenSet[str]:
+    """Read .quenchignore at root and return a frozenset of raw glob patterns.
+
+    Lines are stripped; blank lines and lines starting with '#' are skipped.
+    Trailing-slash patterns (e.g. 'vendor/') match directories by name.
+    Other patterns are fnmatch globs matched against the full posix path or the
+    bare filename (e.g. '*.min.js' matches 'src/lib/jquery.min.js').
+    Returns an empty frozenset when the file does not exist.
+    """
+    ignore_file = root / '.quenchignore'
+    if not ignore_file.is_file():
+        return frozenset()
+    patterns: List[str] = []
+    for raw in ignore_file.read_text(encoding='utf-8').splitlines():
+        line = raw.strip()
+        if line and not line.startswith('#'):
+            patterns.append(line)
+    return frozenset(patterns)
+
+
+def _matches_ignore(rel_path: Path, patterns: FrozenSet[str]) -> bool:
+    """Return True if rel_path matches any pattern in the ignore set.
+
+    Trailing-slash patterns match when any path component equals the dirname
+    stem (e.g. 'vendor/' matches 'vendor/foo/bar.md').
+    Other patterns are matched against the full posix path and the bare filename
+    using fnmatch so wildcards like '*.min.js' work correctly.
+    """
+    posix = rel_path.as_posix()
+    name = rel_path.name
+    for pattern in patterns:
+        if pattern.endswith('/'):
+            stem = pattern.rstrip('/')
+            if stem in rel_path.parts:
+                return True
+        else:
+            if fnmatch.fnmatch(posix, pattern) or fnmatch.fnmatch(name, pattern):
+                return True
+    return False
 
 
 @functools.lru_cache(maxsize=32)
@@ -908,37 +950,49 @@ def _git_staged_files(root: Path) -> Optional[List[Path]]:
     return sorted({Path(n) for n in names if n})
 
 
-def _list_files(root: Path, staged_only: bool = False) -> List[Path]:
+def _list_files(root: Path, staged_only: bool = False,
+                ignore_patterns: FrozenSet[str] = frozenset()) -> List[Path]:
     """Return candidate files relative to root, honouring .gitignore in git work trees."""
     if staged_only:
         staged_files = _git_staged_files(root)
         if staged_files is not None:
             return [p for p in staged_files
-                    if not any(part in IGNORE_DIRS for part in p.parts[:-1]) and (root / p).is_file()]
+                    if not any(part in IGNORE_DIRS for part in p.parts[:-1])
+                    and (root / p).is_file()
+                    and not _matches_ignore(p, ignore_patterns)]
 
     git_files = _git_list_files(root)
     if git_files:
         # --cached still lists files deleted from the work tree; skip them and submodule dirs.
         return [p for p in git_files
-                if not any(part in IGNORE_DIRS for part in p.parts[:-1]) and (root / p).is_file()]
+                if not any(part in IGNORE_DIRS for part in p.parts[:-1])
+                and (root / p).is_file()
+                and not _matches_ignore(p, ignore_patterns)]
 
     files: List[Path] = []
+    ignore_dir_stems = {p.rstrip('/') for p in ignore_patterns if p.endswith('/')}
     for dirpath, dirnames, filenames in os.walk(root):
         # Exclude ignored directories in-place
-        dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS and d not in GENERATED_DIRS]
+        dirnames[:] = [d for d in dirnames
+                       if d not in IGNORE_DIRS and d not in GENERATED_DIRS
+                       and d not in ignore_dir_stems]
         for filename in filenames:
-            files.append((Path(dirpath) / filename).relative_to(root))
+            rel = (Path(dirpath) / filename).relative_to(root)
+            if not _matches_ignore(rel, ignore_patterns):
+                files.append(rel)
     return files
 
 
 def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool = False,
                     private_terms: Optional[Sequence[str]] = None,
-                    staged_only: bool = False) -> ValidationReport:
+                    staged_only: bool = False, no_ignore: bool = False) -> ValidationReport:
     """Scan root with all gates. private_terms=None loads them via load_private_terms()."""
     report = ValidationReport()
     is_quench = _is_quench_repo(root)
     if private_terms is None:
         private_terms = load_private_terms()
+
+    ignore_patterns = frozenset() if no_ignore else load_quench_ignore(root)
 
     # Run adapter parity check first
     if not check_paths_only:
@@ -946,7 +1000,7 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
 
     eol_info, autocrlf = _git_eol_info(root) if not check_paths_only else ({}, '')
 
-    for rel_path in _list_files(root, staged_only=staged_only):
+    for rel_path in _list_files(root, staged_only=staged_only, ignore_patterns=ignore_patterns):
         filename = rel_path.name
         if filename in IGNORE_FILES:
             continue
@@ -1064,6 +1118,8 @@ def main():
                         help=f"Private tool/project name to flag as context bleed (repeatable; "
                              f"also read from ${PRIVATE_TERMS_ENV} and ${PRIVATE_TERMS_FILE_ENV})")
     parser.add_argument('--verbose', action='store_true', help="Show verbose scan information")
+    parser.add_argument('--no-ignore', action='store_true',
+                        help="Ignore .quenchignore and scan all files (for CI audits)")
     args = parser.parse_args()
     private_terms = load_private_terms(args.private_term)
 
@@ -1092,9 +1148,13 @@ def main():
     if private_terms:
         # Count only: printing the terms would leak them into CI logs.
         print(f"Private terms: {len(private_terms)} configured")
+    ignore_patterns = frozenset() if args.no_ignore else load_quench_ignore(repo_root)
+    if ignore_patterns:
+        print(f"Ignore patterns: {len(ignore_patterns)} from .quenchignore")
 
     report = scan_repository(repo_root, check_paths_only=args.check_paths_only, auto_fix=args.fix,
-                             private_terms=private_terms, staged_only=args.staged)
+                             private_terms=private_terms, staged_only=args.staged,
+                             no_ignore=args.no_ignore)
 
     print(f"\nScanned {report.files_scanned} files across repository.")
 

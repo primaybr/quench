@@ -5,6 +5,7 @@ quench CLI - Unified zero-dependency command line interface for quench.
 Commands:
   quench init     Initialize quench in any project repository.
   quench check    Run the 5-gate Quench validation engine on any target directory.
+                  Use --no-ignore to bypass .quenchignore and scan all files.
   quench update   Update installed Quench rules/adapters from source templates.
                   With --global: follow the latest release in ~/.quench and wire Claude Code.
   quench status   Inspect target directory for active adapters and git hooks.
@@ -313,6 +314,21 @@ def cmd_init(args: argparse.Namespace) -> int:
     print(f"Initializing Quench ({tool}) in: {target}")
     count, _ = copy_adapter_files(tool, REPO_ROOT, target, force=args.force)
 
+    ignore_file = target / '.quenchignore'
+    if not ignore_file.exists():
+        ignore_file.write_text(
+            "# .quenchignore - paths and globs quench will not scan\n"
+            "# Syntax: one pattern per line, # for comments.\n"
+            "# Trailing slash matches a directory and all its contents.\n"
+            "# Examples:\n"
+            "#   vendor/\n"
+            "#   dist/\n"
+            "#   *.min.js\n"
+            "#   src/generated/\n",
+            encoding='utf-8',
+        )
+        print("  Created: .quenchignore (template)")
+
     if args.hooks:
         print("Installing Git validation hooks...")
         h_count, h_installed = install_git_hooks(REPO_ROOT, target, force=args.force)
@@ -342,9 +358,11 @@ def cmd_check(args: argparse.Namespace) -> int:
     if private_terms:
         # Count only: printing the terms would leak them into CI logs.
         print(f"Private terms: {len(private_terms)} configured")
+    no_ignore = bool(getattr(args, 'no_ignore', False))
 
     report = validate.scan_repository(target, check_paths_only=args.paths_only, auto_fix=args.fix,
-                                      private_terms=private_terms, staged_only=staged_only)
+                                      private_terms=private_terms, staged_only=staged_only,
+                                      no_ignore=no_ignore)
     print(f"\nScanned {report.files_scanned} files across repository.")
 
     if report.passed:
@@ -823,6 +841,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_check.add_argument('--private-term', action='append', default=[], metavar='TERM',
                          help='Private tool/project name to flag as context bleed (repeatable; '
                               'also read from $QUENCH_PRIVATE_TERMS and $QUENCH_PRIVATE_TERMS_FILE)')
+    p_check.add_argument('--no-ignore', action='store_true',
+                         help='Bypass .quenchignore and scan all files')
 
     # update
     p_update = subparsers.add_parser('update', help='Update existing installed adapters from source templates')
