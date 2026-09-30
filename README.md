@@ -1,14 +1,14 @@
-<p align="left">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./logo-dark-bg.png">
-    <source media="(prefers-color-scheme: light)" srcset="./logo-light-bg.png">
-    <img alt="quench" src="./logo-light-bg.png" width="300" height="100">
-  </picture>
+<p align="center">
+  <img alt="quench" src="./logo-light-bg.png" width="300" height="100">
 </p>
 
-> The hardening moment. A production-grade Skills ecosystem for AI Agents.
+<p align="center">
+  <em>The hardening moment. A production-grade Skills ecosystem for AI Agents.</em>
+</p>
 
-[![Validate](https://github.com/primaybr/quench/actions/workflows/validate.yml/badge.svg)](https://github.com/primaybr/quench/actions/workflows/validate.yml)
+<p align="center">
+  <a href="https://github.com/primaybr/quench/actions/workflows/validate.yml"><img alt="Validate" src="https://github.com/primaybr/quench/actions/workflows/validate.yml/badge.svg"></a>
+</p>
 
 Not a prompt pack. Not a jailbreak collection. Not a role-play library.
 
