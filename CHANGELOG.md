@@ -3,6 +3,14 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.9.3] 2026-09-30 - --format github PR Diff Annotations
+
+### Added
+- **`--format {text,github}` output flag (`quench check --format github` / `validate.py --format github`):** Controls whether violations are followed by `::error file=...,line=...,col=...,title=...::` GitHub Actions workflow commands so they appear inline on PR diffs. Defaults to `'github'` when `GITHUB_ACTIONS=true` (preserving existing automatic behavior), and to `'text'` otherwise. Passing `--format text` suppresses annotations even inside a GitHub Actions environment.
+- **`format` input in `action.yml`:** Callers can now pass `format: text` to the Quench Action to get plain-text output only, or leave the default `github` to get PR diff annotations. `INPUT_FORMAT` is threaded through the composite action's env block and passed as `--format "$INPUT_FORMAT"` to the `quench check` invocation.
+- **6 new tests in `scripts/test_validate.py` (`TestGithubAnnotations`):** Covers annotation string shape, line-0 omission of `line=/col=`, `fmt='github'` emits one `::error` per violation, `fmt='text'` emits none even when `GITHUB_ACTIONS=true`, and two CLI subprocess tests asserting the flag controls annotation presence.
+- **`test_action_yml.py` updates:** `test_05_inputs_specification` now asserts the `format` input exists with `default: github`, and `test_08_quench_check_step` asserts `INPUT_FORMAT` is present in the step env mapping.
+
 ## [1.9.2] 2026-09-30 - .quenchignore Project-Level Ignore File
 
 ### Added
