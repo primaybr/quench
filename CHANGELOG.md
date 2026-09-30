@@ -3,6 +3,13 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.9.2] 2026-09-30 - .quenchignore Project-Level Ignore File
+
+### Added
+- **`.quenchignore` project-level ignore file:** Place a `.quenchignore` file at any target repository root to exclude paths and files from all quench scan gates. Syntax mirrors `.gitignore`: one pattern per line, `#` comments, blank lines ignored, trailing `/` matches a directory and all its contents (e.g. `vendor/`), bare globs match both the full relative path and the filename (e.g. `*.min.js`). `quench init` writes a commented template if none exists.
+- **`--no-ignore` CLI flag (`quench check --no-ignore` / `validate.py --no-ignore`):** Bypasses `.quenchignore` and scans all files, intended for CI full-repo audits that need to override project-level exclusions.
+- **Nine new tests (`scripts/test_ignore_file.py`):** Covers pattern parsing, directory and glob matching, `scan_repository` respects-ignore and bypass, `quench init` template creation, and CLI subprocess behavior.
+
 ## [1.9.1] 2026-09-30 - Brand Assets, Issue Templates, 17-Scenario Adversarial Suite & Rule Consolidation
 
 ### Added
