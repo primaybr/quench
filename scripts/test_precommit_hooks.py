@@ -123,7 +123,7 @@ class TestPrecommitHooksConfig(unittest.TestCase):
         """Verify YAML parses into a non-empty list of dictionaries."""
         hooks = load_hooks_data()
         self.assertIsInstance(hooks, list, "Root YAML element must be a list")
-        self.assertEqual(len(hooks), 2, "Expected exactly 2 hook definitions")
+        self.assertEqual(len(hooks), 3, "Expected exactly 3 hook definitions")
 
     def test_hook_ids_unique(self):
         """Verify all hook IDs are unique and present."""
@@ -131,6 +131,7 @@ class TestPrecommitHooksConfig(unittest.TestCase):
         ids = [h.get('id') for h in hooks]
         self.assertEqual(len(ids), len(set(ids)), "Hook IDs must be unique")
         self.assertIn('quench-check', ids)
+        self.assertIn('quench-check-staged', ids)
         self.assertIn('quench-commit-msg', ids)
 
     def test_quench_check_hook(self):
@@ -145,6 +146,23 @@ class TestPrecommitHooksConfig(unittest.TestCase):
             'Run Quench 5-gate integrity engine against repository files'
         )
         self.assertEqual(hook.get('entry'), 'python scripts/quench.py check')
+        self.assertEqual(hook.get('language'), 'python')
+        self.assertEqual(hook.get('stages'), ['pre-commit'])
+        self.assertIs(hook.get('pass_filenames'), False)
+        self.assertIs(hook.get('always_run'), True)
+
+    def test_quench_check_staged_hook(self):
+        """Verify structure and values of quench-check-staged hook."""
+        hooks = load_hooks_data()
+        hook = next((h for h in hooks if h.get('id') == 'quench-check-staged'), None)
+        self.assertIsNotNone(hook, "quench-check-staged hook not found")
+
+        self.assertEqual(hook.get('name'), 'quench-check-staged')
+        self.assertEqual(
+            hook.get('description'),
+            'Run Quench 5-gate integrity engine against git-staged files only'
+        )
+        self.assertEqual(hook.get('entry'), 'python scripts/quench.py check --staged')
         self.assertEqual(hook.get('language'), 'python')
         self.assertEqual(hook.get('stages'), ['pre-commit'])
         self.assertIs(hook.get('pass_filenames'), False)

@@ -7,6 +7,15 @@
   pass_filenames: false
   always_run: true
 
+- id: quench-check-staged
+  name: quench-check-staged
+  description: Run Quench 5-gate integrity engine against git-staged files only
+  entry: python scripts/quench.py check --staged
+  language: python
+  stages: [pre-commit]
+  pass_filenames: false
+  always_run: true
+
 - id: quench-commit-msg
   name: quench-commit-msg
   description: Validate commit message against plaincast typography and leakguard rules

@@ -22,7 +22,7 @@ if _scripts_quench.is_file():
         _spec.loader.exec_module(_mod)
         main = _mod.main
         for _key in dir(_mod):
-            if not _key.startswith('_'):
+            if not (_key.startswith('__') and _key.endswith('__')):
                 globals()[_key] = getattr(_mod, _key)
 else:
     def main(argv: list[str] | None = None) -> int:
