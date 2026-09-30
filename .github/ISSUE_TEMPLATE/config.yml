@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/primaybr/quench/discussions
+    about: Ask questions, share multi-tool adapter setups, or discuss AI agent hardening patterns.

@@ -1,4 +1,4 @@
-# quench - Multi-Tool Installation Guide
+# <img src="./icon.png" alt="quench" width="28" height="28" align="absmiddle"> quench - Multi-Tool Installation Guide
 
 quench skills are authored in `skills/*/SKILL.md` (the canonical source of truth).
 Always-on rules live in `rules/AGENTS.md` (the compiled extract).
@@ -66,6 +66,7 @@ your-project/
     plugins/
       quench/            <- clone quench here, or symlink
         plugin.json
+        icon.png
         rules/
           AGENTS.md
         skills/

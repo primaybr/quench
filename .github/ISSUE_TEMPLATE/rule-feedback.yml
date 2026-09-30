@@ -1,0 +1,49 @@
+name: Rule or Skill Feedback
+description: Report a rule that models ignore or over-apply, or propose a new behavioral hardening rule.
+title: "[Rule Feedback]: "
+labels: ["rules", "feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when an agent ignores a Quench directive, applies a rule too aggressively, or hits a deterministic failure mode not yet covered.
+
+  - type: dropdown
+    id: discipline
+    attributes:
+      label: Discipline / Component
+      description: Which skill or subsystem does this feedback apply to?
+      options:
+        - "steel-mind (anti-slop, platform grounding, tool discipline, cadence, agency)"
+        - "plaincast (ASCII keyboard boundary, typography normalization)"
+        - "leakguard (path sanitization, hermetic isolation, credential guard)"
+        - "precision-output (verify-before-assert, epistemic states, manifest checks)"
+        - "CLI / Adapters / GitHub Action"
+        - "New Rule or Discipline Proposal"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: AI Tool & Model
+      description: Which coding assistant and model exhibited the behavior?
+      placeholder: "e.g. Claude Code (Sonnet/Opus), Cursor, Antigravity, Kilo Code, Copilot"
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed_behavior
+    attributes:
+      label: Observed Behavior
+      description: What did the agent output or execute, or what friction did the current rule wording cause?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Hardened Behavior
+      description: What constraint and positive replacement should the agent follow instead?
+    validations:
+      required: true

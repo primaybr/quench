@@ -3,6 +3,12 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [Unreleased]
+
+### Added
+- **Project brand assets (`icon.png`, `logo-light-bg.png`, `logo-dark-bg.png`):** Added theme-aware `<picture>` wordmark header (`prefers-color-scheme: dark` and `light`) and asset tree entry in `README.md`, inline project icon in `INSTALL.md`, icon/logo metadata in `plugin.json`, and asset inclusion in `pyproject.toml` `[tool.setuptools.package-data]`.
+- **GitHub issue forms (`.github/ISSUE_TEMPLATE/`):** Added structured YAML issue templates for scanner false-positive reports (`false-positive.yml`), rule/skill behavioral feedback (`rule-feedback.yml`), and GitHub Discussions routing (`config.yml`).
+
 ## [1.9.0] 2026-09-24 - Opt-In Verified Auto-Update, Git-Aware Line Endings & Scrubbed History
 
 ### Security

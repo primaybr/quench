@@ -55,4 +55,8 @@ py-modules = ["quench"]
     "skills/**/*",
     ".githooks/*",
     "scripts/*",
+    "plugin.json",
+    "icon.png",
+    "logo-light-bg.png",
+    "logo-dark-bg.png",
 ]

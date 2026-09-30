@@ -158,6 +158,33 @@ class TestPackagingConfiguration(unittest.TestCase):
         self.assertEqual(res.returncode, 0, f"Import command failed: {res.stderr}")
         self.assertTrue(res.stdout.strip().endswith('quench.py'))
 
+    def test_10_brand_assets_and_plugin_manifest(self):
+        """Brand assets (icon.png, logo-light-bg.png, logo-dark-bg.png) must exist and be wired into docs and manifests."""
+        import json
+
+        expected_assets = ['icon.png', 'logo-light-bg.png', 'logo-dark-bg.png']
+        for asset in expected_assets:
+            asset_path = REPO_ROOT / asset
+            self.assertTrue(asset_path.is_file(), f"Missing brand asset: {asset}")
+            self.assertTrue(asset_path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'), f"Invalid PNG header in {asset}")
+
+        if tomllib is not None:
+            patterns = self.parsed.get('tool', {}).get('setuptools', {}).get('package-data', {}).get('*', [])
+            for asset in expected_assets:
+                self.assertIn(asset, patterns, f"{asset} missing from [tool.setuptools.package-data]")
+
+        plugin_data = json.loads((REPO_ROOT / 'plugin.json').read_text(encoding='utf-8'))
+        self.assertEqual(plugin_data.get('icon'), 'icon.png')
+        self.assertEqual(plugin_data.get('logoLight'), 'logo-light-bg.png')
+        self.assertEqual(plugin_data.get('logoDark'), 'logo-dark-bg.png')
+
+        readme_text = (REPO_ROOT / 'README.md').read_text(encoding='utf-8')
+        self.assertIn('logo-light-bg.png', readme_text)
+        self.assertIn('logo-dark-bg.png', readme_text)
+
+        install_text = (REPO_ROOT / 'INSTALL.md').read_text(encoding='utf-8')
+        self.assertIn('icon.png', install_text)
+
 
 if __name__ == '__main__':
     unittest.main()

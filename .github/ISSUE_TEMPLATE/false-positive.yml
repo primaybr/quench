@@ -1,0 +1,59 @@
+name: False Positive Report
+description: Report a false positive from quench check or the GitHub Action scanner.
+title: "[False Positive]: "
+labels: ["false-positive", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report a file, line, or pattern that `quench check` (`scripts/validate.py`) flagged erroneously.
+        Do not include real credentials, private hostnames, or proprietary source code in this form.
+
+  - type: dropdown
+    id: gate
+    attributes:
+      label: Validation Gate
+      description: Which Quench validation gate reported the violation?
+      options:
+        - "Gate 1: plaincast (character boundary & Unicode hygiene)"
+        - "Gate 2: leakguard (local paths, private hosts & secrets)"
+        - "Gate 3: parity (multi-tool adapter synchronization)"
+        - "Gate 4: skills (SKILL.md frontmatter schema)"
+        - "Gate 5: hygiene (UTF-8 BOM & LF line endings)"
+    validations:
+      required: true
+
+  - type: input
+    id: file_type
+    attributes:
+      label: File Extension or Path Pattern
+      description: What type of file was scanned?
+      placeholder: "e.g. .py, .ts, .md, Dockerfile, .github/workflows/ci.yml"
+    validations:
+      required: true
+
+  - type: textarea
+    id: snippet
+    attributes:
+      label: Flagged Content (Sanitized)
+      description: Minimal reproducible line or snippet that triggered the violation. Replace any sensitive values with placeholders first.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: scanner_output
+    attributes:
+      label: Scanner Output
+      description: Paste the exact error line from `quench check` or GitHub Actions annotations.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Why This Pattern Is Valid
+      description: Explain why this syntax or character sequence is expected in your codebase and whether `--fix` altered it.
+    validations:
+      required: true

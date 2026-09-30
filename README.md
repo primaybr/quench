@@ -1,4 +1,10 @@
-# quench
+<p align="left">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logo-dark-bg.png">
+    <source media="(prefers-color-scheme: light)" srcset="./logo-light-bg.png">
+    <img alt="quench" src="./logo-light-bg.png" width="300" height="100">
+  </picture>
+</p>
 
 > The hardening moment. A production-grade Skills ecosystem for AI Agents.
 
@@ -382,11 +388,17 @@ python scripts/install-hooks.py
 quench/
   quench.py                      - Unified CLI runner
   plugin.json                    - Antigravity plugin manifest
+  icon.png                       - Project icon
+  logo-light-bg.png              - Wordmark logo for light backgrounds
+  logo-dark-bg.png               - Wordmark logo for dark backgrounds
   README.md                      - This file
   INSTALL.md                     - Per-tool installation guide
   CHANGELOG.md                   - Version history
   .gitignore
   .gitattributes                 - Enforces LF line endings
+  .github/
+    ISSUE_TEMPLATE/              - False-positive and rule feedback issue forms
+    workflows/                   - Validation and automated release CI workflows
   .githooks/
     pre-commit                   - Automated git pre-commit validation hook
     commit-msg                   - Automated git commit-msg validation hook

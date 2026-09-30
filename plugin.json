@@ -1,3 +1,12 @@
 {
-  "name": "quench"
+  "name": "quench",
+  "displayName": "Quench",
+  "description": "Zero-dependency AI agent rules and behavioral hardening toolkit",
+  "icon": "icon.png",
+  "logo": "https://raw.githubusercontent.com/primaybr/quench/master/icon.png",
+  "logoLight": "logo-light-bg.png",
+  "logoDark": "logo-dark-bg.png",
+  "homepage": "https://github.com/primaybr/quench",
+  "repository": "https://github.com/primaybr/quench",
+  "license": "MIT"
 }
