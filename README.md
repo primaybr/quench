@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="quench" src="./logo-light-bg.png" width="300" height="100">
+  <img alt="quench" src="./logo-dark-bg.png" width="300" height="100">
 </p>
 
 <p align="center">
