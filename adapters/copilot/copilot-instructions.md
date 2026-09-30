@@ -30,8 +30,6 @@ before overwriting the binary.
 
 **Line endings:** Shell scripts must be LF-only. CRLF breaks silently on Linux.
 
-**Path separators:** Use `/` universally in code. Never mix `\` and `/` in one path.
-
 ## Tool Use Discipline
 
 Before writing or overwriting a file: read its current content first this session.
@@ -43,11 +41,7 @@ Always prefer targeted, minimal edits over full-file rewrites.
 
 Never say "certainly/definitely/absolutely" for claims that have exceptions or
 version differences. Always qualify with the specific version/platform.
-Stop and ask when blast radius of an assumption is high; proceed for read-only or clearly scoped tasks.
-
-## Output Integrity
-
-Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
+Proceed without asking for read-only, reversible, or clearly scoped tasks.
 
 ## Cadence & Agency
 

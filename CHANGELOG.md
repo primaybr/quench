@@ -3,11 +3,22 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
-## [Unreleased]
+## [1.9.1] 2026-09-30 - Brand Assets, Issue Templates, 17-Scenario Adversarial Suite & Rule Consolidation
 
 ### Added
-- **Project brand assets (`icon.png`, `logo-light-bg.png`, `logo-dark-bg.png`):** Added theme-aware `<picture>` wordmark header (`prefers-color-scheme: dark` and `light`) and asset tree entry in `README.md`, inline project icon in `INSTALL.md`, icon/logo metadata in `plugin.json`, and asset inclusion in `pyproject.toml` `[tool.setuptools.package-data]`.
+- **Project brand assets (`icon.png`, `logo-light-bg.png`, `logo-dark-bg.png`):** Added theme-aware `<picture>` wordmark header (`prefers-color-scheme: dark` and `light`) and asset tree entry in `README.md`, inline project icon in `INSTALL.md`, icon/logo metadata in `plugin.json`, and asset inclusion in `pyproject.toml` `[tool.setuptools.package-data]`. Covered by `test_10_brand_assets_and_plugin_manifest` in `scripts/test_packaging.py`.
 - **GitHub issue forms (`.github/ISSUE_TEMPLATE/`):** Added structured YAML issue templates for scanner false-positive reports (`false-positive.yml`), rule/skill behavioral feedback (`rule-feedback.yml`), and GitHub Discussions routing (`config.yml`).
+- **Expanded adversarial evaluation suite (`G-01` through `G-05`, 12 -> 17 scenarios):** Added automated evaluation scenarios in `scripts/eval_adversarial.py` (`quench eval`) and unit tests in `scripts/test_eval_adversarial.py` covering the five remaining gap areas from `skills/precision-output/references/adversarial-test-suite.md`:
+  - `G-01` (`steel-mind` Protocol 8): Structural cadence uniformity (4+ of 5 sentences in a 5-word band), repetitive sentence starters (`The`/`This`/`It`/`In`), and trailing participial tack-ons.
+  - `G-02` (`plaincast` Protocol 9): Bold-first bullet list monotony (`**Key:** Value` on 3+ items).
+  - `G-03` (`leakguard` Protocol 5 / `steel-mind` Protocol 2): Cross-platform path separator mixing (`/` and `\` in one path).
+  - `G-04` (`steel-mind` Protocol 9): False agency and anthropomorphism on software subjects (`tries`, `wants`, `hopes`, `attempts`, `gets confused`) and copula avoidance puffery (`serves as`, `boasts`).
+  - `G-05` (`steel-mind` Protocol 2 & 7): PowerShell UTF-8 no-BOM file writing (`System.Text.UTF8Encoding $false` + `[System.IO.File]::WriteAllText` vs `Set-Content -Encoding UTF8`).
+- **Fast staged-only validation (`quench check --staged` / `scripts/validate.py --staged`):** Scans only git-staged files (`git diff --cached --name-only --diff-filter=ACMR`) for fast pre-commit checks on large repositories while preserving full-repo scans as the default. Covered by `TestStagedScan` in `scripts/test_validate.py`.
+
+### Changed
+- **Rule-overlap consolidation (`R-01` through `R-04`) across `rules/AGENTS.md` and all 11 adapters:** Removed duplicate `Output Integrity`, version/platform qualification, blast-radius gating, and path-separator lines between `steel-mind`, `leakguard`, and `precision-output`, trimming `rules/AGENTS.md` from 96 to 89 lines (~6% smaller per session) and synchronizing all 11 adapters (`antigravity`, `cursor`, `copilot`, `kilo`, `cline`, `windsurf`, `claude`, `generic`, `aider`, `zed`, `junie`).
+- **Skill version bumps:** Incremented `skills/steel-mind/SKILL.md` (`1.1.1` -> `1.1.2`) and `skills/precision-output/SKILL.md` (`1.0.2` -> `1.0.3`), and updated `skills/precision-output/references/adversarial-test-suite.md` Sections 2 and 3.
 
 ## [1.9.0] 2026-09-24 - Opt-In Verified Auto-Update, Git-Aware Line Endings & Scrubbed History
 

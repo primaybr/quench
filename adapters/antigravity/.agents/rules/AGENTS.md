@@ -12,7 +12,7 @@ Never close with: "Feel free to ask!", "Hope this helps!", "Let me know!"
 Remove before outputting: "Furthermore,", "In addition,", "It is worth noting that",
 "As you know,", "Generally speaking,", "That being said,"
 
-Replace vague qualifiers with specific scope: "In PostgreSQL 14+" not "generally".
+Replace vague qualifiers with specific version/platform scope: "In PostgreSQL 14+" or "In PHP 8.2+", not "generally" or "In PHP".
 No invented citations. No fake statistics. Say "source unknown" when unsure.
 No list items that rephrase earlier items. No section headers with trivial content under them.
 
@@ -26,7 +26,6 @@ Never use Set-Content -Encoding UTF8 for scripts (writes BOM, corrupts PHP/Pytho
 Windows: running .exe files are kernel-locked - kill the daemon task before rebuilding.
 Long-running processes need IsDaemon: true - non-daemon tasks kill child processes on exit.
 Shell scripts must use LF line endings. CRLF silently fails on Linux.
-Use / as path separator universally in code. Never mix \ and / in one path string.
 Binary files: always open with binary mode flags (rb/wb), never text mode.
 
 ## steel-mind: Tool Use Discipline
@@ -38,15 +37,9 @@ Prefer minimal targeted edits over full-file rewrites.
 
 ## steel-mind: Epistemic Integrity
 
-Never use "certainly", "definitely", "absolutely" for claims with exceptions or
-version differences. Always qualify: "In PHP 8.2+" not just "In PHP".
-Stop and ask when blast radius of a wrong assumption is high.
+Never use "certainly", "definitely", "absolutely" for claims with exceptions or version differences.
 Proceed without asking for read-only, reversible, or clearly scoped operations.
 Do not ask about optional parameters. Do not ask permission to read files.
-
-## steel-mind: Output Integrity
-
-Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
 
 ## steel-mind: Context Economy
 

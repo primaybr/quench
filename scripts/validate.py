@@ -890,8 +890,32 @@ def _git_eol_info(root: Path) -> Tuple[Dict[Path, Tuple[str, str, str]], str]:
     return info, autocrlf
 
 
-def _list_files(root: Path) -> List[Path]:
+def _git_staged_files(root: Path) -> Optional[List[Path]]:
+    """List staged (added, copied, modified, renamed) files under root, relative to root.
+
+    Returns None when root is not inside a git work tree or git is unavailable.
+    """
+    try:
+        result = subprocess.run(
+            ['git', '-C', str(root), 'diff', '--cached', '--name-only', '-z', '--diff-filter=ACMR'],
+            capture_output=True, timeout=120,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    names = result.stdout.decode('utf-8', errors='surrogateescape').split('\0')
+    return sorted({Path(n) for n in names if n})
+
+
+def _list_files(root: Path, staged_only: bool = False) -> List[Path]:
     """Return candidate files relative to root, honouring .gitignore in git work trees."""
+    if staged_only:
+        staged_files = _git_staged_files(root)
+        if staged_files is not None:
+            return [p for p in staged_files
+                    if not any(part in IGNORE_DIRS for part in p.parts[:-1]) and (root / p).is_file()]
+
     git_files = _git_list_files(root)
     if git_files:
         # --cached still lists files deleted from the work tree; skip them and submodule dirs.
@@ -908,7 +932,8 @@ def _list_files(root: Path) -> List[Path]:
 
 
 def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool = False,
-                    private_terms: Optional[Sequence[str]] = None) -> ValidationReport:
+                    private_terms: Optional[Sequence[str]] = None,
+                    staged_only: bool = False) -> ValidationReport:
     """Scan root with all gates. private_terms=None loads them via load_private_terms()."""
     report = ValidationReport()
     is_quench = _is_quench_repo(root)
@@ -921,7 +946,7 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
 
     eol_info, autocrlf = _git_eol_info(root) if not check_paths_only else ({}, '')
 
-    for rel_path in _list_files(root):
+    for rel_path in _list_files(root, staged_only=staged_only):
         filename = rel_path.name
         if filename in IGNORE_FILES:
             continue
@@ -1033,6 +1058,7 @@ def main():
     parser.add_argument('--root', type=str, default='.', help="Path to repository root")
     parser.add_argument('--fix', action='store_true', help="Automatically fix plaincast character violations")
     parser.add_argument('--check-paths-only', action='store_true', help="Only run Gate 2 (Path & Secret leak checks)")
+    parser.add_argument('--staged', action='store_true', help="Scan only git-staged files (fast pre-commit mode)")
     parser.add_argument('--check-commit-msg', type=str, help="Validate commit message file from git commit-msg hook")
     parser.add_argument('--private-term', action='append', default=[], metavar='TERM',
                         help=f"Private tool/project name to flag as context bleed (repeatable; "
@@ -1061,12 +1087,14 @@ def main():
         print("Auto-fix mode: ENABLED")
     if args.check_paths_only:
         print("Mode: Paths and secret leaks only")
+    if args.staged:
+        print("Mode: Staged files only")
     if private_terms:
         # Count only: printing the terms would leak them into CI logs.
         print(f"Private terms: {len(private_terms)} configured")
 
     report = scan_repository(repo_root, check_paths_only=args.check_paths_only, auto_fix=args.fix,
-                             private_terms=private_terms)
+                             private_terms=private_terms, staged_only=args.staged)
 
     print(f"\nScanned {report.files_scanned} files across repository.")
 

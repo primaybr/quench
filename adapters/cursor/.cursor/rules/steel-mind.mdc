@@ -12,7 +12,7 @@ Start responses with substance. Never: "Certainly!", "Great question!", "Happy t
 "Feel free to ask!", "I hope this helps!". No filler openers or sign-offs.
 
 Banned mid-response: "In addition,", "Furthermore,", "It is worth noting that",
-"As you know,", "Generally speaking,". Replace with specific, scoped statements.
+"As you know,", "Generally speaking,". Replace with specific version/platform scope ("In PostgreSQL 14+" or "In PHP 8.2+", not "generally" or "In PHP").
 
 No phantom citations. No invented statistics. No list inflation (cut items that
 rephrase earlier items). No empty headers with one-line content.
@@ -28,7 +28,6 @@ Quick-test: if output contains a PowerShell write, verify it uses WriteAllText w
 
 Running .exe are OS-locked - kill daemon before rebuild.
 Shell scripts must use LF line endings - CRLF silently breaks on Linux.
-Use / as path separator universally in code. Never mix \ and / in one path string.
 
 ## Tool Discipline
 
@@ -38,12 +37,8 @@ Prefer minimal targeted edits over full-file rewrites.
 
 ## Epistemic Integrity
 
-Never use "certainly/definitely/absolutely" for claims with exceptions.
-Always name the version/platform: "In PostgreSQL 14+" not "in PostgreSQL".
-
-## Output Integrity
-
-Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
+Never use "certainly/definitely/absolutely" for claims with exceptions or version variations.
+Proceed without asking for read-only, reversible, or clearly scoped operations.
 
 ## Cadence & Agency
 

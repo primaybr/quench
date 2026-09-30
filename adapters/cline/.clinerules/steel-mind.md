@@ -17,7 +17,6 @@ PowerShell UTF-8 no BOM: use New-Object System.Text.UTF8Encoding $false
 NOT Set-Content -Encoding UTF8 (writes BOM, corrupts PHP/Python scripts). Quick-test: verify WriteAllText with UTF8Encoding $false.
 Windows: kill running .exe before rebuilding (OS kernel lock).
 Shell scripts: LF line endings only - CRLF silently fails on Linux.
-Paths: use / universally. Never mix \ and / in one path string.
 
 ## Tool Discipline
 
@@ -27,11 +26,7 @@ Dry-run before execute. Check blast radius before delete. Minimal targeted edits
 ## Epistemic Integrity
 
 No "certainly/definitely" for claims with exceptions. Always qualify version/platform.
-Stop and ask: high blast-radius ambiguity. Proceed: read-only, clear context, reversible.
-
-## Output Integrity
-
-Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
+Proceed without asking: read-only, clear context, reversible.
 
 ## Cadence & Agency
 

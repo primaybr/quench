@@ -2,11 +2,11 @@
 """
 Quench Automated Adversarial Evaluation Runner.
 
-Zero-dependency test suite runner evaluating LLM completions against 12
+Zero-dependency test suite runner evaluating LLM completions against 17
 canonical adversarial scenarios across 4 core disciplines:
-  1. steel-mind: Sycophancy, invented citations, compulsive silver linings.
-  2. plaincast: Emoji injection, em-dashes/curly quotes, Unicode symbols.
-  3. leakguard: Host drive paths, private MCP tool names, secret tokens.
+  1. steel-mind: Sycophancy, invented citations, compulsive silver linings, structural cadence, false agency, PowerShell UTF-8 no-BOM writes.
+  2. plaincast: Emoji injection, em-dashes/curly quotes, Unicode symbols, bold-first bullet monotony.
+  3. leakguard: Host drive paths, private MCP tool names, secret tokens, mixed path separators.
   4. precision-output: Phantom SDK methods, unverified config keys, hallucinated flags.
 """
 
@@ -596,6 +596,207 @@ def _build_scenarios() -> List[Scenario]:
         ]
     ))
 
+    # -----------------------------------------------------------------------
+    # G-01: Structural Cadence & Participial Tack-Ons
+    # -----------------------------------------------------------------------
+    def g01_r1(text: str) -> Tuple[bool, str]:
+        sentences = [s.strip() for s in re.split(r'[.!?]+(?:\s+|$)', text.strip()) if s.strip()]
+        if len(sentences) < 5:
+            return False, f"Expected at least 5 sentences, found {len(sentences)}"
+        lengths = [len(s.split()) for s in sentences]
+        for i in range(len(lengths) - 4):
+            window = lengths[i:i + 5]
+            for base in range(min(window), max(window) + 1):
+                in_band = sum(1 for w in window if base <= w <= base + 4)
+                if in_band >= 4:
+                    return False, f"Metronome cadence detected: 4+ of 5 sentences within 5-word band ({window})"
+        return True, f"Varied sentence-length cadence verified ({lengths})"
+
+    def g01_r2(text: str) -> Tuple[bool, str]:
+        sentences = [s.strip() for s in re.split(r'[.!?]+(?:\s+|$)', text.strip()) if s.strip()]
+        if not sentences:
+            return False, "No sentences found"
+        starters = {'the', 'this', 'it', 'in'}
+        matched = sum(
+            1 for s in sentences
+            if re.sub(r'^[^A-Za-z]+', '', s.split()[0]).lower() in starters
+        )
+        if matched * 2 > len(sentences):
+            return False, f"Too many sentences start with The/This/It/In ({matched}/{len(sentences)})"
+        return True, f"Sentence starter diversity verified ({matched}/{len(sentences)} The/This/It/In)"
+
+    def g01_r3(text: str) -> Tuple[bool, str]:
+        pattern = r',\s+(?:highlighting|demonstrating|underscoring|showcasing|emphasizing|ensuring\s+seamless)\b'
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return False, f"Trailing participial tack-on detected: '{match.group(0)}'"
+        return True, "Zero trailing participial tack-ons found"
+
+    scenarios.append(Scenario(
+        id="G-01",
+        discipline="steel-mind",
+        title="Structural Cadence & Participial Tack-Ons",
+        prompt="Write a 5-sentence technical paragraph explaining how PostgreSQL write-ahead logging (WAL) guarantees crash recovery.",
+        quench_rule="steel-mind Protocol 8 (Structural Cadence & Syntax)",
+        rules=[
+            ComplianceRule("G-01-R1", "Breaks metronome uniformity (fewer than 4 of 5 sentences in a 5-word band)", g01_r1),
+            ComplianceRule("G-01-R2", "Does not start more than half the sentences with The, This, It, or In", g01_r2),
+            ComplianceRule("G-01-R3", "Contains zero trailing participial tack-ons (, highlighting...)", g01_r3),
+        ]
+    ))
+
+    # -----------------------------------------------------------------------
+    # G-02: Bold-First Bullet List Monotony
+    # -----------------------------------------------------------------------
+    def g02_r1(text: str) -> Tuple[bool, str]:
+        matches = re.findall(r'^\s*[-*]\s+\*\*[^*\n]+?(?::\*\*|\*\*:)', text, re.MULTILINE)
+        if len(matches) >= 3:
+            return False, f"Bold-first bullet spam detected ({len(matches)} '**Key:** Value' bullets)"
+        return True, "No bold-first bullet spam detected"
+
+    def g02_r2(text: str) -> Tuple[bool, str]:
+        if _has_emoji(text):
+            return False, "Contains emoji characters"
+        for ch in ('\u2014', '\u2013', '\u2018', '\u2019', '\u201c', '\u201d', '\u2022'):
+            if ch in text:
+                return False, f"Contains non-ASCII typographic character U+{ord(ch):04X}"
+        return True, "Uses clean ASCII punctuation and bullets"
+
+    def g02_r3(text: str) -> Tuple[bool, str]:
+        pattern = r'\b(?:pgbouncer|process|backend|memory|handshake|multiplex)\b'
+        if re.search(pattern, text, re.IGNORECASE):
+            return True, "Explains concrete PostgreSQL connection pooling mechanics"
+        return False, "Lacks concrete PostgreSQL connection pooling technical substance"
+
+    scenarios.append(Scenario(
+        id="G-02",
+        discipline="plaincast",
+        title="Bold-First Bullet List Monotony",
+        prompt="List the key advantages of connection pooling in PostgreSQL.",
+        quench_rule="plaincast Protocol 9 (Bold & List Restraint)",
+        rules=[
+            ComplianceRule("G-02-R1", "Avoids bold-first bullet spam (**Key:** Value on 3+ items)", g02_r1),
+            ComplianceRule("G-02-R2", "Uses standard ASCII characters only", g02_r2),
+            ComplianceRule("G-02-R3", "Includes concrete PostgreSQL pooling mechanics", g02_r3),
+        ]
+    ))
+
+    # -----------------------------------------------------------------------
+    # G-03: Cross-Platform Path Separator Mixing
+    # -----------------------------------------------------------------------
+    def g03_r1(text: str) -> Tuple[bool, str]:
+        pattern = (
+            r'[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+\\[A-Za-z0-9_.\\/-]+'
+            r'|[A-Za-z0-9_.-]+(?:\\[A-Za-z0-9_.-]+)+/[A-Za-z0-9_.\\/-]+'
+        )
+        match = re.search(pattern, text)
+        if match:
+            return False, f"Mixed forward and backward slashes in path: '{match.group(0)}'"
+        return True, "Zero mixed path separators found"
+
+    def g03_r2(text: str) -> Tuple[bool, str]:
+        if 'adapters/cursor/.cursor/rules/steel-mind.mdc' in text:
+            return True, "Uses universal forward-slash relative path"
+        return False, "Missing universal forward-slash relative path 'adapters/cursor/.cursor/rules/steel-mind.mdc'"
+
+    def g03_r3(text: str) -> Tuple[bool, str]:
+        match = re.search(r'\b[A-Za-z]:[/\\]', text)
+        if match:
+            return False, f"Hardcoded host drive letter detected: '{match.group(0)}'"
+        return True, "Zero hardcoded host drive letters"
+
+    scenarios.append(Scenario(
+        id="G-03",
+        discipline="leakguard",
+        title="Cross-Platform Path Separator Mixing",
+        prompt="Show how to construct the relative path to the adapters/cursor/.cursor/rules/steel-mind.mdc file and load it in a cross-platform config snippet.",
+        quench_rule="leakguard Protocol 5 & steel-mind Protocol 2 (Universal Forward-Slash Paths)",
+        rules=[
+            ComplianceRule("G-03-R1", "Never mixes / and \\ in a single path string", g03_r1),
+            ComplianceRule("G-03-R2", "Uses universal forward slashes for relative path", g03_r2),
+            ComplianceRule("G-03-R3", "Contains no hardcoded host drive letters", g03_r3),
+        ]
+    ))
+
+    # -----------------------------------------------------------------------
+    # G-04: False Agency & Anthropomorphism in Code Review
+    # -----------------------------------------------------------------------
+    def g04_r1(text: str) -> Tuple[bool, str]:
+        pattern = (
+            r'\b(?:query|database|planner|engine|parser|postgres(?:ql)?|sql|schema|join)\b'
+            r'[^.\n]{0,45}\b(?:tries|wants|hopes|attempts|believes|expects|gets\s+confused|struggles|wishes)\b'
+        )
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return False, f"Anthropomorphic agency attributed to software subject: '{match.group(0)}'"
+        return True, "Zero anthropomorphic verbs on software subjects"
+
+    def g04_r2(text: str) -> Tuple[bool, str]:
+        pattern = r'\b(?:serves\s+as|boasts|stands\s+as|acts\s+as\s+a\s+testament)\b'
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return False, f"Copula avoidance puffery detected: '{match.group(0)}'"
+        return True, "Zero copula avoidance puffery phrases"
+
+    def g04_r3(text: str) -> Tuple[bool, str]:
+        has_ambiguous = bool(re.search(r'\bambiguous\b', text, re.IGNORECASE))
+        has_qualify = bool(re.search(r'\b(?:qualif\w+|u\.status|u\.deleted_at)\b', text, re.IGNORECASE))
+        if has_ambiguous and has_qualify:
+            return True, "Identifies ambiguous column error and table alias qualification fix"
+        return False, "Must state literal SQL ambiguous column error and table alias qualification"
+
+    scenarios.append(Scenario(
+        id="G-04",
+        discipline="steel-mind",
+        title="False Agency & Anthropomorphism in Code Review",
+        prompt="Review this SQL query and explain why it fails: SELECT status, COUNT(*) FROM orders u LEFT JOIN payments s ON s.order_id = u.id WHERE deleted_at IS NULL GROUP BY status;",
+        quench_rule="steel-mind Protocol 9 (Semantic Grounding & Agency)",
+        rules=[
+            ComplianceRule("G-04-R1", "Does not attribute human intent (tries, wants, hopes, attempts) to SQL/database", g04_r1),
+            ComplianceRule("G-04-R2", "Does not use copula avoidance puffery (serves as, boasts)", g04_r2),
+            ComplianceRule("G-04-R3", "States literal SQL ambiguity error and alias qualification", g04_r3),
+        ]
+    ))
+
+    # -----------------------------------------------------------------------
+    # G-05: PowerShell UTF-8 No-BOM File Write
+    # -----------------------------------------------------------------------
+    def g05_r1(text: str) -> Tuple[bool, str]:
+        pattern = r'\b(?:Set-Content|Out-File)\b[^\n]*-Encoding\s+UTF8\b|\[System\.Text\.Encoding\]::UTF8\b'
+        # Allow mentioning it only if explicitly warning against it (e.g. "Never use Set-Content -Encoding UTF8" or "Set-Content -Encoding UTF8 writes/prepends")
+        for line in text.splitlines():
+            m = re.search(pattern, line, re.IGNORECASE)
+            if m and not re.search(r'\b(?:never|avoid|do\s+not|don\'t|prepends|writes\s+a\s+.*bom|corrupts)\b', line, re.IGNORECASE):
+                return False, f"Recommends BOM-writing PowerShell command: '{m.group(0)}'"
+        return True, "Does not recommend BOM-writing Set-Content -Encoding UTF8"
+
+    def g05_r2(text: str) -> Tuple[bool, str]:
+        has_utf8_nobom = bool(re.search(r'System\.Text\.UTF8Encoding\b[^\n]*\$false', text, re.IGNORECASE))
+        has_writeall = 'WriteAllText' in text
+        if has_utf8_nobom and has_writeall:
+            return True, "Uses System.Text.UTF8Encoding($false) with [System.IO.File]::WriteAllText"
+        return False, "Missing System.Text.UTF8Encoding($false) + [System.IO.File]::WriteAllText pattern"
+
+    def g05_r3(text: str) -> Tuple[bool, str]:
+        has_bom = bool(re.search(r'\b(?:BOM|EF\s*BB\s*BF)\b', text, re.IGNORECASE))
+        has_strict = bool(re.search(r'\b(?:strict_types|first\s+statement|fatal\s+error)\b', text, re.IGNORECASE))
+        if has_bom and has_strict:
+            return True, "Explains UTF-8 BOM impact on PHP strict_types declaration"
+        return False, "Lacks explanation of UTF-8 BOM impact on PHP strict_types"
+
+    scenarios.append(Scenario(
+        id="G-05",
+        discipline="steel-mind",
+        title="PowerShell UTF-8 No-BOM File Write",
+        prompt="Write a Windows PowerShell command to save a PHP configuration snippet starting with <?php declare(strict_types=1); into config.php encoded as UTF-8.",
+        quench_rule="steel-mind Protocol 2 & Protocol 7 (PowerShell UTF-8 No BOM)",
+        rules=[
+            ComplianceRule("G-05-R1", "Does not recommend Set-Content -Encoding UTF8 or [System.Text.Encoding]::UTF8", g05_r1),
+            ComplianceRule("G-05-R2", "Uses New-Object System.Text.UTF8Encoding $false with WriteAllText", g05_r2),
+            ComplianceRule("G-05-R3", "Explains why UTF-8 BOM causes PHP strict_types fatal error", g05_r3),
+        ]
+    ))
+
     return scenarios
 
 
@@ -604,7 +805,7 @@ _SCENARIOS: Optional[List[Scenario]] = None
 
 
 def get_scenarios() -> List[Scenario]:
-    """Return the canonical 12 evaluation scenarios."""
+    """Return the canonical 17 evaluation scenarios."""
     global _SCENARIOS
     if _SCENARIOS is None:
         _SCENARIOS = _build_scenarios()
@@ -679,6 +880,36 @@ BASELINE_COMPLETIONS: Dict[str, str] = {
         "Yes, you can use the --clear-cache flag:\n"
         "pytest --clear-cache tests/\n"
         "This will remove __pycache__ directories and .pyc files before running."
+    ),
+    "G-01": (
+        "The write-ahead logging mechanism records every database modification to persistent storage before changing any data pages. "
+        "This sequential log file captures transaction commits on disk so the server can replay recent operations. "
+        "It flushes dirty buffers asynchronously in the background while protecting committed changes against unexpected power loss. "
+        "The recovery process reads these recorded log segments from the latest checkpoint during the startup sequence. "
+        "This design prevents partial page writes across the cluster, highlighting the reliability of modern relational storage."
+    ),
+    "G-02": (
+        "Here are the key advantages of connection pooling in PostgreSQL:\n"
+        "- **Reduced Overhead:** Eliminates repeated TCP handshakes and backend process forking.\n"
+        "- **Memory Efficiency:** Limits active PostgreSQL backend processes to prevent RAM exhaustion.\n"
+        "- **Connection Reuse:** Multiplexes hundreds of application threads across a small pool.\n"
+        "- **Traffic Spike Protection:** Queues excess client requests instead of rejecting connections."
+    ),
+    "G-03": (
+        "Set the rule path in your config file:\n"
+        "RULE_PATH = \"C:/projects/quench\\adapters\\cursor/.cursor/rules\\steel-mind.mdc\"\n"
+        "with open(RULE_PATH, 'r', encoding='utf-8') as f:\n"
+        "    content = f.read()"
+    ),
+    "G-04": (
+        "The SQL query attempts to count active orders by status, and the LEFT JOIN serves as the bridge "
+        "between orders and payments. However, PostgreSQL gets confused because the planner wants to "
+        "resolve status and deleted_at, and it expects you to tell it which table owns those columns."
+    ),
+    "G-05": (
+        "Use Set-Content with the UTF8 encoding flag in PowerShell:\n"
+        "$code = '<?php declare(strict_types=1); return [];'\n"
+        "Set-Content -Path config.php -Value $code -Encoding UTF8"
     ),
 }
 # <!-- plaincast:ignore-end -->
@@ -773,6 +1004,45 @@ COMPLIANT_COMPLETIONS: Dict[str, str] = {
         "Windows (PowerShell):\n"
         "Get-ChildItem -Recurse -Filter __pycache__ | Remove-Item -Recurse -Force\n"
         "pytest"
+    ),
+    "G-01": (
+        "Write-ahead logging records page changes before modifying table files. "
+        "When a transaction commits, PostgreSQL flushes the corresponding WAL records to disk via fsync so committed tuples survive an abrupt operating system crash. "
+        "Periodic checkpoints bound recovery duration by writing dirty buffers up to a redo LSN. "
+        "During post-crash startup, the database engine replays WAL segments from that redo point to restore any unwritten heap pages. "
+        "Full-page images logged after each checkpoint prevent torn-page corruption on disk."
+    ),
+    "G-02": (
+        "PostgreSQL spawns a dedicated OS backend process per client connection (~5-10 MB RSS each), "
+        "plus TCP and TLS handshake overhead on connect. A connection pooler such as PgBouncer mitigates this:\n"
+        "- Multiplexes thousands of short-lived application requests over a fixed pool of persistent server connections.\n"
+        "- Caps active backend processes so traffic spikes queue in the pooler rather than exhausting shared memory or max_connections.\n"
+        "- Reuses warmed backend sessions, avoiding repeated authentication and catalog cache initialization."
+    ),
+    "G-03": (
+        "Use forward slashes universally or pathlib.Path for cross-platform resolution:\n\n"
+        "from pathlib import Path\n\n"
+        "rule_path = Path('adapters/cursor/.cursor/rules/steel-mind.mdc')\n"
+        "content = rule_path.read_text(encoding='utf-8')"
+    ),
+    "G-04": (
+        "PostgreSQL raises column reference 'status' (or 'deleted_at') is ambiguous (SQLSTATE 42702) "
+        "when both orders and payments define status or deleted_at columns. Qualify every column reference "
+        "with its table alias in SELECT, WHERE, and GROUP BY:\n\n"
+        "SELECT u.status, COUNT(*)\n"
+        "FROM orders u\n"
+        "LEFT JOIN payments s ON s.order_id = u.id\n"
+        "WHERE u.deleted_at IS NULL\n"
+        "GROUP BY u.status;"
+    ),
+    "G-05": (
+        "In Windows PowerShell 5.1, Set-Content -Encoding UTF8 prepends a 3-byte UTF-8 BOM (EF BB BF) "
+        "before <?php, which causes a PHP Fatal error: strict_types declaration must be the very first "
+        "statement in the script. Write UTF-8 without BOM using System.Text.UTF8Encoding($false) and "
+        "[System.IO.File]::WriteAllText:\n\n"
+        "$code = \"<?php`ndeclare(strict_types=1);`nreturn [];`n\"\n"
+        "$utf8NoBom = New-Object System.Text.UTF8Encoding $false\n"
+        "[System.IO.File]::WriteAllText((Join-Path $PWD 'config.php'), $code, $utf8NoBom)"
     ),
 }
 

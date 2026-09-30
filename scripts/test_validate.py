@@ -772,5 +772,23 @@ class TestPrivateTerms(_TempRepoCase):
         self.assertIn("Cross-project", res.stdout)
 
 
+class TestStagedScan(_TempRepoCase):
+    """staged_only=True scans only git-staged files when inside a git work tree."""
+
+    def test_staged_only_ignores_unstaged_violations(self):
+        subprocess.run(['git', 'init', str(self.root)], capture_output=True, check=True)
+        _write(self.root, 'staged_clean.md', "Clean staged documentation.\n")
+        _write(self.root, 'unstaged_dirty.md', "Unstaged \u2014 em dash violation.\n")
+        subprocess.run(['git', '-C', str(self.root), 'add', 'staged_clean.md'], capture_output=True, check=True)
+
+        staged_report = validate.scan_repository(self.root, private_terms=[], staged_only=True)
+        self.assertTrue(staged_report.passed, [str(v) for v in staged_report.violations])
+        self.assertEqual(staged_report.files_scanned, 1)
+
+        full_report = validate.scan_repository(self.root, private_terms=[], staged_only=False)
+        self.assertFalse(full_report.passed)
+        self.assertEqual(full_report.files_scanned, 2)
+
+
 if __name__ == '__main__':
     unittest.main()

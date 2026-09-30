@@ -40,10 +40,10 @@ AI coding assistants naturally drift into failure modes that degrade codebase hy
 
 | Skill | Version | Description |
 |-------|---------|-------------|
-| [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.1 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
+| [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.2 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
 | [plaincast](./skills/plaincast/SKILL.md) | 1.1.0 | Text normalization: standard keyboard boundary, no emoji, no em dashes, no curly quotes, colon/list restraint |
 | [leakguard](./skills/leakguard/SKILL.md) | 1.0.2 | Environment, path, and context isolation: host path neutralization, hermetic project boundaries, credential redaction |
-| [precision-output](./skills/precision-output/SKILL.md) | 1.0.2 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution |
+| [precision-output](./skills/precision-output/SKILL.md) | 1.0.3 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution |
 
 ---
 
@@ -153,6 +153,9 @@ quench init --tool all --hooks --target /path/to/project
 # Validate repository integrity across all 5 gates
 quench check --target /path/to/project
 
+# Fast pre-commit check: scan only git-staged files
+quench check --staged --target /path/to/project
+
 # Validate and auto-fix fixable plaincast and path issues
 quench check --fix --target /path/to/project
 
@@ -165,7 +168,7 @@ quench update --target /path/to/project
 # Follow the latest release globally and wire it into Claude Code (~/.quench, ~/.claude)
 quench update --global
 
-# Run the automated adversarial evaluation runner (12 scenarios across 4 disciplines)
+# Run the automated adversarial evaluation runner (17 scenarios across 4 disciplines)
 quench eval
 
 # Evaluate external model completions from JSON/JSONL against adversarial scenarios
@@ -179,7 +182,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.9.0
+    rev: v1.9.1
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -196,7 +199,7 @@ Validate pull requests and commits in GitHub Actions CI using the official compo
     target: .
 ```
 
-`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.0`) if you want fully reproducible CI.
+`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.1`) if you want fully reproducible CI.
 
 Violations are reported as `::error` annotations, so they appear inline on the PR diff. With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes.
 
@@ -268,7 +271,7 @@ Auto-update is opt-in because the clone supplies your agent's always-on rules an
 of this repository. Without it, re-run `quench update --global` when you want a new
 release.
 
-Options: `--ref v1.9.0` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
+Options: `--ref v1.9.1` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
 moves the clone, `--no-claude` updates the clone only.
 
 Run `/memory` in a new session to confirm the import is listed, and `/skills` to

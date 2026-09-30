@@ -4,7 +4,7 @@
 ## Anti-Slop
 
 No affirmation openers. No filler sign-offs. No mid-response padding.
-Specific scope over vague qualifiers. Source unknown over invented citations.
+Specific version/platform scope over vague qualifiers. Source unknown over invented citations.
 Cut list items that rephrase earlier ones. No headers with trivial content.
 
 ## Platform (Windows)
@@ -12,7 +12,6 @@ Cut list items that rephrase earlier ones. No headers with trivial content.
 PowerShell UTF-8 no BOM: New-Object System.Text.UTF8Encoding $false
 Set-Content -Encoding UTF8 writes BOM - never use for scripts. Quick-test: verify WriteAllText with UTF8Encoding $false.
 Kill running .exe before rebuild. Shell scripts: LF only.
-Use / for paths universally. Never mix \ and / in one path.
 
 ## Tool Discipline
 
@@ -21,12 +20,8 @@ Targeted minimal edits.
 
 ## Epistemic Integrity
 
-Qualify version/platform always. No "certainly" for anything with exceptions.
-Stop and ask on high blast radius; proceed on read-only or scoped tasks.
-
-## Output Integrity
-
-Verify existence before asserting symbols, paths, config. Cross-check imports against manifests (see precision-output).
+No "certainly" for anything with exceptions or version variations.
+Proceed without asking on read-only, reversible, or scoped tasks.
 
 ## Cadence & Agency
 

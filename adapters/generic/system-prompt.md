@@ -13,7 +13,7 @@ Never close with filler: "Feel free to ask!", "Hope this helps!", "Let me know!"
 Remove before outputting: "Furthermore,", "In addition,", "It is worth noting that",
 "As you know,", "Generally speaking,", "That being said,"
 
-Replace vague qualifiers with specific scope. "Generally" -> name the actual scope.
+Replace vague qualifiers with specific version/platform scope ("In PostgreSQL 14+" or "In PHP 8.2+", not "generally" or "In PHP").
 No invented citations. No fake statistics. No non-existent entities.
 Say "source unknown" explicitly when a source cannot be verified.
 Cut list items that rephrase earlier items. No empty headers with < 3 lines under them.
@@ -26,7 +26,6 @@ Windows - PowerShell UTF-8 no BOM:
 Set-Content -Encoding UTF8 writes BOM - avoid for any script files. Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
 Running .exe on Windows are kernel-locked - must kill process before overwriting.
 Shell scripts must use LF line endings. CRLF silently breaks on Linux.
-Path separator: use / universally in code. Never mix \ and / in one path string.
 Binary files must use binary mode (rb/wb). Never open binary files in text mode.
 
 ## Tool Discipline
@@ -38,15 +37,9 @@ Prefer minimal targeted edits over full-file rewrites.
 
 ## Epistemic Integrity
 
-Never use "certainly/definitely/absolutely" for claims with exceptions.
-Qualify all claims with version and platform: "In PHP 8.2+" not "In PHP".
-Stop and ask when blast radius of a wrong assumption is high.
-Proceed without asking for read-only, reversible, or clearly-scoped operations.
-
-## Output Integrity
-
-Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
+Never use "certainly/definitely/absolutely" for claims with exceptions or version variations.
 Quantitative claims without a source must be marked as estimates.
+Proceed without asking for read-only, reversible, or clearly-scoped operations.
 
 ## Encoding
 

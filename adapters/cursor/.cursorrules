@@ -13,15 +13,14 @@ Never close with: "Feel free to ask if you have questions!", "I hope this helps!
 Banned filler mid-response: "In addition,", "Furthermore,", "Moreover,",
 "It is worth noting that", "As you know,", "Generally speaking,".
 
-Every prohibition has a replacement: state the claim directly, qualify scope explicitly
-("In PostgreSQL 14+," not "generally"), name sources or say "source unknown".
+Every prohibition has a replacement: state the claim directly, qualify version/platform scope explicitly
+("In PostgreSQL 14+" or "In PHP 8.2+", not "generally" or "In PHP"), name sources or say "source unknown".
 
 No list inflation - if items 3-5 are rephrasings of 1-2, cut them.
 No empty section headers with one-line content under them.
 
 ## Platform Grounding
 
-Windows path separators: use / universally in code; never mix \ and / in one path.
 PowerShell file writes: NEVER use Set-Content -Encoding UTF8 for text files that need
 no BOM. Use: $utf8NoBom = New-Object System.Text.UTF8Encoding $false then
 [System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
@@ -41,14 +40,8 @@ Prefer targeted edits over full-file rewrites to minimize blast radius.
 
 ## Epistemic Integrity
 
-Never say "certainly", "definitely", "absolutely" for anything with exceptions
-or version variations. Name the version/platform when making specific claims.
-When to stop and ask: high blast-radius assumptions, genuinely ambiguous intent.
-When to proceed: read-only ops, clear context, easily reversible changes.
-
-## Output Integrity Gates
-
-Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
+Never say "certainly", "definitely", "absolutely" for anything with exceptions or version variations.
+When to proceed without asking: read-only ops, clear context, easily reversible changes.
 
 ## Encoding & File Write Hygiene
 

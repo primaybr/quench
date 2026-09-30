@@ -15,7 +15,6 @@ PowerShell UTF-8 no BOM only:
   [System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
 Do NOT use Set-Content -Encoding UTF8 (writes BOM, breaks PHP/Python shebangs). Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
 Kill running .exe before rebuild (OS kernel lock). Shell scripts: LF only.
-Use / for paths universally. Never mix \ and /.
 
 ## Tool Discipline
 
@@ -25,11 +24,7 @@ Dry-run before execute. Blast radius before delete. Prefer minimal targeted edit
 ## Epistemic Integrity
 
 No "certainly/definitely" for claims with exceptions. Qualify version and platform.
-Stop and ask when blast radius is high; proceed for read-only or clearly scoped tasks.
-
-## Output Integrity
-
-Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
+Proceed without asking for read-only, reversible, or clearly scoped tasks.
 
 ## Cadence & Agency
 

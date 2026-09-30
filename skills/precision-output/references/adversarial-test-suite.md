@@ -440,67 +440,60 @@ Confirm the rule-following agent's response:
 
 ## Section 2 - Coverage Gap Analysis
 
-After designing the 10 prompts above, the following failure modes remain uncovered
-by any of the prompts in this suite.
+After designing the initial 12 prompts above, the following 5 failure modes were
+identified and subsequently implemented as automated adversarial scenarios (`G-01`
+through `G-05`) in `scripts/eval_adversarial.py` (`quench eval`).
 
 ### Gap G-01 - Structural Cadence Violations (steel-mind Protocol 8)
 
-None of the 10 prompts specifically probe for metronome-tell sentence length uniformity,
+None of the initial 12 prompts specifically probe for metronome-tell sentence length uniformity,
 the bimodal seesaw, or participial tack-on patterns. A baseline LLM will naturally
-produce text with these synthetic cadence markers on almost any explanatory prompt, but
-no adversarial prompt in this suite is designed to isolate and detect them.
+produce text with these synthetic cadence markers on almost any explanatory prompt.
 
-The compliance test for cadence violations is harder to formalize as a pass/fail
-check because it requires sentence-length distribution analysis rather than the
-presence of a specific banned token. This gap reflects an analysis tooling gap, not
-an absence of the rule.
+The compliance test for cadence violations requires sentence-length distribution analysis
+and participial/opener checks across a 5+ sentence explanatory paragraph.
 
-Status: Genuine coverage gap for automated detection. Rule exists in steel-mind
-Protocol 8, but no adversarial prompt in this suite surfaces it in isolation.
+Status: Automated adversarial scenario `G-01` implemented in `scripts/eval_adversarial.py` (`quench eval`).
 
 ### Gap G-02 - Bold-First Bullet List Monotony (plaincast Protocol 9)
 
-None of the prompts specifically elicit the "bold-first bullet spam" pattern where
+None of the initial 12 prompts specifically elicit the "bold-first bullet spam" pattern where
 every bullet item starts with "**Term:** Description." A baseline LLM produces this
-pattern aggressively in response to "list the advantages of X" prompts. No prompt
-in this suite targets it directly.
+pattern aggressively in response to "list the advantages of X" prompts.
 
-Status: Genuine coverage gap. plaincast Protocol 9 covers it but no adversarial
-prompt exercises it.
+Status: Automated adversarial scenario `G-02` implemented in `scripts/eval_adversarial.py` (`quench eval`).
 
 ### Gap G-03 - Cross-Platform Path Separator Mixing (steel-mind Protocol 2 / leakguard Protocol 5)
 
-No prompt specifically tests that the agent avoids mixing forward and backslashes
+No prompt in the initial 12 specifically tests that the agent avoids mixing forward and backslashes
 in a single path string (e.g., "C:/path\to/project"). This is a subtle but real
 failure mode that corrupts paths on Windows when passed to tools expecting consistent
 separators.
 
-Status: Genuine coverage gap. The rule exists across steel-mind Protocol 2 and
-leakguard Protocol 5, but no prompt in this suite elicits it.
+Status: Automated adversarial scenario `G-03` implemented in `scripts/eval_adversarial.py` (`quench eval`).
 
 ### Gap G-04 - False Agency / Anthropomorphism in Code Review (steel-mind Protocol 9)
 
-No prompt asks the agent to review code or describe system behavior in a way that
+No prompt in the initial 12 asks the agent to review code or describe system behavior in a way that
 would trigger anthropomorphic language ("the schema attempts to validate",
 "the router hopes to resolve"). This is a subtle but consistent baseline LLM pattern.
 
-Status: Genuine coverage gap. steel-mind Protocol 9 covers it, no prompt targets it.
+Status: Automated adversarial scenario `G-04` implemented in `scripts/eval_adversarial.py` (`quench eval`).
 
 ### Gap G-05 - BOM Write via PowerShell (steel-mind Protocol 2 / Protocol 7)
 
-No prompt asks the agent to write a PowerShell file write command, which is the
+No prompt in the initial 12 asks the agent to write a PowerShell file write command, which is the
 primary vector for UTF-8 BOM contamination on Windows. A baseline LLM will generate
 "Set-Content -Encoding UTF8" which writes a BOM by default.
 
-Status: Genuine coverage gap. Rule exists in steel-mind Protocol 2 and Protocol 7
-and in AGENTS.md. No adversarial prompt exercises it.
+Status: Automated adversarial scenario `G-05` implemented in `scripts/eval_adversarial.py` (`quench eval`).
 
 ---
 
 ## Section 3 - Rule Redundancy Map
 
 The following pairs of rules across skill files address identical or substantially
-overlapping failure modes. These are candidates for consolidation in the next trim.
+overlapping failure modes and have been consolidated in the Always-On extracts and adapters.
 
 ### Redundancy R-01 - Phantom API Prohibition
 
@@ -513,10 +506,7 @@ check before asserting) while precision-output frames it as a proactive manifest
 cross-reference step. The framing difference is meaningful, but the prohibited
 behavior is identical.
 
-Consolidation candidate: The AGENTS.md extract currently covers this under both
-"steel-mind: Output Integrity" and "precision-output" sections. The steel-mind entry
-could be trimmed to a cross-reference pointer ("See precision-output for phantom API
-protocol") to reduce token weight.
+Status: Consolidated in v1.9.1 across rules/AGENTS.md and all 11 adapters.
 
 ### Redundancy R-02 - Epistemic State Labeling
 
@@ -525,12 +515,9 @@ Inferred, Uncertain. precision-output Protocol 2 (Three Epistemic States) define
 the same three states with nearly identical framing and output language requirements.
 
 Both rules prohibit presenting inference as direct fact. Both require explicit
-labeling of non-Known claims. The AGENTS.md extract covers this in both the
-"steel-mind: Epistemic Integrity" and "precision-output" sections.
+labeling of non-Known claims.
 
-Consolidation candidate: steel-mind Protocol 4 could be trimmed to a brief note
-("three epistemic states: see precision-output Protocol 2 for full calibration table")
-since precision-output owns the more detailed implementation table.
+Status: Consolidated in v1.9.1 across rules/AGENTS.md and all 11 adapters.
 
 ### Redundancy R-03 - Hermetic Boundary / Private Tool Name Prohibition
 
@@ -543,21 +530,15 @@ Both rules prohibit the same behavior: leaking private tool names from the host
 environment into repository files. steel-mind frames it as an integrity gate question.
 leakguard frames it as an isolation invariant.
 
-Consolidation candidate: steel-mind Protocol 5 could drop the hermetic isolation
-bullet and cross-reference leakguard Protocol 2 as the canonical owner, reducing
-coverage duplication without losing the rule.
+Status: Consolidated in v1.9.1 across rules/AGENTS.md and all 11 adapters.
 
 ### Redundancy R-04 - Never Overwrite a File Not Read
 
 steel-mind Protocol 3 (Tool Use Discipline): "Never overwrite a file not read in
 the current session." This same constraint appears as a quench repository invariant
 in the system instructions and in AGENTS.md under "steel-mind: Tool Use Discipline".
-It appears three times across the rule surface in functionally identical language.
 
-Consolidation candidate: The AGENTS.md entry is sufficient. The SKILL.md entry
-in Protocol 3 provides the rationale and examples, which justify keeping it there,
-but the system instruction duplicate is the redundancy to eliminate if token budget
-tightens.
+Status: Consolidated in v1.9.1 across rules/AGENTS.md and all 11 adapters.
 
 ---
 

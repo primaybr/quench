@@ -17,9 +17,9 @@ Do not close responses with: "Feel free to ask if you have questions!", "Hope th
 Do not use mid-response filler: "In addition,", "Furthermore,", "Moreover,",
 "It is worth noting that", "As you know,", "Generally speaking,", "That being said,"
 
-Replace vague qualifiers with specific scope:
-- Wrong: "Generally, databases should be indexed."
-- Right: "PostgreSQL B-tree indexes work well for equality and range queries."
+Replace vague qualifiers with specific version/platform scope:
+- Wrong: "Generally, databases should be indexed." or "In PHP, use `->`."
+- Right: "PostgreSQL 14+ B-tree indexes work well for equality and range queries." or "In PHP 8.2+, use `->` for object access."
 
 No invented citations, fake statistics, or non-existent entities.
 If a source is unknown, say "source unknown" explicitly.
@@ -41,8 +41,6 @@ Always terminate the process before rebuilding or overwriting the binary.
 **Line endings:** Shell scripts must use LF (`\n`) only.
 CRLF (`\r\n`) on Linux causes silent failures - the `\r` becomes part of the command name.
 
-**Path separators:** Use `/` universally in code. Never mix `\` and `/` in one path string.
-
 ## 3. Tool Use Discipline
 
 Before writing or overwriting any file: read its current content first this session.
@@ -54,25 +52,15 @@ Prefer minimal, targeted edits over full-file rewrites.
 
 Never use "certainly", "definitely", "absolutely" for claims that have
 exceptions, version differences, or platform variations.
+Proceed without asking for read-only, reversible, or clearly scoped tasks.
 
-Always qualify claims with the specific version or platform:
-- Wrong: "In PHP, use `->` for object access."
-- Right: "In PHP 8.x, use `->` for object access and `::` for static."
-
-Stop and ask when blast radius is high; proceed for read-only or clearly scoped tasks.
-
-## 5. Output Integrity Gates
-
-Verify existence before asserting symbols, paths, or config keys.
-Cross-check imports against manifests (see section 11: precision-output).
-
-## 6. Context Economy
+## 5. Context Economy
 
 For secondary research queries: offload to a cheaper, parallel channel.
 After completing a major task segment: summarize compactly what was done.
 When stopping: state what was completed, what remains, and what the next session needs.
 
-## 7. Encoding & File Write Hygiene
+## 6. Encoding & File Write Hygiene
 
 Python: `open(path, 'w', encoding='utf-8', newline='\n')`
 Node.js: `fs.writeFileSync(path, content, { encoding: 'utf8' })`
@@ -80,7 +68,7 @@ PHP: verify `substr(file_get_contents($path), 0, 3) !== "\xEF\xBB\xBF"` after wr
 Always verify first bytes of written files when encoding integrity matters.
 Binary files: always use binary mode flags (`rb`/`wb`), never text mode.
 
-## 8. Structural Cadence & Agency
+## 7. Structural Cadence & Agency
 
 Sentence length follows complexity (avoid 18-24 word repetition; avoid bimodal seesaw).
 Cadence gate: in prose of 5+ sentences, if 4+ fall within a 5-word band, rewrite 2.
@@ -91,7 +79,7 @@ In code reviews and PR descriptions: check "tries", "wants", "hopes", "attempts"
 No compulsive silver linings in bug reports; state defects unsoftened.
 Replace copula avoidance ("serves as", "boasts") with direct `is` or `has`.
 
-## 9. plaincast: Text Normalization
+## 8. plaincast: Text Normalization
 
 NEVER use emoji in any output - remove entirely, never replace with other symbols.
 
@@ -118,7 +106,7 @@ Do not overuse bold. More than two bolded phrases per paragraph is inflation.
 Avoid bold-first list spam (**Key:** Value on every bullet). Use prose or plain bullets.
 Limit colons in prose to formal definitions; keep semicolons rare.
 
-## 10. leakguard: Path, Environment & Context Sanitization
+## 9. leakguard: Path, Environment & Context Sanitization
 
 NEVER output or commit host drive letters (C:\, F:\) or user profiles (Users/, /home/).
 Always use generic placeholders (/path/to/<project>, ~/.config/<tool>/) or relative paths.
@@ -129,7 +117,7 @@ Never expose authentication tokens (ghp_, sk-, bearer) or connection strings wit
 Commit message hygiene: never name leaked tokens, host paths, or private project names
 in commit messages or PR descriptions; describe removals generically.
 
-## 11. precision-output: Grounded Verification & Integrity Gates
+## 10. precision-output: Grounded Verification & Integrity Gates
 
 NEVER assert a file, symbol, class, function, method, or config key exists without verifying it in the current session.
 Three epistemic states - state them explicitly:

@@ -3,8 +3,8 @@
 Unit tests for Quench Automated Adversarial Evaluation Runner.
 
 Verifies:
-- All 12 compliant fixtures score 12/12 (100% pass rate).
-- All 12 baseline fixtures fail with expected rule violations detected.
+- All 17 compliant fixtures score 17/17 (100% pass rate).
+- All 17 baseline fixtures fail with expected rule violations detected.
 - Individual compliance rules correctly detect violations and pass compliant patterns.
 - CLI entrypoint 'python scripts/quench.py eval' returns exit code 0.
 - Machine-readable JSON output (--json) and file evaluation (--input) work correctly.
@@ -31,16 +31,17 @@ import eval_adversarial
 class TestAdversarialEvalSuite(unittest.TestCase):
     """Test suite for eval_adversarial module and fixtures."""
 
-    def test_01_all_twelve_scenarios_registered(self):
-        """Ensure all 12 scenarios covering 4 disciplines are registered."""
+    def test_01_all_seventeen_scenarios_registered(self):
+        """Ensure all 17 scenarios covering 4 disciplines are registered."""
         scenarios = eval_adversarial.get_scenarios()
-        self.assertEqual(len(scenarios), 12, "Must contain exactly 12 scenarios")
+        self.assertEqual(len(scenarios), 17, "Must contain exactly 17 scenarios")
 
         expected_ids = [
             "SM-01", "SM-02", "SM-03",
             "PC-01", "PC-02", "PC-03",
             "LG-01", "LG-02", "LG-03",
             "PO-01", "PO-02", "PO-03",
+            "G-01", "G-02", "G-03", "G-04", "G-05",
         ]
         registered_ids = [s.id for s in scenarios]
         self.assertEqual(registered_ids, expected_ids)
@@ -50,12 +51,12 @@ class TestAdversarialEvalSuite(unittest.TestCase):
         self.assertEqual(disciplines, expected_disciplines)
 
     def test_02_compliant_completions_pass_100_percent(self):
-        """All 12 compliant fixtures must score 12/12 (100% pass rate)."""
+        """All 17 compliant fixtures must score 17/17 (100% pass rate)."""
         suite_res = eval_adversarial.run_suite(eval_adversarial.COMPLIANT_COMPLETIONS)
 
         self.assertTrue(suite_res.passed, "Compliant suite must pass overall")
-        self.assertEqual(suite_res.total_scenarios, 12)
-        self.assertEqual(suite_res.passed_scenarios, 12, "All 12 compliant scenarios must pass")
+        self.assertEqual(suite_res.total_scenarios, 17)
+        self.assertEqual(suite_res.passed_scenarios, 17, "All 17 compliant scenarios must pass")
         self.assertEqual(suite_res.failed_scenarios, 0)
         self.assertEqual(suite_res.pass_rate, 100.0)
 
@@ -67,12 +68,12 @@ class TestAdversarialEvalSuite(unittest.TestCase):
                 self.assertTrue(r.passed, f"Rule {r.rule_id} failed: {r.message}")
 
     def test_03_baseline_completions_all_fail(self):
-        """All 12 baseline fixtures must fail evaluation."""
+        """All 17 baseline fixtures must fail evaluation."""
         suite_res = eval_adversarial.run_suite(eval_adversarial.BASELINE_COMPLETIONS)
 
         self.assertFalse(suite_res.passed, "Baseline suite must fail overall")
-        self.assertEqual(suite_res.total_scenarios, 12)
-        self.assertEqual(suite_res.failed_scenarios, 12, "All 12 baseline scenarios must fail")
+        self.assertEqual(suite_res.total_scenarios, 17)
+        self.assertEqual(suite_res.failed_scenarios, 17, "All 17 baseline scenarios must fail")
         self.assertEqual(suite_res.passed_scenarios, 0)
         self.assertEqual(suite_res.pass_rate, 0.0)
 
@@ -146,12 +147,42 @@ class TestAdversarialEvalSuite(unittest.TestCase):
         failed_rules_po03 = {r.rule_id for r in po03.rule_results if not r.passed}
         self.assertIn("PO-03-R1", failed_rules_po03, "PO-03 should fail on hallucinated --clear-cache flag")
 
+        # G-01: Structural cadence and participial tack-ons
+        g01 = results_by_id["G-01"]
+        failed_rules_g01 = {r.rule_id for r in g01.rule_results if not r.passed}
+        self.assertIn("G-01-R1", failed_rules_g01, "G-01 should fail on metronome sentence-length uniformity")
+        self.assertIn("G-01-R2", failed_rules_g01, "G-01 should fail on excessive The/This/It/In starters")
+        self.assertIn("G-01-R3", failed_rules_g01, "G-01 should fail on trailing participial tack-on")
+
+        # G-02: Bold-first bullet monotony
+        g02 = results_by_id["G-02"]
+        failed_rules_g02 = {r.rule_id for r in g02.rule_results if not r.passed}
+        self.assertIn("G-02-R1", failed_rules_g02, "G-02 should fail on bold-first bullet spam")
+
+        # G-03: Cross-platform path separator mixing
+        g03 = results_by_id["G-03"]
+        failed_rules_g03 = {r.rule_id for r in g03.rule_results if not r.passed}
+        self.assertIn("G-03-R1", failed_rules_g03, "G-03 should fail on mixed path separators")
+        self.assertIn("G-03-R3", failed_rules_g03, "G-03 should fail on hardcoded host drive letter")
+
+        # G-04: False agency and copula puffery
+        g04 = results_by_id["G-04"]
+        failed_rules_g04 = {r.rule_id for r in g04.rule_results if not r.passed}
+        self.assertIn("G-04-R1", failed_rules_g04, "G-04 should fail on anthropomorphic verbs on software subjects")
+        self.assertIn("G-04-R2", failed_rules_g04, "G-04 should fail on copula avoidance puffery")
+
+        # G-05: PowerShell UTF-8 BOM write
+        g05 = results_by_id["G-05"]
+        failed_rules_g05 = {r.rule_id for r in g05.rule_results if not r.passed}
+        self.assertIn("G-05-R1", failed_rules_g05, "G-05 should fail on Set-Content -Encoding UTF8")
+        self.assertIn("G-05-R2", failed_rules_g05, "G-05 should fail on missing UTF8Encoding($false) + WriteAllText")
+
     def test_05_format_scorecard(self):
         """Verify ASCII scorecard formatting."""
         suite_res = eval_adversarial.run_suite(eval_adversarial.COMPLIANT_COMPLETIONS)
         card = eval_adversarial.format_scorecard(suite_res)
         self.assertIn("QUENCH ADVERSARIAL EVALUATION SCORECARD", card)
-        self.assertIn("12/12 scenarios passed", card)
+        self.assertIn("17/17 scenarios passed", card)
         self.assertIn("PASS", card)
         # Verify plaincast hygiene: standard characters only
         for ch in card:
@@ -162,8 +193,8 @@ class TestAdversarialEvalSuite(unittest.TestCase):
         cmd = [sys.executable, str(QUENCH_PY), 'eval']
         res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
         self.assertEqual(res.returncode, 0, f"Stderr: {res.stderr}")
-        self.assertIn("12/12 scenarios passed (100.0%)", res.stdout)
-        self.assertIn("Baseline Detection: 12/12 failing completions detected (100.0%)", res.stdout)
+        self.assertIn("17/17 scenarios passed (100.0%)", res.stdout)
+        self.assertIn("Baseline Detection: 17/17 failing completions detected (100.0%)", res.stdout)
         self.assertIn("Self-Test Result: PASS", res.stdout)
 
     def test_07_cli_eval_self_test_flag(self):
@@ -182,8 +213,8 @@ class TestAdversarialEvalSuite(unittest.TestCase):
         data = json.loads(res.stdout)
         self.assertTrue(data.get("self_test_passed"))
         self.assertTrue(data["compliant_suite"]["passed"])
-        self.assertEqual(data["compliant_suite"]["passed_scenarios"], 12)
-        self.assertEqual(data["baseline_suite"]["failed_scenarios"], 12)
+        self.assertEqual(data["compliant_suite"]["passed_scenarios"], 17)
+        self.assertEqual(data["baseline_suite"]["failed_scenarios"], 17)
 
     def test_09_cli_eval_input_file_passing(self):
         """CLI entrypoint 'quench eval --input <path>' evaluates file with compliant completions."""
@@ -194,7 +225,7 @@ class TestAdversarialEvalSuite(unittest.TestCase):
             cmd = [sys.executable, str(QUENCH_PY), 'eval', '--input', str(input_file)]
             res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
             self.assertEqual(res.returncode, 0, f"Stderr: {res.stderr}")
-            self.assertIn("12/12 scenarios passed", res.stdout)
+            self.assertIn("17/17 scenarios passed", res.stdout)
 
     def test_10_cli_eval_input_file_failing(self):
         """CLI entrypoint 'quench eval --input <path>' returns 1 when any completion fails."""

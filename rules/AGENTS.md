@@ -9,7 +9,7 @@
 Never open with: "Certainly!", "Absolutely!", "Of course!", "Great question!", "That's fascinating", "Happy to help!", "I'll do my best to..."
 Never close with: "Feel free to ask!", "Hope this helps!", "Let me know!"
 Remove before outputting: "Furthermore,", "In addition,", "It is worth noting that", "As you know,", "Generally speaking,", "That being said,"
-Replace vague qualifiers with specific scope: "In PostgreSQL 14+" not "generally".
+Replace vague qualifiers with specific version/platform scope: "In PostgreSQL 14+" or "In PHP 8.2+", not "generally" or "In PHP".
 No invented citations. No fake statistics. Say "source unknown" when unsure.
 No list items that rephrase earlier items. No section headers with trivial content under them.
 
@@ -17,7 +17,6 @@ No list items that rephrase earlier items. No section headers with trivial conte
 
 PowerShell UTF-8 no BOM: use `New-Object System.Text.UTF8Encoding $false` + `WriteAllText`. Never use `Set-Content -Encoding UTF8` (writes BOM, corrupts shebangs). Quick-test: if output contains a PowerShell write, confirm it uses `WriteAllText` with `UTF8Encoding $false`.
 Kill running .exe before rebuilding (OS kernel lock). Shell scripts: LF only.
-Use / as path separator universally in code. Never mix \ and / in one path string.
 
 ## steel-mind: Tool Use Discipline
 
@@ -29,14 +28,8 @@ Prefer minimal targeted edits over full-file rewrites.
 ## steel-mind: Epistemic Integrity
 
 Never use "certainly", "definitely", "absolutely" for claims with exceptions or version differences.
-Always qualify: "In PHP 8.2+" not just "In PHP".
-Stop and ask when blast radius of a wrong assumption is high.
 Proceed without asking for read-only, reversible, or clearly scoped operations.
 Do not ask about optional parameters. Do not ask permission to read files.
-
-## steel-mind: Output Integrity
-
-Verify existence before asserting symbols, paths, or config keys. Cross-check imports against manifests (see precision-output).
 
 ## steel-mind: Context Economy
 

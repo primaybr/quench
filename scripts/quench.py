@@ -8,7 +8,7 @@ Commands:
   quench update   Update installed Quench rules/adapters from source templates.
                   With --global: follow the latest release in ~/.quench and wire Claude Code.
   quench status   Inspect target directory for active adapters and git hooks.
-  quench eval     Run automated adversarial evaluation runner against 12 scenarios.
+  quench eval     Run automated adversarial evaluation runner against 17 scenarios.
 """
 
 from __future__ import annotations
@@ -33,8 +33,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.9.0"
-__version__ = "1.9.0"
+VERSION = "quench 1.9.1"
+__version__ = "1.9.1"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -335,13 +335,16 @@ def cmd_check(args: argparse.Namespace) -> int:
         print("Auto-fix mode: ENABLED")
     if args.paths_only:
         print("Mode: Paths and secret leaks only")
+    staged_only = bool(getattr(args, 'staged', False))
+    if staged_only:
+        print("Mode: Staged files only")
     private_terms = validate.load_private_terms(getattr(args, 'private_term', None))
     if private_terms:
         # Count only: printing the terms would leak them into CI logs.
         print(f"Private terms: {len(private_terms)} configured")
 
     report = validate.scan_repository(target, check_paths_only=args.paths_only, auto_fix=args.fix,
-                                      private_terms=private_terms)
+                                      private_terms=private_terms, staged_only=staged_only)
     print(f"\nScanned {report.files_scanned} files across repository.")
 
     if report.passed:
@@ -816,6 +819,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_check.add_argument('-d', '--target', default='.', help='Directory to validate (default: current dir)')
     p_check.add_argument('--fix', action='store_true', help='Automatically fix plaincast and path issues')
     p_check.add_argument('--paths-only', action='store_true', help='Only check path leaks and secrets')
+    p_check.add_argument('--staged', action='store_true', help='Scan only git-staged files (fast pre-commit mode)')
     p_check.add_argument('--private-term', action='append', default=[], metavar='TERM',
                          help='Private tool/project name to flag as context bleed (repeatable; '
                               'also read from $QUENCH_PRIVATE_TERMS and $QUENCH_PRIVATE_TERMS_FILE)')
@@ -846,7 +850,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_status.add_argument('-d', '--target', default='.', help='Target project directory (default: current dir)')
 
     # eval
-    p_eval = subparsers.add_parser('eval', help='Run automated adversarial evaluation runner against 12 scenarios')
+    p_eval = subparsers.add_parser('eval', help='Run automated adversarial evaluation runner against 17 scenarios')
     p_eval.add_argument('--self-test', action='store_true', default=False, help='Run built-in baseline and compliant fixtures (default)')
     p_eval.add_argument('--input', dest='input_path', help='Path to JSON/JSONL completions file to evaluate')
     p_eval.add_argument('--json', dest='json_output', action='store_true', help='Output machine-readable JSON results')
