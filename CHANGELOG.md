@@ -3,6 +3,12 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.9.6] 2026-10-03 - Documentation & CI Drift Fixes
+
+### Fixed
+- **Scenario count metadata:** Updated README and CLI help text from "17 scenarios across 4 disciplines" to "20 scenarios across 5 disciplines" to match the actual adversarial suite expanded in v1.9.4.
+- **CI test coverage gap:** Added `test_eval_adversarial.py` and `test_ignore_file.py` to `.github/workflows/validate.yml`, closing a gap where PR and push validation ran 8 of 10 test suites while the release workflow ran all 10.
+
 ## [1.9.5] 2026-10-03 - Live Benchmark Hardening & Multi-Model Resilience
 
 ### Changed

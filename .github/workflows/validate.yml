@@ -44,6 +44,12 @@ jobs:
       - name: Run release helper tests
         run: python scripts/test_release_notes.py -v
 
+      - name: Run adversarial evaluation tests
+        run: python scripts/test_eval_adversarial.py -v
+
+      - name: Run ignore file tests
+        run: python scripts/test_ignore_file.py -v
+
       - name: Run full repository scan
         run: python scripts/validate.py
 

@@ -173,7 +173,7 @@ quench update --target /path/to/project
 # Follow the latest release globally and wire it into Claude Code (~/.quench, ~/.claude)
 quench update --global
 
-# Run the automated adversarial evaluation runner (17 scenarios across 4 disciplines)
+# Run the automated adversarial evaluation runner (20 scenarios across 5 disciplines)
 quench eval
 
 # Evaluate external model completions from JSON/JSONL against adversarial scenarios
@@ -187,7 +187,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.9.5
+    rev: v1.9.6
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -204,7 +204,7 @@ Validate pull requests and commits in GitHub Actions CI using the official compo
     target: .
 ```
 
-`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.5`) if you want fully reproducible CI.
+`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.6`) if you want fully reproducible CI.
 
 Violations are reported as `::error` annotations, so they appear inline on the PR diff. With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes.
 
@@ -276,7 +276,7 @@ Auto-update is opt-in because the clone supplies your agent's always-on rules an
 of this repository. Without it, re-run `quench update --global` when you want a new
 release.
 
-Options: `--ref v1.9.5` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
+Options: `--ref v1.9.6` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
 moves the clone, `--no-claude` updates the clone only.
 
 Run `/memory` in a new session to confirm the import is listed, and `/skills` to

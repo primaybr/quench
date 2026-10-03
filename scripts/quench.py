@@ -10,7 +10,7 @@ Commands:
   quench update   Update installed Quench rules/adapters from source templates.
                   With --global: follow the latest release in ~/.quench and wire Claude Code.
   quench status   Inspect target directory for active adapters and git hooks.
-  quench eval     Run automated adversarial evaluation runner against 17 scenarios.
+  quench eval     Run automated adversarial evaluation runner against 20 scenarios.
 """
 
 from __future__ import annotations
@@ -35,8 +35,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.9.5"
-__version__ = "1.9.5"
+VERSION = "quench 1.9.6"
+__version__ = "1.9.6"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -885,7 +885,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_status.add_argument('-d', '--target', default='.', help='Target project directory (default: current dir)')
 
     # eval
-    p_eval = subparsers.add_parser('eval', help='Run automated adversarial evaluation runner against 17 scenarios')
+    p_eval = subparsers.add_parser('eval', help='Run automated adversarial evaluation runner against 20 scenarios')
     p_eval.add_argument('--self-test', action='store_true', default=False, help='Run built-in baseline and compliant fixtures (default)')
     p_eval.add_argument('--input', dest='input_path', help='Path to JSON/JSONL completions file to evaluate')
     p_eval.add_argument('--json', dest='json_output', action='store_true', help='Output machine-readable JSON results')
