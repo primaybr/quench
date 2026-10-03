@@ -7,8 +7,8 @@ NEVER use the em dash character (U+2014). Replace with:
 - " - " (space-hyphen-space) as a direct substitute
 - a comma, colon, period, or parentheses when restructuring reads better
 
-NEVER use curly/smart quotes (U+2018 U+2019 U+201C U+201D).
-Use straight apostrophe ' (U+0027) and straight double quote " (U+0022) everywhere.
+NEVER use curly/smart quotes or curly apostrophes (U+2018 U+2019 U+201C U+201D).
+Use straight apostrophe ' (U+0027) and straight double quote " (U+0022) everywhere, including all contractions (it's, don't, user's).
 
 NEVER use the Unicode ellipsis character (U+2026). Use three periods ... instead.
 
@@ -16,7 +16,7 @@ NEVER use Unicode arrows in prose. Use ASCII: -> <- => <-.
 NEVER use Unicode bullets (U+2022) in prose. Use - or * instead.
 NEVER use Unicode check marks or ballot boxes. Use [x] and [ ] instead.
 
-NEVER use en dash (U+2013) for ranges. Use a plain hyphen: 2020-2024.
+NEVER use en dash (U+2013) or non-breaking hyphen (U+2011) anywhere. Use a plain hyphen '-' (0x2D) for all hyphens, compound words, ranges, and list markers.
 
 NEVER write words in ALL CAPS for emphasis. Restructure the sentence instead.
 

@@ -1,6 +1,6 @@
 ---
 name: leakguard
-version: 1.0.2
+version: 1.0.3
 description: Environment, path, and context isolation discipline. Prevents agents from leaking local host paths, drive letters, user profile directories, internal machine identities, credentials, and cross-project tools into public code, commits, and documentation.
 ---
 
@@ -17,7 +17,7 @@ leakguard defines non-negotiable isolation gates and sanitization protocols to e
 ## The Rule Tiers
 
 ### Hard Gates (Non-Negotiable Invariants)
-- **Zero Local Drive Leaks:** Never write absolute host drive letters (`C:\`, `F:\`, `/Users/`, `/home/`) into tracked files.
+- **Zero Local Drive Leaks:** Never write absolute host drive letters (`C:\`, `F:\`, `/Users/`, `/home/`) into tracked files or example commands.
 - **Zero Cross-Project Context Bleed:** Never bleed names, custom MCP tools, internal scripts, or private APIs from sibling projects or global prompts into project documentation or code.
 - **Zero Secret Exposure:** Never commit or output bearer tokens, personal access tokens (`ghp_*`, `sk-*`), or database URIs with plain credentials.
 - **Universal Forward Slashes:** Always use forward slashes `/` in file paths within documentation and cross-platform scripts.
@@ -65,6 +65,13 @@ When referencing paths in documentation, installation guides, or configuration t
 | `/path/to/quench` | ALLOWED | (Approved documentation placeholder) |
 | `~/.gemini/config/` | ALLOWED | (Standard user configuration directory) |
 <!-- leakguard:ignore-end -->
+
+### Installation & Setup Guide Portability
+
+When generating setup instructions or environment configuration examples:
+- Always provide complete, portable instructions from repository clone (`git clone https://github.com/<org>/<repo>.git`) through environment configuration.
+- Use generic placeholders (`export CONFIG_PATH=/path/to/<project>`) or shell-native session variables (`$env:CONFIG_PATH = "/path/to/<project>"` in PowerShell).
+- Never include drive letters even in Windows sample code or CMD/PowerShell examples.
 
 ---
 

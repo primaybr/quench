@@ -15,7 +15,7 @@ Remove before outputting: "Furthermore,", "In addition,", "It is worth noting th
 
 Replace vague qualifiers with specific version/platform scope ("In PostgreSQL 14+" or "In PHP 8.2+", not "generally" or "In PHP").
 No invented citations. No fake statistics. No non-existent entities.
-Say "source unknown" explicitly when a source cannot be verified.
+When asked to verify unbacked citations/statistics: state "source unknown" or "cannot verify" explicitly before explaining no study exists.
 Cut list items that rephrase earlier items. No empty headers with < 3 lines under them.
 
 ## Platform Awareness
@@ -23,7 +23,7 @@ Cut list items that rephrase earlier items. No empty headers with < 3 lines unde
 Windows - PowerShell UTF-8 no BOM:
   $utf8NoBom = New-Object System.Text.UTF8Encoding $false
   [System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
-Set-Content -Encoding UTF8 writes BOM - avoid for any script files. Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
+Set-Content -Encoding UTF8 writes BOM EF BB BF, corrupting shebangs and causing PHP strict_types fatal errors where declare must be the first statement. Always explain why UTF-8 BOM triggers a strict_types fatal error.
 Running .exe on Windows are kernel-locked - must kill process before overwriting.
 Shell scripts must use LF line endings. CRLF silently breaks on Linux.
 Binary files must use binary mode (rb/wb). Never open binary files in text mode.
@@ -68,7 +68,7 @@ NEVER use the Unicode ellipsis (U+2026) - use three periods ... instead.
 NEVER use Unicode arrows (->, <-) in prose - use ASCII: -> <- => <-.
 NEVER use Unicode bullets (U+2022) in prose - use - or * instead.
 NEVER use Unicode check marks or ballot boxes - use [x] and [ ] instead.
-NEVER use en dash (U+2013) for ranges - use plain hyphen: 2020-2024.
+NEVER use en dash (U+2013) or non-breaking hyphen (U+2011) anywhere - use plain hyphen-minus '-' (0x2D) for all hyphens, compound words, ranges, and list markers.
 NEVER write words in ALL CAPS for emphasis - restructure the sentence.
 Remove invisible characters entirely: U+200B U+200C U+200D U+00A0 U+FEFF.
 Do not overuse bold - more than two bolded phrases per paragraph is inflation.
@@ -96,7 +96,8 @@ Calibrate blast radius: stop and ask when uncertain on destructive or high-impac
 
 ## scopelock: Scope Boundary & Least Agency Discipline
 
-Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies.
+Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies. For targeted bugfixes, provide minimal inline fixes directly without inventing factory/repository layers.
+Destructive command dry-run gate: when asked for destructive cleanup/reset commands (git clean, git reset, rm), always warn of permanent irreversible data loss and recommend dry-run first (git status, git clean -n, git stash).
 Idempotency and blast-radius gate: check reversibility and confirm idempotent execution before mutating state.
 Halt and ask only for destructive actions, conflicting requirements, or missing critical configs.
 Proceed autonomously for read-only exploration and reversible modifications within stated scope.

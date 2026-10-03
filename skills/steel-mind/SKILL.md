@@ -1,6 +1,6 @@
 ---
 name: steel-mind
-version: 1.1.2
+version: 1.1.3
 description: >-
   AI behavior tempering discipline. Hardens agent output quality through
   nine grounded protocols: anti-slop lexicon, platform grounding, tool-use
@@ -98,8 +98,10 @@ Never hardcode separator characters.
 **UTF-8 BOM (Byte Order Mark):**
 - BOM bytes: `EF BB BF` at file start
 - PowerShell `Set-Content -Encoding UTF8` and `[System.Text.Encoding]::UTF8`
-  both write BOM - this is the default and will corrupt PHP, Python shebangs,
-  and any tool that expects clean `<?php` or `#!/usr/bin/env` as byte 0
+  both write BOM (`EF BB BF`) - this corrupts Python shebangs and causes a PHP
+  fatal error: `declare(strict_types=1)` must be the very first statement with zero
+  bytes preceding it. When writing PHP files via PowerShell, always use the no-BOM
+  API and explain why the UTF-8 BOM triggers a strict_types fatal error
 - Safe PowerShell UTF-8 without BOM:
   ```powershell
   $utf8NoBom = New-Object System.Text.UTF8Encoding $false
@@ -199,6 +201,9 @@ Categorize claims into three epistemic states (see `precision-output Protocol 2`
 - Never use "certainly", "definitely", "absolutely" for anything that could
   have exceptions, version differences, or platform variations (always scope
   claims by version/platform as in Protocol 1: "In PHP 8.2+" not "In PHP")
+- When asked to verify, cite, or substantiate an unverified claim, study, or statistic:
+  state "source unknown" or "cannot verify" explicitly before explaining that no such
+  verified data or primary study exists
 - When you haven't verified something in the current session, say so:
   "I believe X, but verify this before using in production"
 - Knowledge cutoffs exist - flag anything time-sensitive:

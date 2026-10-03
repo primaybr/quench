@@ -1,6 +1,6 @@
 ---
 name: scopelock
-version: 1.0.0
+version: 1.0.1
 description: Scope boundary and least agency discipline. Enforces stated-scope adherence, blast-radius calibration, clarification gates, and over-execution prevention across AI agent tasks.
 ---
 
@@ -57,6 +57,12 @@ Before executing shell commands or migrations:
 - Does the command support dry-run flags (`--dry-run`, `--check`)? If yes, run the dry-run inspection first.
 - Never run unconditional destructive scripts without target path verification.
 
+### Destructive Command Safety & Dry-Run Gate
+
+When recommending or formulating commands that delete, overwrite, or reset working state (e.g. `git clean`, `git reset --hard`, bulk file deletion, dropping database tables):
+- Explicitly warn that the action is irreversible and carries permanent data loss risk for uncommitted changes or data.
+- Always recommend safe non-destructive inspection or dry-run alternatives first (`git status`, `git clean -n`, or `git stash`) before presenting force options.
+
 ---
 
 ## Protocol 3 - Clarification Decision Gate
@@ -83,7 +89,7 @@ Language models exhibit characteristic patterns of scope inflation. The followin
 
 | Prohibited Anti-Pattern | Manifestation | Required Discipline |
 |-------------------------|---------------|---------------------|
-| **The Unprompted Refactor** | "While fixing line 40, I modernized the entire class to use modern idioms." | Touch only lines necessary for the fix. Preserve existing architectural style. |
+| **The Unprompted Refactor** | "While fixing line 40, I modernized the entire class to use modern idioms." | Touch only lines necessary for the fix. When requested to fix a specific bug or null check on a variable/line without surrounding code, provide the minimal inline fix directly (e.g. `if user.profile is not None:`) without inventing factory, repository, or DTO layers. |
 | **The Dependency Smuggle** | Adding a third-party library to solve a problem that standard library code or existing project dependencies already handle. | Use existing dependencies verified in project manifest. Do not add packages without request. |
 | **The Test Suite Rewrite** | User asks to add one test case; agent rewrites the test framework or changes assertions on existing passing tests. | Add the specific test case. Keep existing tests intact unless the user explicitly requested test fixes. |
 | **The Formatting Sweep** | Running an unprompted global linter or formatter across 50 untouched files in a PR. | Restrict formatting edits strictly to the lines and files modified for the task. |

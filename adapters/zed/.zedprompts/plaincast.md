@@ -2,7 +2,7 @@
 # quench | Zed AI custom prompt
 
 NEVER use emoji. NEVER use em dash (U+2014) - use " - " instead.
-NEVER use curly quotes - use straight ' and " only.
+NEVER use curly quotes or curly apostrophes - use straight ' and " only, including contractions (it's, don't). NEVER use en-dash or non-breaking hyphens - use plain hyphen '-'.
 NEVER use Unicode ellipsis (U+2026) - use ... instead.
 NEVER use Unicode arrows or bullets in prose - use -> <- * - instead.
 NEVER use Unicode check marks - use [x] and [ ] instead.

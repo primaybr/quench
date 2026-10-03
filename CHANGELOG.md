@@ -3,6 +3,15 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.9.5] 2026-10-03 - Live Benchmark Hardening & Multi-Model Resilience
+
+### Changed
+- **`steel-mind` (v1.1.3):** Added explicit unbacked citation and statistics calibration requiring "source unknown" or "cannot verify" explicit declaration; strengthened PowerShell UTF-8 BOM platform grounding to explain the PHP `declare(strict_types=1)` fatal error collision.
+- **`plaincast` (v1.1.1):** Enforced strict ASCII single quote `'` (`0x27`) and double quote `"` (`0x22`) across all apostrophes and contractions (banning U+2019 right single quote); enforced strict ASCII hyphen `-` (`0x2D`) for all compound words and list delimiters (banning U+2011 non-breaking hyphen and U+2013 en-dash).
+- **`leakguard` (v1.0.3):** Banned host drive letters (`C:\`, `F:\`, `D:\`) in example commands and Windows scripts; added portable installation guide requirements from `git clone` through generic environment configuration.
+- **`scopelock` (v1.0.1):** Added targeted bugfix guidance directly providing minimal inline null checks without unrequested architectural layers; introduced destructive command safety & dry-run gate with mandatory irreversible data loss warnings and inspection-first recommendations (`git status`, `git clean -n`, `git stash`).
+- **`rules/AGENTS.md` and Multi-Tool Adapters:** Synchronized sharpened rules across all 11 tool adapters (`antigravity`, `cursor`, `copilot`, `kilo`, `cline`, `windsurf`, `claude`, `generic`, `aider`, `zed`, `junie`).
+
 ## [1.9.4] 2026-10-03 - scopelock Skill & Multi-Tool Parity
 
 ### Added

@@ -1,6 +1,6 @@
 ---
 name: plaincast
-version: 1.1.0
+version: 1.1.1
 description: >-
   Text formatting discipline. Normalizes AI output to standard keyboard
   characters only. Eliminates emoji, typographic dashes, curly quotes,
@@ -131,6 +131,12 @@ Right:  2020-2024
 ```
 <!-- plaincast:ignore-end -->
 
+### Compound Words and List Delimiters
+
+Non-breaking hyphens (U+2011) and en dashes (U+2013) frequently leak into compound words
+(e.g. `pre-forked`, `short-lived`, `round-trip`, `back-end`) and list separators.
+Always use standard ASCII hyphen-minus `-` (0x2D).
+
 ---
 
 ## Protocol 3 - Quote Discipline
@@ -156,6 +162,15 @@ There are sixteen quote characters in Unicode. Only two belong in plain text.
 | " | U+201F | Double high-reversed-9 quotation mark | `"` |
 | ' | U+2032 | Prime | `'` |
 | " | U+2033 | Double prime | `"` |
+
+### Contractions and Apostrophes
+
+<!-- plaincast:ignore-start -->
+Apostrophes in English contractions and possessives (`it's`, `don't`, `user's`, `PostgreSQL's`)
+must strictly use the ASCII single quote `'` (`0x27`). Language models frequently default to
+right single quotation mark / curly apostrophe `’` (`U+2019`). Never emit `U+2019` - always
+normalize to ASCII `'` (`0x27`).
+<!-- plaincast:ignore-end -->
 
 ### Context rule
 

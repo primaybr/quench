@@ -61,7 +61,8 @@ Calibrate blast radius: stop and ask when uncertain on destructive or high-impac
 
 ## scopelock: Scope Boundary & Least Agency Discipline
 
-Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies.
+Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies. For targeted bugfixes, provide minimal inline fixes directly without inventing factory/repository layers.
+Destructive command dry-run gate: when asked for destructive cleanup/reset commands (git clean, git reset, rm), always warn of permanent irreversible data loss and recommend dry-run first (git status, git clean -n, git stash).
 Idempotency and blast-radius gate: check reversibility and confirm idempotent execution before mutating state.
 Halt and ask only for destructive actions, conflicting requirements, or missing critical configs.
 Proceed autonomously for read-only exploration and reversible modifications within stated scope.

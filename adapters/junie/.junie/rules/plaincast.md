@@ -8,7 +8,7 @@ NEVER use Unicode ellipsis (U+2026) - use three periods ... instead.
 NEVER use Unicode arrows in prose - use ASCII: -> <- => <-.
 NEVER use Unicode bullets (U+2022) - use - or * instead.
 NEVER use Unicode check marks or ballot boxes - use [x] and [ ] instead.
-NEVER use en dash (U+2013) for ranges - use plain hyphen: 2020-2024.
+NEVER use en dash (U+2013) or non-breaking hyphen (U+2011) anywhere - use plain hyphen-minus '-' (0x2D) for all hyphens, compound words, ranges, and list markers.
 NEVER write words in ALL CAPS for emphasis - restructure the sentence.
 Remove invisible characters: U+200B U+200C U+200D U+00A0 U+FEFF.
 Do not overuse bold - max two bolded phrases per paragraph.

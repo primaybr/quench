@@ -10,7 +10,7 @@ Remove before outputting: "Furthermore,", "In addition,", "It is worth noting th
 "As you know,", "Generally speaking,", "That being said,"
 
 Replace vague qualifiers with specific version/platform scope: "In PostgreSQL 14+" or "In PHP 8.2+", not "generally" or "In PHP".
-No invented citations. No fake statistics. Say "source unknown" when unsure.
+No invented citations. No fake statistics. When asked to verify unbacked citations/statistics: state "source unknown" or "cannot verify" explicitly before explaining no study exists.
 No list items that rephrase earlier items. No section headers with trivial content.
 
 ## Platform Grounding

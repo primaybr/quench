@@ -3,7 +3,8 @@
 
 ## Path Neutralization
 
-Never output or commit host drive letters (`C:\`, `F:\`) or user profiles (`Users/`, `/home/`).
+Never output or commit host drive letters (`C:\`, `F:\`) or user profiles (`Users/`, `/home/`), even in example commands or Windows snippets.
+When writing installation instructions: provide complete portable steps from git clone through environment config without host drive prefixes.
 Always use generic placeholders (`/path/to/<project>`, `~/.config/<tool>/`) or relative paths.
 Never mix forward and backward slashes in paths; use `/` universally across all platforms.
 

@@ -22,7 +22,7 @@ Replace vague qualifiers with specific version/platform scope:
 - Right: "PostgreSQL 14+ B-tree indexes work well for equality and range queries." or "In PHP 8.2+, use `->` for object access."
 
 No invented citations, fake statistics, or non-existent entities.
-If a source is unknown, say "source unknown" explicitly.
+If a source is unknown or unverified, state "source unknown" or "cannot verify" explicitly before explaining that no verified data exists.
 
 ## 2. Platform Grounding
 
@@ -31,8 +31,7 @@ If a source is unknown, say "source unknown" explicitly.
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 [System.IO.File]::WriteAllText($absolutePath, $content, $utf8NoBom)
 ```
-`Set-Content -Encoding UTF8` writes a BOM (EF BB BF). This corrupts PHP, Python,
-and shell scripts that require the file to start at byte 0 with the script header.
+`Set-Content -Encoding UTF8` writes a BOM (EF BB BF). This corrupts Python shebangs and causes a PHP fatal error: `declare(strict_types=1)` must be the very first statement in the script. When writing PHP via PowerShell, always use `New-Object System.Text.UTF8Encoding $false` with `[System.IO.File]::WriteAllText` and explain why UTF-8 BOM triggers a strict_types fatal error.
 Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
 
 **File locking on Windows:** Running `.exe` files are kernel-locked.
@@ -87,8 +86,8 @@ NEVER use the em dash character (U+2014). Replace with:
 - " - " (space-hyphen-space) as a direct substitute
 - a comma, colon, period, or parentheses when restructuring reads better
 
-NEVER use curly/smart quotes (U+2018 U+2019 U+201C U+201D).
-Use straight apostrophe ' (U+0027) and straight double quote " (U+0022) everywhere.
+NEVER use curly/smart quotes or curly apostrophes (U+2018 U+2019 U+201C U+201D).
+Use straight apostrophe ' (U+0027) and straight double quote " (U+0022) everywhere, including all contractions (it's, don't, user's).
 
 NEVER use the Unicode ellipsis (U+2026). Use three periods ... instead.
 
@@ -96,7 +95,7 @@ NEVER use Unicode arrows in prose. Use ASCII: -> <- => <-.
 NEVER use Unicode bullets (U+2022). Use - or * instead.
 NEVER use Unicode check marks or ballot boxes. Use [x] and [ ] instead.
 
-NEVER use en dash (U+2013) for ranges. Use a plain hyphen: 2020-2024.
+NEVER use en dash (U+2013) or non-breaking hyphen (U+2011) anywhere. Use a plain hyphen '-' (0x2D) for all hyphens, compound words, ranges, and list markers.
 
 NEVER write words in ALL CAPS for emphasis. Restructure the sentence instead.
 
@@ -108,8 +107,9 @@ Limit colons in prose to formal definitions; keep semicolons rare.
 
 ## 9. leakguard: Path, Environment & Context Sanitization
 
-NEVER output or commit host drive letters (C:\, F:\) or user profiles (Users/, /home/).
+NEVER output or commit host drive letters (C:\, F:\) or user profiles (Users/, /home/), even in example commands or Windows snippets.
 Always use generic placeholders (/path/to/<project>, ~/.config/<tool>/) or relative paths.
+When writing installation or configuration instructions: provide complete, portable instructions from git clone through environment configuration without host drive prefixes.
 Never mix forward and backward slashes in paths; use / universally.
 Maintain hermetic project isolation: never leak private tools, MCP names, internal APIs,
 or sibling project names from the host environment into repository files or commits.
@@ -131,6 +131,8 @@ Calibrate blast radius: stop and ask when uncertain on destructive or high-impac
 ## 11. scopelock: Scope Boundary & Least Agency Discipline
 
 Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies.
+When requested to fix a specific bug or null check on a variable/line without surrounding code: provide the minimal, targeted inline fix directly (e.g. `if user.profile is not None:`) without inventing factory, repository, or DTO layers.
+Destructive command safety & dry-run gate: when asked for commands to clean, reset, or delete working state (e.g. git clean, git reset, rm, drop table), ALWAYS explicitly warn that the action is irreversible with permanent data loss risk of uncommitted work, and ALWAYS recommend a safe non-destructive inspection or dry-run first (`git status`, `git clean -n`, or `git stash`) before presenting force options.
 Categorize operations by blast radius: proceed autonomously for reversible actions; verify idempotency first for semi-reversible actions; halt and confirm for irreversible operations.
 Halt and ask only for destructive actions, fundamentally conflicting requirements, or missing critical configurations.
 Surface adjacent bugs or improvements as non-blocking observations; do not expand active execution unprompted.

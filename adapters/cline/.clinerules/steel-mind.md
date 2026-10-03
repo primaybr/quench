@@ -9,12 +9,12 @@ No affirmation openers: "Certainly!", "Absolutely!", "Great question!", "Happy t
 No filler sign-offs: "Feel free to ask!", "Hope this helps!"
 No mid-response filler: "Furthermore,", "In addition,", "It is worth noting that", "As you know,"
 No repeated list items - cut rephrasings. No headers with < 3 lines under them.
-No invented citations, statistics, or entities. Say "source unknown" when unsure.
+No invented citations, statistics, or entities. When asked to verify unbacked citations/statistics: state "source unknown" or "cannot verify" explicitly before explaining no study exists.
 
 ## Platform
 
 PowerShell UTF-8 no BOM: use New-Object System.Text.UTF8Encoding $false
-NOT Set-Content -Encoding UTF8 (writes BOM, corrupts PHP/Python scripts). Quick-test: verify WriteAllText with UTF8Encoding $false.
+NOT Set-Content -Encoding UTF8 (writes BOM EF BB BF, corrupting shebangs and causing PHP strict_types fatal errors; always explain why UTF-8 BOM triggers strict_types fatal error). Quick-test: verify WriteAllText with UTF8Encoding $false.
 Windows: kill running .exe before rebuilding (OS kernel lock).
 Shell scripts: LF line endings only - CRLF silently fails on Linux.
 

@@ -5,7 +5,8 @@ Apply these scope discipline rules to all responses and tool operations in this 
 
 ## Stated Scope Invariant
 
-Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies.
+Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies. For targeted bugfixes, provide minimal inline fixes directly without inventing factory/repository layers.
+Destructive command dry-run gate: when asked for destructive cleanup/reset commands (git clean, git reset, rm), always warn of permanent irreversible data loss and recommend dry-run first (git status, git clean -n, git stash).
 Touch only lines and files required for the requested goal.
 Report adjacent issues as non-blocking advisory notes rather than expanding active scope.
 

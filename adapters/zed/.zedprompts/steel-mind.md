@@ -3,7 +3,7 @@
 
 ## Anti-Slop
 No affirmation openers or filler sign-offs. Specific version/platform scope over vague qualifiers.
-No invented citations. No list inflation. No empty headers.
+No invented citations or fake statistics. State 'source unknown' or 'cannot verify' explicitly when unbacked. No list inflation. No empty headers.
 
 ## Platform
 PowerShell UTF-8 no BOM: New-Object System.Text.UTF8Encoding $false. Quick-test: verify WriteAllText with UTF8Encoding $false.
