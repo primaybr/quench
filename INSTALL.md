@@ -41,7 +41,7 @@ Gives you both always-on rules AND on-demand skills. Best experience.
 ```
 
 What this loads every session, automatically and silently:
-- `rules/AGENTS.md` - steel-mind + plaincast + leakguard + precision-output behavioral disciplines
+- `rules/AGENTS.md` - steel-mind + plaincast + leakguard + precision-output + scopelock behavioral disciplines
 - `skills/*/SKILL.md` descriptions - available for on-demand deep reference
 
 ### Option C - Skills only (Antigravity, no always-on rules)
@@ -74,6 +74,7 @@ your-project/
           plaincast/
           leakguard/
           precision-output/
+          scopelock/
 ```
 
 ---
@@ -99,6 +100,7 @@ cp adapters/cursor/.cursor/rules/steel-mind.mdc /your-project/.cursor/rules/
 cp adapters/cursor/.cursor/rules/plaincast.mdc   /your-project/.cursor/rules/
 cp adapters/cursor/.cursor/rules/leakguard.mdc   /your-project/.cursor/rules/
 cp adapters/cursor/.cursor/rules/precision-output.mdc /your-project/.cursor/rules/
+cp adapters/cursor/.cursor/rules/scopelock.mdc   /your-project/.cursor/rules/
 ```
 
 ### GitHub Copilot
@@ -112,6 +114,7 @@ cp adapters/cline/.clinerules/steel-mind.md  /your-project/.clinerules/
 cp adapters/cline/.clinerules/plaincast.md   /your-project/.clinerules/
 cp adapters/cline/.clinerules/leakguard.md   /your-project/.clinerules/
 cp adapters/cline/.clinerules/precision-output.md /your-project/.clinerules/
+cp adapters/cline/.clinerules/scopelock.md   /your-project/.clinerules/
 ```
 
 ### Windsurf
@@ -145,6 +148,7 @@ cp adapters/kilo/.kilo/rules/steel-mind.md /your-project/.kilo/rules/
 cp adapters/kilo/.kilo/rules/plaincast.md  /your-project/.kilo/rules/
 cp adapters/kilo/.kilo/rules/leakguard.md  /your-project/.kilo/rules/
 cp adapters/kilo/.kilo/rules/precision-output.md /your-project/.kilo/rules/
+cp adapters/kilo/.kilo/rules/scopelock.md  /your-project/.kilo/rules/
 ```
 The `kilo.jsonc` file references all rule files automatically.
 For global rules (all projects): place `kilo.jsonc` at `~/.config/kilo/kilo.jsonc`.
@@ -155,6 +159,7 @@ cp adapters/zed/.zedprompts/steel-mind.md  /your-project/.zedprompts/
 cp adapters/zed/.zedprompts/plaincast.md   /your-project/.zedprompts/
 cp adapters/zed/.zedprompts/leakguard.md   /your-project/.zedprompts/
 cp adapters/zed/.zedprompts/precision-output.md /your-project/.zedprompts/
+cp adapters/zed/.zedprompts/scopelock.md  /your-project/.zedprompts/
 ```
 
 ### JetBrains Junie
@@ -163,35 +168,40 @@ cp adapters/junie/.junie/rules/steel-mind.md  /your-project/.junie/rules/
 cp adapters/junie/.junie/rules/plaincast.md   /your-project/.junie/rules/
 cp adapters/junie/.junie/rules/leakguard.md   /your-project/.junie/rules/
 cp adapters/junie/.junie/rules/precision-output.md /your-project/.junie/rules/
+cp adapters/junie/.junie/rules/scopelock.md  /your-project/.junie/rules/
 ```
 
 ---
 
 ## What Each Adapter Contains
 
-| Adapter | steel-mind | plaincast | leakguard | precision-output |
-|---------|-----------|-----------|-----------|------------------|
-| Antigravity `.agents/rules/AGENTS.md` | [x] | [x] | [x] | [x] |
-| Cursor `.cursorrules` | [x] | [x] | [x] | [x] |
-| Cursor `.cursor/rules/steel-mind.mdc` | [x] | - | - | - |
-| Cursor `.cursor/rules/plaincast.mdc` | - | [x] | - | - |
-| Cursor `.cursor/rules/leakguard.mdc` | - | - | [x] | - |
-| Cursor `.cursor/rules/precision-output.mdc` | - | - | - | [x] |
-| GitHub Copilot `copilot-instructions.md` | [x] | [x] | [x] | [x] |
-| Cline `.clinerules/steel-mind.md` | [x] | - | - | - |
-| Cline `.clinerules/plaincast.md` | - | [x] | - | - |
-| Cline `.clinerules/leakguard.md` | - | - | [x] | - |
-| Cline `.clinerules/precision-output.md` | - | - | - | [x] |
-| Windsurf `.windsurfrules` | [x] | [x] | [x] | [x] |
-| Claude.ai `CLAUDE.md` | [x] | [x] | [x] | [x] |
-| Generic `system-prompt.md` | [x] | [x] | [x] | [x] |
-| Aider `CONVENTIONS.md` | [x] | [x] | [x] | [x] |
-| Kilo Code `kilo.jsonc` + `.kilo/rules/` | [x] | [x] | [x] | [x] |
-| Zed `.zedprompts/steel-mind.md` | [x] | - | - | - |
-| Zed `.zedprompts/plaincast.md` | - | [x] | - | - |
-| Zed `.zedprompts/leakguard.md` | - | - | [x] | - |
-| Zed `.zedprompts/precision-output.md` | - | - | - | [x] |
-| Junie `.junie/rules/steel-mind.md` | [x] | - | - | - |
-| Junie `.junie/rules/plaincast.md` | - | [x] | - | - |
-| Junie `.junie/rules/leakguard.md` | - | - | [x] | - |
-| Junie `.junie/rules/precision-output.md` | - | - | - | [x] |
+| Adapter | steel-mind | plaincast | leakguard | precision-output | scopelock |
+|---------|-----------|-----------|-----------|------------------|-----------|
+| Antigravity `.agents/rules/AGENTS.md` | [x] | [x] | [x] | [x] | [x] |
+| Cursor `.cursorrules` | [x] | [x] | [x] | [x] | [x] |
+| Cursor `.cursor/rules/steel-mind.mdc` | [x] | - | - | - | - |
+| Cursor `.cursor/rules/plaincast.mdc` | - | [x] | - | - | - |
+| Cursor `.cursor/rules/leakguard.mdc` | - | - | [x] | - | - |
+| Cursor `.cursor/rules/precision-output.mdc` | - | - | - | [x] | - |
+| Cursor `.cursor/rules/scopelock.mdc` | - | - | - | - | [x] |
+| GitHub Copilot `copilot-instructions.md` | [x] | [x] | [x] | [x] | [x] |
+| Cline `.clinerules/steel-mind.md` | [x] | - | - | - | - |
+| Cline `.clinerules/plaincast.md` | - | [x] | - | - | - |
+| Cline `.clinerules/leakguard.md` | - | - | [x] | - | - |
+| Cline `.clinerules/precision-output.md` | - | - | - | [x] | - |
+| Cline `.clinerules/scopelock.md` | - | - | - | - | [x] |
+| Windsurf `.windsurfrules` | [x] | [x] | [x] | [x] | [x] |
+| Claude.ai `CLAUDE.md` | [x] | [x] | [x] | [x] | [x] |
+| Generic `system-prompt.md` | [x] | [x] | [x] | [x] | [x] |
+| Aider `CONVENTIONS.md` | [x] | [x] | [x] | [x] | [x] |
+| Kilo Code `kilo.jsonc` + `.kilo/rules/` | [x] | [x] | [x] | [x] | [x] |
+| Zed `.zedprompts/steel-mind.md` | [x] | - | - | - | - |
+| Zed `.zedprompts/plaincast.md` | - | [x] | - | - | - |
+| Zed `.zedprompts/leakguard.md` | - | - | [x] | - | - |
+| Zed `.zedprompts/precision-output.md` | - | - | - | [x] | - |
+| Zed `.zedprompts/scopelock.md` | - | - | - | - | [x] |
+| Junie `.junie/rules/steel-mind.md` | [x] | - | - | - | - |
+| Junie `.junie/rules/plaincast.md` | - | [x] | - | - | - |
+| Junie `.junie/rules/leakguard.md` | - | - | [x] | - | - |
+| Junie `.junie/rules/precision-output.md` | - | - | - | [x] | - |
+| Junie `.junie/rules/scopelock.md` | - | - | - | - | [x] |

@@ -127,3 +127,11 @@ Three epistemic states - state them explicitly:
 No phantom APIs: cross-check all external imports and methods against project manifests.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.
+
+## 11. scopelock: Scope Boundary & Least Agency Discipline
+
+Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies.
+Categorize operations by blast radius: proceed autonomously for reversible actions; verify idempotency first for semi-reversible actions; halt and confirm for irreversible operations.
+Halt and ask only for destructive actions, fundamentally conflicting requirements, or missing critical configurations.
+Surface adjacent bugs or improvements as non-blocking observations; do not expand active execution unprompted.
+

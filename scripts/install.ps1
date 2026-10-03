@@ -217,7 +217,8 @@ try {
             @{ Src = 'adapters/cursor/.cursor/rules/steel-mind.mdc'; Dst = '.cursor/rules/steel-mind.mdc' },
             @{ Src = 'adapters/cursor/.cursor/rules/plaincast.mdc'; Dst = '.cursor/rules/plaincast.mdc' },
             @{ Src = 'adapters/cursor/.cursor/rules/leakguard.mdc'; Dst = '.cursor/rules/leakguard.mdc' },
-            @{ Src = 'adapters/cursor/.cursor/rules/precision-output.mdc'; Dst = '.cursor/rules/precision-output.mdc' }
+            @{ Src = 'adapters/cursor/.cursor/rules/precision-output.mdc'; Dst = '.cursor/rules/precision-output.mdc' },
+            @{ Src = 'adapters/cursor/.cursor/rules/scopelock.mdc'; Dst = '.cursor/rules/scopelock.mdc' }
         );
         'copilot' = @(
             @{ Src = 'adapters/copilot/copilot-instructions.md'; Dst = '.github/copilot-instructions.md' }
@@ -227,13 +228,15 @@ try {
             @{ Src = 'adapters/kilo/.kilo/rules/steel-mind.md'; Dst = '.kilo/rules/steel-mind.md' },
             @{ Src = 'adapters/kilo/.kilo/rules/plaincast.md'; Dst = '.kilo/rules/plaincast.md' },
             @{ Src = 'adapters/kilo/.kilo/rules/leakguard.md'; Dst = '.kilo/rules/leakguard.md' },
-            @{ Src = 'adapters/kilo/.kilo/rules/precision-output.md'; Dst = '.kilo/rules/precision-output.md' }
+            @{ Src = 'adapters/kilo/.kilo/rules/precision-output.md'; Dst = '.kilo/rules/precision-output.md' },
+            @{ Src = 'adapters/kilo/.kilo/rules/scopelock.md'; Dst = '.kilo/rules/scopelock.md' }
         );
         'cline' = @(
             @{ Src = 'adapters/cline/.clinerules/steel-mind.md'; Dst = '.clinerules/steel-mind.md' },
             @{ Src = 'adapters/cline/.clinerules/plaincast.md'; Dst = '.clinerules/plaincast.md' },
             @{ Src = 'adapters/cline/.clinerules/leakguard.md'; Dst = '.clinerules/leakguard.md' },
-            @{ Src = 'adapters/cline/.clinerules/precision-output.md'; Dst = '.clinerules/precision-output.md' }
+            @{ Src = 'adapters/cline/.clinerules/precision-output.md'; Dst = '.clinerules/precision-output.md' },
+            @{ Src = 'adapters/cline/.clinerules/scopelock.md'; Dst = '.clinerules/scopelock.md' }
         );
         'windsurf' = @(
             @{ Src = 'adapters/windsurf/.windsurfrules'; Dst = '.windsurfrules' }
@@ -251,13 +254,15 @@ try {
             @{ Src = 'adapters/zed/.zedprompts/steel-mind.md'; Dst = '.zedprompts/steel-mind.md' },
             @{ Src = 'adapters/zed/.zedprompts/plaincast.md'; Dst = '.zedprompts/plaincast.md' },
             @{ Src = 'adapters/zed/.zedprompts/leakguard.md'; Dst = '.zedprompts/leakguard.md' },
-            @{ Src = 'adapters/zed/.zedprompts/precision-output.md'; Dst = '.zedprompts/precision-output.md' }
+            @{ Src = 'adapters/zed/.zedprompts/precision-output.md'; Dst = '.zedprompts/precision-output.md' },
+            @{ Src = 'adapters/zed/.zedprompts/scopelock.md'; Dst = '.zedprompts/scopelock.md' }
         );
         'junie' = @(
             @{ Src = 'adapters/junie/.junie/rules/steel-mind.md'; Dst = '.junie/rules/steel-mind.md' },
             @{ Src = 'adapters/junie/.junie/rules/plaincast.md'; Dst = '.junie/rules/plaincast.md' },
             @{ Src = 'adapters/junie/.junie/rules/leakguard.md'; Dst = '.junie/rules/leakguard.md' },
-            @{ Src = 'adapters/junie/.junie/rules/precision-output.md'; Dst = '.junie/rules/precision-output.md' }
+            @{ Src = 'adapters/junie/.junie/rules/precision-output.md'; Dst = '.junie/rules/precision-output.md' },
+            @{ Src = 'adapters/junie/.junie/rules/scopelock.md'; Dst = '.junie/rules/scopelock.md' }
         );
         'antigravity' = @(
             @{ Src = 'adapters/antigravity/.agents/rules/AGENTS.md'; Dst = '.agents/rules/AGENTS.md' }

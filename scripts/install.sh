@@ -238,6 +238,7 @@ install_tool() {
             copy_item "adapters/cursor/.cursor/rules/plaincast.mdc" ".cursor/rules/plaincast.mdc"
             copy_item "adapters/cursor/.cursor/rules/leakguard.mdc" ".cursor/rules/leakguard.mdc"
             copy_item "adapters/cursor/.cursor/rules/precision-output.mdc" ".cursor/rules/precision-output.mdc"
+            copy_item "adapters/cursor/.cursor/rules/scopelock.mdc" ".cursor/rules/scopelock.mdc"
             ;;
         copilot)
             copy_item "adapters/copilot/copilot-instructions.md" ".github/copilot-instructions.md"
@@ -248,12 +249,14 @@ install_tool() {
             copy_item "adapters/kilo/.kilo/rules/plaincast.md" ".kilo/rules/plaincast.md"
             copy_item "adapters/kilo/.kilo/rules/leakguard.md" ".kilo/rules/leakguard.md"
             copy_item "adapters/kilo/.kilo/rules/precision-output.md" ".kilo/rules/precision-output.md"
+            copy_item "adapters/kilo/.kilo/rules/scopelock.md" ".kilo/rules/scopelock.md"
             ;;
         cline)
             copy_item "adapters/cline/.clinerules/steel-mind.md" ".clinerules/steel-mind.md"
             copy_item "adapters/cline/.clinerules/plaincast.md" ".clinerules/plaincast.md"
             copy_item "adapters/cline/.clinerules/leakguard.md" ".clinerules/leakguard.md"
             copy_item "adapters/cline/.clinerules/precision-output.md" ".clinerules/precision-output.md"
+            copy_item "adapters/cline/.clinerules/scopelock.md" ".clinerules/scopelock.md"
             ;;
         windsurf)
             copy_item "adapters/windsurf/.windsurfrules" ".windsurfrules"
@@ -272,12 +275,14 @@ install_tool() {
             copy_item "adapters/zed/.zedprompts/plaincast.md" ".zedprompts/plaincast.md"
             copy_item "adapters/zed/.zedprompts/leakguard.md" ".zedprompts/leakguard.md"
             copy_item "adapters/zed/.zedprompts/precision-output.md" ".zedprompts/precision-output.md"
+            copy_item "adapters/zed/.zedprompts/scopelock.md" ".zedprompts/scopelock.md"
             ;;
         junie)
             copy_item "adapters/junie/.junie/rules/steel-mind.md" ".junie/rules/steel-mind.md"
             copy_item "adapters/junie/.junie/rules/plaincast.md" ".junie/rules/plaincast.md"
             copy_item "adapters/junie/.junie/rules/leakguard.md" ".junie/rules/leakguard.md"
             copy_item "adapters/junie/.junie/rules/precision-output.md" ".junie/rules/precision-output.md"
+            copy_item "adapters/junie/.junie/rules/scopelock.md" ".junie/rules/scopelock.md"
             ;;
         antigravity)
             copy_item "adapters/antigravity/.agents/rules/AGENTS.md" ".agents/rules/AGENTS.md"

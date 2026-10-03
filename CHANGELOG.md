@@ -3,6 +3,23 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.9.4] 2026-10-03 - scopelock Skill & Multi-Tool Parity
+
+### Added
+- **`scopelock` discipline (fifth canonical skill, `skills/scopelock/SKILL.md`):** Enforces scope boundary adherence, blast-radius calibration, clarification gates, and over-execution prevention across AI agent tasks. Incorporates 2026 intent-to-execution gap research, the Principle of Least Agency, and Risk-Aware Causal Gating (RACG) triage with mandatory idempotency checks.
+- **`scopelock` reference documentation (`skills/scopelock/references/`):**
+  - `blast-radius-matrix.md`: Action risk classification (Tier 1 Reversible, Tier 2 Semi-Reversible, Tier 3 Irreversible) and idempotency checklist.
+  - `over-execution-patterns.md`: Catalog of scope inflation failure modes including unprompted refactoring, dependency smuggling, test suite escalation, premature generalization, and multi-turn cascading drift.
+- **Multi-tool adapter parity across all 11 adapters:**
+  - Added `scopelock` rule extracts to single-file adapters (`adapters/antigravity/.agents/rules/AGENTS.md`, `adapters/cursor/.cursorrules`, `adapters/copilot/copilot-instructions.md`, `adapters/windsurf/.windsurfrules`, `adapters/claude/CLAUDE.md`, `adapters/generic/system-prompt.md`, `adapters/aider/CONVENTIONS.md`).
+  - Added dedicated per-skill rule files for modular adapters: `adapters/cursor/.cursor/rules/scopelock.mdc`, `adapters/kilo/.kilo/rules/scopelock.md` (and registered in `kilo.jsonc`), `adapters/cline/.clinerules/scopelock.md`, `adapters/zed/.zedprompts/scopelock.md`, and `adapters/junie/.junie/rules/scopelock.md`.
+  - Updated `scripts/quench.py`, `scripts/install.ps1`, `scripts/install.sh`, and `scripts/validate.py` (`REQUIRED_ADAPTERS`).
+- **Adversarial evaluation suite expansion (`SL-01`, `SL-02`, `SL-03`):** Added three adversarial scenarios in `skills/precision-output/references/adversarial-test-suite.md` covering unprompted refactoring on a targeted bugfix, dependency smuggling on a standard library task, and irreversible destructive actions without prior confirmation.
+
+### Changed
+- **`skills/precision-output/SKILL.md`:** Bumped version from `1.0.3` to `1.0.4` following adversarial test suite expansion.
+- **`rules/AGENTS.md`:** Added always-on `## scopelock: Scope Boundary & Least Agency Discipline` section.
+
 ## [1.9.3] 2026-09-30 - --format github PR Diff Annotations
 
 ### Added

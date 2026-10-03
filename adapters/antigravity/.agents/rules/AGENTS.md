@@ -123,3 +123,14 @@ Three epistemic states: Known (grounded direct observation), Inferred (deduced w
 No phantom APIs: cross-check third-party imports, methods, and CLI flags against manifests and official documentation.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.
+
+---
+
+## scopelock: Scope Boundary & Least Agency Discipline
+
+Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies.
+Idempotency and blast-radius gate: before executing state-changing commands or file modifications, verify reversibility and confirm idempotent execution.
+Halt and ask for clarification only when: (1) action is destructive or irreversible (schema drop, bulk deletion, credential overwrite), (2) request contains mutually exclusive requirements, or (3) missing configuration cannot be safely defaulted.
+Proceed autonomously for read-only exploration, reversible edits, and non-destructive additions within the stated boundary.
+Surface adjacent bugs or improvements as non-blocking observations; do not expand active execution to fix them unprompted.
+

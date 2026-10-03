@@ -58,3 +58,12 @@ Three epistemic states: Known (grounded), Inferred (deduced), Uncertain (unverif
 No phantom APIs: verify imports and methods against project manifests.
 Mentally execute code for syntax, arity, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.
+
+## scopelock: Scope Boundary & Least Agency Discipline
+
+Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies.
+Idempotency and blast-radius gate: check reversibility and confirm idempotent execution before mutating state.
+Halt and ask only for destructive actions, conflicting requirements, or missing critical configs.
+Proceed autonomously for read-only exploration and reversible modifications within stated scope.
+Surface adjacent bugs or improvements as non-blocking observations; do not expand active execution unprompted.
+

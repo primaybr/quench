@@ -35,8 +35,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.9.3"
-__version__ = "1.9.3"
+VERSION = "quench 1.9.4"
+__version__ = "1.9.4"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -51,6 +51,7 @@ ADAPTER_MAP: Dict[str, Dict] = {
             (Path('adapters/cursor/.cursor/rules/plaincast.mdc'), Path('.cursor/rules/plaincast.mdc')),
             (Path('adapters/cursor/.cursor/rules/leakguard.mdc'), Path('.cursor/rules/leakguard.mdc')),
             (Path('adapters/cursor/.cursor/rules/precision-output.mdc'), Path('.cursor/rules/precision-output.mdc')),
+            (Path('adapters/cursor/.cursor/rules/scopelock.mdc'), Path('.cursor/rules/scopelock.mdc')),
         ],
         'detection': [Path('.cursorrules'), Path('.cursor/rules')],
     },
@@ -69,6 +70,7 @@ ADAPTER_MAP: Dict[str, Dict] = {
             (Path('adapters/kilo/.kilo/rules/plaincast.md'), Path('.kilo/rules/plaincast.md')),
             (Path('adapters/kilo/.kilo/rules/leakguard.md'), Path('.kilo/rules/leakguard.md')),
             (Path('adapters/kilo/.kilo/rules/precision-output.md'), Path('.kilo/rules/precision-output.md')),
+            (Path('adapters/kilo/.kilo/rules/scopelock.md'), Path('.kilo/rules/scopelock.md')),
         ],
         'detection': [Path('kilo.jsonc'), Path('.kilo/rules')],
     },
@@ -79,6 +81,7 @@ ADAPTER_MAP: Dict[str, Dict] = {
             (Path('adapters/cline/.clinerules/plaincast.md'), Path('.clinerules/plaincast.md')),
             (Path('adapters/cline/.clinerules/leakguard.md'), Path('.clinerules/leakguard.md')),
             (Path('adapters/cline/.clinerules/precision-output.md'), Path('.clinerules/precision-output.md')),
+            (Path('adapters/cline/.clinerules/scopelock.md'), Path('.clinerules/scopelock.md')),
         ],
         'detection': [Path('.clinerules')],
     },
@@ -117,6 +120,7 @@ ADAPTER_MAP: Dict[str, Dict] = {
             (Path('adapters/zed/.zedprompts/plaincast.md'), Path('.zedprompts/plaincast.md')),
             (Path('adapters/zed/.zedprompts/leakguard.md'), Path('.zedprompts/leakguard.md')),
             (Path('adapters/zed/.zedprompts/precision-output.md'), Path('.zedprompts/precision-output.md')),
+            (Path('adapters/zed/.zedprompts/scopelock.md'), Path('.zedprompts/scopelock.md')),
         ],
         'detection': [Path('.zedprompts')],
     },
@@ -127,6 +131,7 @@ ADAPTER_MAP: Dict[str, Dict] = {
             (Path('adapters/junie/.junie/rules/plaincast.md'), Path('.junie/rules/plaincast.md')),
             (Path('adapters/junie/.junie/rules/leakguard.md'), Path('.junie/rules/leakguard.md')),
             (Path('adapters/junie/.junie/rules/precision-output.md'), Path('.junie/rules/precision-output.md')),
+            (Path('adapters/junie/.junie/rules/scopelock.md'), Path('.junie/rules/scopelock.md')),
         ],
         'detection': [Path('.junie/rules'), Path('.junie')],
     },

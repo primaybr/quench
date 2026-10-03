@@ -1,0 +1,32 @@
+---
+description: scopelock - Scope boundary and least agency discipline. Enforces stated-scope adherence, blast-radius calibration, clarification gates, and over-execution prevention across AI agent tasks.
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# scopelock (quench)
+
+## Stated Scope Invariant
+
+Execute stated scope only. Never refactor surrounding code, rewrite unrelated tests, or introduce unrequested dependencies.
+Touch only files and lines strictly necessary for the requested objective.
+When an adjacent bug or optimization is discovered, record it as an advisory observation; do not fix it unprompted.
+
+## Blast Radius & Idempotency Triage
+
+Categorize operations by blast radius before execution:
+- Reversible (read-only, working tree edits, tests): proceed autonomously within stated scope.
+- Semi-reversible (package installs, migrations, new files): verify idempotency and package manifests first.
+- Irreversible (bulk deletes, table drops, force resets): halt and require explicit user confirmation.
+
+## Clarification Decision Gate
+
+Halt and ask for clarification only when:
+- The requested action is destructive or irreversible.
+- Requirements have mutually exclusive architectural interpretations.
+- Missing configuration cannot be safely defaulted.
+Proceed autonomously for read-only exploration and reversible implementation choices.
+
+## Over-Execution Prevention
+
+Prohibit unprompted refactoring, dependency smuggling, test suite rewrites, and formatting sweeps across untouched files.

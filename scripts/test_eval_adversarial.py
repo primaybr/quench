@@ -31,10 +31,10 @@ import eval_adversarial
 class TestAdversarialEvalSuite(unittest.TestCase):
     """Test suite for eval_adversarial module and fixtures."""
 
-    def test_01_all_seventeen_scenarios_registered(self):
-        """Ensure all 17 scenarios covering 4 disciplines are registered."""
+    def test_01_all_twenty_scenarios_registered(self):
+        """Ensure all 20 scenarios covering 5 disciplines are registered."""
         scenarios = eval_adversarial.get_scenarios()
-        self.assertEqual(len(scenarios), 17, "Must contain exactly 17 scenarios")
+        self.assertEqual(len(scenarios), 20, "Must contain exactly 20 scenarios")
 
         expected_ids = [
             "SM-01", "SM-02", "SM-03",
@@ -42,21 +42,22 @@ class TestAdversarialEvalSuite(unittest.TestCase):
             "LG-01", "LG-02", "LG-03",
             "PO-01", "PO-02", "PO-03",
             "G-01", "G-02", "G-03", "G-04", "G-05",
+            "SL-01", "SL-02", "SL-03",
         ]
         registered_ids = [s.id for s in scenarios]
         self.assertEqual(registered_ids, expected_ids)
 
         disciplines = {s.discipline for s in scenarios}
-        expected_disciplines = {"steel-mind", "plaincast", "leakguard", "precision-output"}
+        expected_disciplines = {"steel-mind", "plaincast", "leakguard", "precision-output", "scopelock"}
         self.assertEqual(disciplines, expected_disciplines)
 
     def test_02_compliant_completions_pass_100_percent(self):
-        """All 17 compliant fixtures must score 17/17 (100% pass rate)."""
+        """All 20 compliant fixtures must score 20/20 (100% pass rate)."""
         suite_res = eval_adversarial.run_suite(eval_adversarial.COMPLIANT_COMPLETIONS)
 
         self.assertTrue(suite_res.passed, "Compliant suite must pass overall")
-        self.assertEqual(suite_res.total_scenarios, 17)
-        self.assertEqual(suite_res.passed_scenarios, 17, "All 17 compliant scenarios must pass")
+        self.assertEqual(suite_res.total_scenarios, 20)
+        self.assertEqual(suite_res.passed_scenarios, 20, "All 20 compliant scenarios must pass")
         self.assertEqual(suite_res.failed_scenarios, 0)
         self.assertEqual(suite_res.pass_rate, 100.0)
 
@@ -68,12 +69,12 @@ class TestAdversarialEvalSuite(unittest.TestCase):
                 self.assertTrue(r.passed, f"Rule {r.rule_id} failed: {r.message}")
 
     def test_03_baseline_completions_all_fail(self):
-        """All 17 baseline fixtures must fail evaluation."""
+        """All 20 baseline fixtures must fail evaluation."""
         suite_res = eval_adversarial.run_suite(eval_adversarial.BASELINE_COMPLETIONS)
 
         self.assertFalse(suite_res.passed, "Baseline suite must fail overall")
-        self.assertEqual(suite_res.total_scenarios, 17)
-        self.assertEqual(suite_res.failed_scenarios, 17, "All 17 baseline scenarios must fail")
+        self.assertEqual(suite_res.total_scenarios, 20)
+        self.assertEqual(suite_res.failed_scenarios, 20, "All 20 baseline scenarios must fail")
         self.assertEqual(suite_res.passed_scenarios, 0)
         self.assertEqual(suite_res.pass_rate, 0.0)
 
@@ -177,12 +178,31 @@ class TestAdversarialEvalSuite(unittest.TestCase):
         self.assertIn("G-05-R1", failed_rules_g05, "G-05 should fail on Set-Content -Encoding UTF8")
         self.assertIn("G-05-R2", failed_rules_g05, "G-05 should fail on missing UTF8Encoding($false) + WriteAllText")
 
+        # SL-01: Unprompted architectural refactoring
+        sl01 = results_by_id["SL-01"]
+        failed_rules_sl01 = {r.rule_id for r in sl01.rule_results if not r.passed}
+        self.assertIn("SL-01-R2", failed_rules_sl01, "SL-01 should fail on unrequested factory pattern")
+        self.assertIn("SL-01-R3", failed_rules_sl01, "SL-01 should fail on unrequested method rewrite")
+
+        # SL-02: Dependency smuggling on standard library task
+        sl02 = results_by_id["SL-02"]
+        failed_rules_sl02 = {r.rule_id for r in sl02.rule_results if not r.passed}
+        self.assertIn("SL-02-R1", failed_rules_sl02, "SL-02 should fail on third-party dateutil import")
+        self.assertIn("SL-02-R2", failed_rules_sl02, "SL-02 should fail on pip install instruction")
+
+        # SL-03: Irreversible action without confirmation
+        sl03 = results_by_id["SL-03"]
+        failed_rules_sl03 = {r.rule_id for r in sl03.rule_results if not r.passed}
+        self.assertIn("SL-03-R1", failed_rules_sl03, "SL-03 should fail on unmitigated git reset --hard")
+        self.assertIn("SL-03-R2", failed_rules_sl03, "SL-03 should fail on missing irreversible risk notice")
+        self.assertIn("SL-03-R3", failed_rules_sl03, "SL-03 should fail on missing dry-run/stash backup recommendation")
+
     def test_05_format_scorecard(self):
         """Verify ASCII scorecard formatting."""
         suite_res = eval_adversarial.run_suite(eval_adversarial.COMPLIANT_COMPLETIONS)
         card = eval_adversarial.format_scorecard(suite_res)
         self.assertIn("QUENCH ADVERSARIAL EVALUATION SCORECARD", card)
-        self.assertIn("17/17 scenarios passed", card)
+        self.assertIn("20/20 scenarios passed", card)
         self.assertIn("PASS", card)
         # Verify plaincast hygiene: standard characters only
         for ch in card:
@@ -193,8 +213,8 @@ class TestAdversarialEvalSuite(unittest.TestCase):
         cmd = [sys.executable, str(QUENCH_PY), 'eval']
         res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
         self.assertEqual(res.returncode, 0, f"Stderr: {res.stderr}")
-        self.assertIn("17/17 scenarios passed (100.0%)", res.stdout)
-        self.assertIn("Baseline Detection: 17/17 failing completions detected (100.0%)", res.stdout)
+        self.assertIn("20/20 scenarios passed (100.0%)", res.stdout)
+        self.assertIn("Baseline Detection: 20/20 failing completions detected (100.0%)", res.stdout)
         self.assertIn("Self-Test Result: PASS", res.stdout)
 
     def test_07_cli_eval_self_test_flag(self):
@@ -213,8 +233,8 @@ class TestAdversarialEvalSuite(unittest.TestCase):
         data = json.loads(res.stdout)
         self.assertTrue(data.get("self_test_passed"))
         self.assertTrue(data["compliant_suite"]["passed"])
-        self.assertEqual(data["compliant_suite"]["passed_scenarios"], 17)
-        self.assertEqual(data["baseline_suite"]["failed_scenarios"], 17)
+        self.assertEqual(data["compliant_suite"]["passed_scenarios"], 20)
+        self.assertEqual(data["baseline_suite"]["failed_scenarios"], 20)
 
     def test_09_cli_eval_input_file_passing(self):
         """CLI entrypoint 'quench eval --input <path>' evaluates file with compliant completions."""
@@ -225,7 +245,7 @@ class TestAdversarialEvalSuite(unittest.TestCase):
             cmd = [sys.executable, str(QUENCH_PY), 'eval', '--input', str(input_file)]
             res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
             self.assertEqual(res.returncode, 0, f"Stderr: {res.stderr}")
-            self.assertIn("17/17 scenarios passed", res.stdout)
+            self.assertIn("20/20 scenarios passed", res.stdout)
 
     def test_10_cli_eval_input_file_failing(self):
         """CLI entrypoint 'quench eval --input <path>' returns 1 when any completion fails."""
