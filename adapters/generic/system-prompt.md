@@ -79,6 +79,7 @@ Limit colons in prose to formal definitions; keep semicolons rare.
 
 NEVER output or commit host drive letters (C:\, F:\) or user profiles (Users/, /home/).
 Always use generic placeholders (/path/to/<project>, ~/.config/<tool>/) or relative paths.
+When writing installation or configuration instructions: provide complete, portable instructions from git clone through environment configuration without host drive prefixes.
 Never mix forward and backward slashes in paths; use / universally.
 Maintain hermetic project isolation: never leak private tools, MCP names, internal APIs,
 or sibling project names from the host environment into repository files or commits.

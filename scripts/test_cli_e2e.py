@@ -65,6 +65,7 @@ class TestQuenchCliE2E(unittest.TestCase):
                 'plaincast.mdc',
                 'leakguard.mdc',
                 'precision-output.mdc',
+                'scopelock.mdc',
             ]
             for rule_file in expected_rules:
                 rule_path = rules_dir / rule_file
@@ -93,6 +94,7 @@ class TestQuenchCliE2E(unittest.TestCase):
                 'plaincast.md',
                 'leakguard.md',
                 'precision-output.md',
+                'scopelock.md',
             ]
             for rule_file in expected_rules:
                 rule_path = rules_dir / rule_file
@@ -305,11 +307,11 @@ class TestQuenchCliE2E(unittest.TestCase):
             self.assertEqual(refreshed_content, source_content)
 
     def test_10_version_flag(self):
-        """quench --version displays 'quench 1.9.6'."""
+        """quench --version displays 'quench 1.9.7'."""
         cmd = [sys.executable, str(QUENCH_PY), '--version']
         res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
         self.assertEqual(res.returncode, 0)
-        self.assertIn("quench 1.9.6", res.stdout.strip())
+        self.assertIn("quench 1.9.7", res.stdout.strip())
 
 
 if __name__ == '__main__':

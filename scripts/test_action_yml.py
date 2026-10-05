@@ -250,7 +250,7 @@ class TestActionYaml(unittest.TestCase):
         self.assertEqual(self.parsed['description'].strip(), expected_desc)
 
     def test_05_inputs_specification(self):
-        """Inputs target, fix, and paths-only must be defined with proper defaults."""
+        """Inputs target, fix, paths-only, format, private-terms, no-ignore, and staged must be defined with proper defaults."""
         inputs = self.parsed.get('inputs', {})
         self.assertIsInstance(inputs, dict, "inputs must be a mapping")
 
@@ -267,9 +267,21 @@ class TestActionYaml(unittest.TestCase):
                 'desc': 'Only check for path leaks and credentials',
                 'default': 'false',
             },
+            'private-terms': {
+                'desc': 'Comma-separated private tool or project names to flag as context bleed; pass from a secret',
+                'default': '',
+            },
             'format': {
                 'desc': "Output format: 'text' for plain lines only, 'github' to also emit ::error annotations on PR diffs (default: github)",
                 'default': 'github',
+            },
+            'no-ignore': {
+                'desc': 'Bypass .quenchignore and scan all files',
+                'default': 'false',
+            },
+            'staged': {
+                'desc': 'Scan only git-staged files',
+                'default': 'false',
             },
         }
 
@@ -341,12 +353,16 @@ class TestActionYaml(unittest.TestCase):
         self.assertIn('INPUT_FIX', step_env, "inputs.fix must be mapped via env: as INPUT_FIX")
         self.assertIn('INPUT_PATHS_ONLY', step_env, "inputs.paths-only must be mapped via env: as INPUT_PATHS_ONLY")
         self.assertIn('INPUT_FORMAT', step_env, "inputs.format must be mapped via env: as INPUT_FORMAT")
+        self.assertIn('INPUT_NO_IGNORE', step_env, "inputs.no-ignore must be mapped via env: as INPUT_NO_IGNORE")
+        self.assertIn('INPUT_STAGED', step_env, "inputs.staged must be mapped via env: as INPUT_STAGED")
 
         # Verifying CLI flags are constructed from env vars (not direct interpolation)
         self.assertIn('INPUT_TARGET', run_text, "Step command does not use $INPUT_TARGET")
         self.assertIn('--target', run_text, "Step command does not pass --target flag")
         self.assertIn('--fix', run_text, "Step command does not handle --fix flag")
         self.assertIn('--paths-only', run_text, "Step command does not handle --paths-only flag")
+        self.assertIn('--no-ignore', run_text, "Step command does not handle --no-ignore flag")
+        self.assertIn('--staged', run_text, "Step command does not handle --staged flag")
 
     def test_09_plaincast_and_hygiene(self):
         """action.yml must comply with Plaincast and hygiene standards."""

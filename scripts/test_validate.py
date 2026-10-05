@@ -677,11 +677,13 @@ class TestCidrRanges(unittest.TestCase):
         return [v.sample for v in report.violations]
 
     def test_network_ranges_not_reported(self):
-        self.assertEqual(self.leaks("$blocked = ['10.0.0.0/8', '172.16.0.0/12', '192.168.1.0/24'];\n"), [])
+        ranges = "['10.0.0.0/8', '172.16.0.0/12', '192.168.1.0/24', '172.16.1.128/25', '10.1.2.64/26', '10.0.0.1/32']"
+        self.assertEqual(self.leaks(f"$blocked = {ranges};\n"), [])
 
     def test_hosts_still_reported(self):
         self.assertEqual(self.leaks("connect to 192.168.1.20 now\n"), ['192.168.1.20'])
         self.assertEqual(self.leaks("address: 192.168.1.5/24\n"), ['192.168.1.5/24'])  # host with prefix
+        self.assertEqual(self.leaks("host: 172.16.1.130/25\n"), ['172.16.1.130/25'])  # host bits set for /25
 
 
 class TestCommitSubject(unittest.TestCase):
@@ -872,6 +874,94 @@ class TestGithubAnnotations(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 1)
             self.assertNotIn('::error', result.stdout)
+
+
+class TestJsonFormat(unittest.TestCase):
+    """Test suite for --format json machine-readable output in validate.py and quench.py."""
+
+    def test_violation_and_report_to_dict(self):
+        report = validate.ValidationReport()
+        report.files_scanned = 5
+        report.add(validate.Violation('plaincast', Path('docs/intro.md'), 10, 4, 'Banned em dash', '\u2014'))
+        report.fix_skipped.append(Path('src/main.py'))
+
+        data = report.to_dict()
+        self.assertFalse(data['passed'])
+        self.assertEqual(data['files_scanned'], 5)
+        self.assertEqual(data['violations_count'], 1)
+        self.assertEqual(data['fix_skipped'], ['src/main.py'])
+        self.assertEqual(len(data['violations']), 1)
+
+        v = data['violations'][0]
+        self.assertEqual(v['gate'], 'plaincast')
+        self.assertEqual(v['file'], 'docs/intro.md')
+        self.assertEqual(v['line'], 10)
+        self.assertEqual(v['col'], 4)
+        self.assertEqual(v['message'], 'Banned em dash')
+        self.assertEqual(v['sample'], '\u2014')
+
+    def test_print_violations_json(self):
+        import io, json
+        report = validate.ValidationReport()
+        report.files_scanned = 3
+        report.add(validate.Violation('leakguard', Path('config.json'), 2, 1, 'Secret key found'))
+
+        buf = io.StringIO()
+        import unittest.mock as mock
+        with mock.patch('builtins.print', side_effect=lambda *a, **k: buf.write(' '.join(str(x) for x in a) + '\n')):
+            validate.print_violations(report, Path('.'), fmt='json')
+
+        parsed = json.loads(buf.getvalue())
+        self.assertFalse(parsed['passed'])
+        self.assertEqual(parsed['violations_count'], 1)
+        self.assertEqual(parsed['violations'][0]['gate'], 'leakguard')
+
+    def test_cli_format_json_flag_on_failure(self):
+        import json, subprocess, tempfile
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td)
+            (p / 'bad.md').write_text('This has an em\u2014dash.', encoding='utf-8')
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS_DIR / 'validate.py'),
+                 '--root', td, '--format', 'json'],
+                capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 1)
+            parsed = json.loads(result.stdout)
+            self.assertFalse(parsed['passed'])
+            self.assertGreaterEqual(parsed['violations_count'], 1)
+            self.assertEqual(parsed['violations'][0]['gate'], 'plaincast')
+
+    def test_cli_format_json_flag_on_pass(self):
+        import json, subprocess, tempfile
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td)
+            (p / 'good.md').write_text('Clean text here.', encoding='utf-8')
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS_DIR / 'validate.py'),
+                 '--root', td, '--format', 'json'],
+                capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 0)
+            parsed = json.loads(result.stdout)
+            self.assertTrue(parsed['passed'])
+            self.assertEqual(parsed['violations_count'], 0)
+            self.assertEqual(len(parsed['violations']), 0)
+
+    def test_quench_check_format_json(self):
+        import json, subprocess, tempfile
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td)
+            (p / 'good.md').write_text('Clean text here.', encoding='utf-8')
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS_DIR / 'quench.py'),
+                 'check', '-d', td, '--format', 'json'],
+                capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 0)
+            parsed = json.loads(result.stdout)
+            self.assertTrue(parsed['passed'])
+            self.assertEqual(parsed['violations_count'], 0)
 
 
 if __name__ == '__main__':

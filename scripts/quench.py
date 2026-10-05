@@ -35,8 +35,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.9.6"
-__version__ = "1.9.6"
+VERSION = "quench 1.9.7"
+__version__ = "1.9.7"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -352,27 +352,34 @@ def cmd_check(args: argparse.Namespace) -> int:
         print(f"Error: Target path does not exist: {target}")
         return 1
 
-    print(f"Running Quench validation engine on: {target}")
-    if args.fix:
-        print("Auto-fix mode: ENABLED")
-    if args.paths_only:
-        print("Mode: Paths and secret leaks only")
-    staged_only = bool(getattr(args, 'staged', False))
-    if staged_only:
-        print("Mode: Staged files only")
-    private_terms = validate.load_private_terms(getattr(args, 'private_term', None))
-    if private_terms:
-        # Count only: printing the terms would leak them into CI logs.
-        print(f"Private terms: {len(private_terms)} configured")
-    no_ignore = bool(getattr(args, 'no_ignore', False))
-
     output_format = args.output_format
     if output_format is None:
         output_format = 'github' if os.environ.get('GITHUB_ACTIONS') == 'true' else 'text'
 
+    staged_only = bool(getattr(args, 'staged', False))
+    private_terms = validate.load_private_terms(getattr(args, 'private_term', None))
+    no_ignore = bool(getattr(args, 'no_ignore', False))
+
+    if output_format != 'json':
+        print(f"Running Quench validation engine on: {target}")
+        if args.fix:
+            print("Auto-fix mode: ENABLED")
+        if args.paths_only:
+            print("Mode: Paths and secret leaks only")
+        if staged_only:
+            print("Mode: Staged files only")
+        if private_terms:
+            # Count only: printing the terms would leak them into CI logs.
+            print(f"Private terms: {len(private_terms)} configured")
+
     report = validate.scan_repository(target, check_paths_only=args.paths_only, auto_fix=args.fix,
                                       private_terms=private_terms, staged_only=staged_only,
                                       no_ignore=no_ignore)
+
+    if output_format == 'json':
+        print(json.dumps(report.to_dict(target), indent=2))
+        return 0 if report.passed else 1
+
     print(f"\nScanned {report.files_scanned} files across repository.")
 
     if report.passed:
@@ -856,8 +863,8 @@ def build_parser() -> argparse.ArgumentParser:
                          help='Bypass .quenchignore and scan all files')
     p_check.add_argument(
         '--format', dest='output_format', default=None,
-        choices=['text', 'github'],
-        help="Output format: 'text' or 'github' (::error annotations). Defaults to 'github' when GITHUB_ACTIONS=true."
+        choices=['text', 'github', 'json'],
+        help="Output format: 'text', 'github' (::error annotations), or 'json' (machine-readable structured JSON). Defaults to 'github' when GITHUB_ACTIONS=true."
     )
     # update
     p_update = subparsers.add_parser('update', help='Update existing installed adapters from source templates')

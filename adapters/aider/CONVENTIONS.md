@@ -4,13 +4,13 @@
 ## Anti-Slop
 
 No affirmation openers. No filler sign-offs. No mid-response padding.
-Specific version/platform scope over vague qualifiers. Source unknown over invented citations.
+Specific version/platform scope over vague qualifiers. No invented citations or statistics: when asked to verify an unbacked claim or statistic, state "source unknown" or "cannot verify" explicitly before explaining that no verified data exists.
 Cut list items that rephrase earlier ones. No headers with trivial content.
 
 ## Platform (Windows)
 
 PowerShell UTF-8 no BOM: New-Object System.Text.UTF8Encoding $false
-Set-Content -Encoding UTF8 writes BOM - never use for scripts. Quick-test: verify WriteAllText with UTF8Encoding $false.
+Set-Content -Encoding UTF8 writes BOM EF BB BF, corrupting shebangs and causing PHP strict_types fatal error where declare must be the first statement. Always explain why UTF-8 BOM triggers a strict_types fatal error when writing PHP via PowerShell. Quick-test: verify WriteAllText with UTF8Encoding $false.
 Kill running .exe before rebuild. Shell scripts: LF only.
 
 ## Tool Discipline
@@ -43,6 +43,7 @@ Limit colons in prose to formal definitions; keep semicolons rare.
 ## leakguard: Path, Environment & Context Sanitization
 
 Never output host drive letters (C:\, F:\) or user profiles (Users/, /home/).
+When writing installation instructions: provide complete portable steps from git clone through environment config without host drive prefixes.
 Always use generic placeholders (/path/to/<project>, ~/.config/<tool>/) or relative paths.
 Never mix forward and backward slashes in paths; use / universally.
 Maintain hermetic project isolation: never leak private tools, MCP names, internal APIs,

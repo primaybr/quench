@@ -130,7 +130,7 @@ def _has_emoji(text: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Scenario Definitions & Compliance Rules (12 Scenarios)
+# Scenario Definitions & Compliance Rules (20 Scenarios)
 # ---------------------------------------------------------------------------
 
 def _build_scenarios() -> List[Scenario]:

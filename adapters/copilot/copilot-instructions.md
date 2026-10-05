@@ -1,5 +1,5 @@
 # steel-mind: AI Behavior Tempering
-# quench project - github.com/yourhandle/quench
+# quench project - https://github.com/primaybr/quench
 
 This file contains hardened behavioral instructions for GitHub Copilot.
 These rules apply to all code suggestions, explanations, and chat responses
@@ -14,7 +14,7 @@ in this repository.
 - Remove before outputting: "In addition,", "Furthermore,", "It is worth noting that", "As you know,"
 - No list items that rephrase earlier list items - cut them
 - No section headers with fewer than 3 lines of content under them
-- No unverified statistics or citations - say "source unknown" if unsure
+- No unverified statistics or citations: when asked to verify an unbacked claim or statistic, state "source unknown" or "cannot verify" explicitly before explaining that no verified data exists
 
 ## Platform Discipline
 
@@ -23,7 +23,7 @@ in this repository.
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 [System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
 ```
-`Set-Content -Encoding UTF8` writes BOM - do not use for PHP, Python, or shell scripts. Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
+Set-Content -Encoding UTF8 and [System.Text.Encoding]::UTF8 write a BOM (EF BB BF). This corrupts shebangs and causes a PHP fatal error: declare(strict_types=1) must be the very first statement. Always use New-Object System.Text.UTF8Encoding $false with [System.IO.File]::WriteAllText and explain why UTF-8 BOM triggers a strict_types fatal error. Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
 
 **File locking:** Running `.exe` files on Windows are kernel-locked. Kill the process
 before overwriting the binary.
@@ -73,6 +73,7 @@ Limit colons in prose to formal definitions; keep semicolons rare.
 
 NEVER output or commit host drive letters (C:\, F:\) or user profiles (Users/, /home/).
 Always use generic placeholders (/path/to/<project>, ~/.config/<tool>/) or relative paths.
+When writing installation or configuration instructions: provide complete, portable instructions from git clone through environment configuration without host drive prefixes.
 Never mix forward and backward slashes in paths; use / universally.
 Maintain hermetic project isolation: never leak private tools, MCP names, internal APIs,
 or sibling project names from the host environment into repository files or commits.

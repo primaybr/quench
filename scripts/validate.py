@@ -14,13 +14,15 @@ Checks:
 import argparse
 import fnmatch
 import functools
+import ipaddress
+import json
 import os
 import re
 import subprocess
 import sys
 import unicodedata
 from pathlib import Path
-from typing import Dict, FrozenSet, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Sequence, Set, Tuple
 
 # ---------------------------------------------------------------------------
 # Plaincast Character Taxonomy & Replacements
@@ -365,6 +367,28 @@ class Violation:
             msg += f" (found: {self.sample!r} [{codepoints}])"
         return msg
 
+    def to_dict(self, root: Optional[Path] = None) -> Dict[str, Any]:
+        file_p = self.file_path
+        if root and file_p.is_absolute():
+            try:
+                rel = file_p.relative_to(root)
+                file_str = rel.as_posix()
+            except ValueError:
+                file_str = file_p.as_posix()
+        else:
+            file_str = file_p.as_posix()
+
+        data: Dict[str, Any] = {
+            "gate": self.gate,
+            "file": file_str,
+            "line": self.line,
+            "col": self.col,
+            "message": self.message,
+        }
+        if self.sample:
+            data["sample"] = self.sample
+        return data
+
 
 class ValidationReport:
     def __init__(self):
@@ -379,6 +403,15 @@ class ValidationReport:
     @property
     def passed(self) -> bool:
         return len(self.violations) == 0
+
+    def to_dict(self, root: Optional[Path] = None) -> Dict[str, Any]:
+        return {
+            "passed": self.passed,
+            "files_scanned": self.files_scanned,
+            "violations_count": len(self.violations),
+            "violations": [v.to_dict(root) for v in self.violations],
+            "fix_skipped": [p.as_posix() for p in self.fix_skipped],
+        }
 
 
 def _escape_annotation(value: str, is_property: bool = False) -> str:
@@ -413,11 +446,16 @@ def github_annotation(violation: Violation, root: Path) -> str:
 
 
 def print_violations(report: ValidationReport, root: Path, fmt: str = 'text') -> None:
-    """Print violations. fmt is 'text' or 'github'.
+    """Print violations. fmt is 'text', 'github', or 'json'.
 
     When fmt='github', emit a GitHub Actions ::error workflow command after
     each human-readable line so violations appear inline on PR diffs.
+    When fmt='json', emit structured JSON report.
     """
+    if fmt == 'json':
+        print(json.dumps(report.to_dict(root), indent=2))
+        return
+
     emit_annotations = (fmt == 'github')
     for v in report.violations:
         print(f"  {v}")
@@ -544,15 +582,20 @@ _PATH_PATTERN_DESCS = {
     'Localhost URL with non-generic path',
 }
 
-_CIDR_NETWORK_RE = re.compile(r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.0)/(\d{1,2})$')
-
-
 def _is_cidr_network(sample: str) -> bool:
-    """True for a range definition such as 10.0.0.0/8 or 192.168.1.0/24 (SSRF guards,
-    firewall rules), which names a network rather than a host. A host address written
-    with a prefix (last octet not 0) is still reported."""
-    m = _CIDR_NETWORK_RE.match(sample)
-    return bool(m) and int(m.group(2)) <= 32
+    """True for a CIDR network definition such as 10.0.0.0/8, 172.16.1.128/25, or
+    192.168.1.0/24 (SSRF guards, firewall rules), which names a network rather than a host.
+    A host address written with a prefix whose host bits are set (e.g. non-zero host bits)
+    is still reported."""
+    if '/' not in sample:
+        return False
+    try:
+        # strict=True enforces that host bits are 0, allowing any mathematically valid
+        # CIDR network specification across subnets while reporting host addresses with prefix.
+        ipaddress.ip_network(sample, strict=True)
+        return True
+    except ValueError:
+        return False
 
 
 # Characters that continue a path token past the matched prefix (used by --fix).
@@ -1131,9 +1174,9 @@ def main():
                         help="Ignore .quenchignore and scan all files (for CI audits)")
     parser.add_argument(
         '--format', dest='output_format', default=None,
-        choices=['text', 'github'],
-        help="Output format: 'text' (default) or 'github' (emit ::error annotations for GitHub Actions PR diffs). "
-             "Defaults to 'github' when GITHUB_ACTIONS=true."
+        choices=['text', 'github', 'json'],
+        help="Output format: 'text' (default), 'github' (emit ::error annotations for GitHub Actions PR diffs), "
+             "or 'json' (machine-readable structured JSON). Defaults to 'github' when GITHUB_ACTIONS=true."
     )
     args = parser.parse_args()
     private_terms = load_private_terms(args.private_term)
@@ -1147,6 +1190,9 @@ def main():
         msg_file = Path(args.check_commit_msg)
         report = ValidationReport()
         validate_commit_message(msg_file, report, private_terms=private_terms)
+        if output_format == 'json':
+            print(json.dumps(report.to_dict(msg_file.parent), indent=2))
+            sys.exit(0 if report.passed else 1)
         if report.passed:
             print("[PASS] Commit message is clean.")
             sys.exit(0)
@@ -1158,25 +1204,30 @@ def main():
             sys.exit(1)
 
     repo_root = Path(args.root).resolve()
-    print(f"Running quench Validation Engine on: {repo_root}")
-    if args.fix:
-        print("Auto-fix mode: ENABLED")
-    if args.check_paths_only:
-        print("Mode: Paths and secret leaks only")
-    if args.staged:
-        print("Mode: Staged files only")
-    if private_terms:
-        # Count only: printing the terms would leak them into CI logs.
-        print(f"Private terms: {len(private_terms)} configured")
-    if output_format == 'github':
-        print("Output format: github (::error annotations enabled)")
-    ignore_patterns = frozenset() if args.no_ignore else load_quench_ignore(repo_root)
-    if ignore_patterns:
-        print(f"Ignore patterns: {len(ignore_patterns)} from .quenchignore")
+    if output_format != 'json':
+        print(f"Running quench Validation Engine on: {repo_root}")
+        if args.fix:
+            print("Auto-fix mode: ENABLED")
+        if args.check_paths_only:
+            print("Mode: Paths and secret leaks only")
+        if args.staged:
+            print("Mode: Staged files only")
+        if private_terms:
+            # Count only: printing the terms would leak them into CI logs.
+            print(f"Private terms: {len(private_terms)} configured")
+        if output_format == 'github':
+            print("Output format: github (::error annotations enabled)")
+        ignore_patterns = frozenset() if args.no_ignore else load_quench_ignore(repo_root)
+        if ignore_patterns:
+            print(f"Ignore patterns: {len(ignore_patterns)} from .quenchignore")
 
     report = scan_repository(repo_root, check_paths_only=args.check_paths_only, auto_fix=args.fix,
                              private_terms=private_terms, staged_only=args.staged,
                              no_ignore=args.no_ignore)
+
+    if output_format == 'json':
+        print(json.dumps(report.to_dict(repo_root), indent=2))
+        sys.exit(0 if report.passed else 1)
 
     print(f"\nScanned {report.files_scanned} files across repository.")
 

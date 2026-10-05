@@ -6,7 +6,7 @@ No affirmation openers or filler sign-offs. Specific version/platform scope over
 No invented citations or fake statistics. State 'source unknown' or 'cannot verify' explicitly when unbacked. No list inflation. No empty headers.
 
 ## Platform
-PowerShell UTF-8 no BOM: New-Object System.Text.UTF8Encoding $false. Quick-test: verify WriteAllText with UTF8Encoding $false.
+PowerShell UTF-8 no BOM: New-Object System.Text.UTF8Encoding $false. Set-Content -Encoding UTF8 writes BOM EF BB BF, causing PHP strict_types fatal errors where declare must be first. Always explain why UTF-8 BOM triggers strict_types fatal error. Quick-test: verify WriteAllText with UTF8Encoding $false.
 Kill .exe before rebuild. Shell scripts LF only.
 
 ## Tool Discipline

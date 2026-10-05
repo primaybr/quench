@@ -9,7 +9,7 @@ No list inflation. No empty section headers.
 
 ## Platform
 PowerShell UTF-8 no BOM: New-Object System.Text.UTF8Encoding $false
-Not Set-Content -Encoding UTF8 (writes BOM, corrupts scripts). Quick-test: verify WriteAllText with UTF8Encoding $false.
+Not Set-Content -Encoding UTF8 (writes BOM EF BB BF, corrupting shebangs and causing PHP strict_types fatal errors where declare must be first; always explain why UTF-8 BOM triggers strict_types error). Quick-test: verify WriteAllText with UTF8Encoding $false.
 Kill running .exe before rebuild (OS kernel lock). Shell scripts: LF only.
 
 ## Tool Discipline

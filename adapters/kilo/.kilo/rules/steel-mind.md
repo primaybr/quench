@@ -18,7 +18,7 @@ No list items that rephrase earlier items. No section headers with trivial conte
 PowerShell UTF-8 no BOM - the only safe write pattern:
   $utf8NoBom = New-Object System.Text.UTF8Encoding $false
   [System.IO.File]::WriteAllText($absolutePath, $content, $utf8NoBom)
-Never use Set-Content -Encoding UTF8 for scripts (writes BOM, corrupts shebangs). Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
+Never use Set-Content -Encoding UTF8 for scripts (both Set-Content -Encoding UTF8 and [System.Text.Encoding]::UTF8 write BOM EF BB BF, corrupting shebangs and causing PHP strict_types fatal error where declare must be the very first statement). When writing PHP via PowerShell, always explain why UTF-8 BOM triggers a strict_types fatal error. Quick-test: if output contains a PowerShell write, verify it uses WriteAllText with UTF8Encoding $false.
 
 Windows: running .exe files are kernel-locked - kill the daemon before rebuilding.
 Long-running processes need IsDaemon: true - non-daemon tasks kill child processes.

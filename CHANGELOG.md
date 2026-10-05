@@ -3,6 +3,18 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.9.7] 2026-10-05 - Multi-Tool Parity, GitHub Action Inputs & Structured JSON Output
+
+### Added
+- **`--format json` output flag (`quench check --format json` / `validate.py --format json`):** Emits machine-readable structured JSON reports containing `passed`, `files_scanned`, `violations_count`, `violations` (with gate, file, line, col, message, and sample), and `fix_skipped` list. Enables seamless integration with jq, automated audit pipelines, and IDE diagnostics.
+- **GitHub Action inputs parity (`no-ignore`, `staged` in `action.yml`):** Exposed `no-ignore` (default: `"false"`) to bypass `.quenchignore` during full CI compliance audits and `staged` (default: `"false"`) to scan only staged files in fast pre-commit actions. Both inputs are securely mapped through step environment variables to `--no-ignore` and `--staged` CLI flags.
+- **RFC-compliant CIDR subnet whitelisting in Gate 2:** Integrated standard library `ipaddress.ip_network(strict=True)` in `scripts/validate.py` to correctly whitelist arbitrary non-class-C subnets (e.g. `172.16.1.128/25`, `10.1.2.64/26`, `10.0.0.1/32`) in SSRF guards and network firewall definitions, while continuing to report host addresses with set host bits.
+
+### Fixed
+- **Adapter placeholder cleanup:** Replaced legacy `yourhandle` repository URLs with `primaybr/quench` in `adapters/cursor/.cursorrules` and `adapters/copilot/copilot-instructions.md`.
+- **Adapter parity harmonization:** Backported missing `leakguard` Protocol 6 portable installation instructions across all 11 adapters (`cursor`, `copilot`, `cline`, `windsurf`, `generic`, `aider`); backported `steel-mind` PHP `declare(strict_types=1)` UTF-8 BOM fatal error explanations and unbacked citation "source unknown" / "cannot verify" declarations across single-file and modular adapters (`cursor`, `copilot`, `windsurf`, `aider`, `kilo`, `zed`, `junie`).
+- **Test suite assertions and documentation alignment:** Added `scopelock.mdc` and `scopelock.md` to `expected_rules` in `scripts/test_cli_e2e.py` (`test_01_init_cursor` and `test_02_init_kilo`); aligned `skills/precision-output/references/adversarial-test-suite.md` and test docstrings to reflect 20/20 scenarios and include `G-01` through `G-05`.
+
 ## [1.9.6] 2026-10-03 - Documentation & CI Drift Fixes
 
 ### Fixed

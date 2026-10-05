@@ -25,6 +25,14 @@ inputs:
     description: "Output format: 'text' for plain lines only, 'github' to also emit ::error annotations on PR diffs (default: github)"
     required: false
     default: "github"
+  no-ignore:
+    description: Bypass .quenchignore and scan all files
+    required: false
+    default: "false"
+  staged:
+    description: Scan only git-staged files
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -41,6 +49,8 @@ runs:
         INPUT_FIX: ${{ inputs.fix }}
         INPUT_PATHS_ONLY: ${{ inputs.paths-only }}
         INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_NO_IGNORE: ${{ inputs.no-ignore }}
+        INPUT_STAGED: ${{ inputs.staged }}
         # Read directly by the scanner; never echoed.
         QUENCH_PRIVATE_TERMS: ${{ inputs.private-terms }}
       run: |
@@ -53,6 +63,12 @@ runs:
         fi
         if [ "$INPUT_PATHS_ONLY" = "true" ] || [ "$INPUT_PATHS_ONLY" = "True" ]; then
           ARGS+=("--paths-only")
+        fi
+        if [ "$INPUT_NO_IGNORE" = "true" ] || [ "$INPUT_NO_IGNORE" = "True" ]; then
+          ARGS+=("--no-ignore")
+        fi
+        if [ "$INPUT_STAGED" = "true" ] || [ "$INPUT_STAGED" = "True" ]; then
+          ARGS+=("--staged")
         fi
         if [ -n "$INPUT_FORMAT" ]; then
           ARGS+=("--format" "$INPUT_FORMAT")

@@ -3,8 +3,8 @@
 Unit tests for Quench Automated Adversarial Evaluation Runner.
 
 Verifies:
-- All 17 compliant fixtures score 17/17 (100% pass rate).
-- All 17 baseline fixtures fail with expected rule violations detected.
+- All 20 compliant fixtures score 20/20 (100% pass rate).
+- All 20 baseline fixtures fail with expected rule violations detected.
 - Individual compliance rules correctly detect violations and pass compliant patterns.
 - CLI entrypoint 'python scripts/quench.py eval' returns exit code 0.
 - Machine-readable JSON output (--json) and file evaluation (--input) work correctly.
