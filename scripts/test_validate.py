@@ -963,6 +963,73 @@ class TestJsonFormat(unittest.TestCase):
             self.assertTrue(parsed['passed'])
             self.assertEqual(parsed['violations_count'], 0)
 
+    def test_json_schema_version_and_fix_fields(self):
+        import json, subprocess, tempfile
+        with tempfile.TemporaryDirectory() as td:
+            (Path(td) / 'a.md').write_text('x — y\n', encoding='utf-8')
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS_DIR / 'validate.py'), '--root', td, '--format', 'json', '--fix'],
+                capture_output=True, text=True)
+            parsed = json.loads(result.stdout)
+            self.assertEqual(parsed['schema_version'], validate.JSON_SCHEMA_VERSION)
+            self.assertEqual(parsed['fixed_files'], ['a.md'])
+            self.assertEqual(parsed['warnings'], [])
+            self.assertNotIn('—', (Path(td) / 'a.md').read_text(encoding='utf-8'))
+
+
+class TestCidrHostBoundary(unittest.TestCase):
+    def test_networks_whitelisted(self):
+        for sample in ('10.0.0.0/8', '172.16.1.128/25', '10.1.2.64/26', '192.168.1.0/24'):
+            self.assertTrue(validate._is_cidr_network(sample), sample)
+
+    def test_hosts_reported(self):
+        # set host bits, a /32 single host, and a bare address are all host references
+        for sample in ('192.168.1.5/24', '192.168.1.5/32', '10.0.0.1/32', '192.168.1.5'):
+            self.assertFalse(validate._is_cidr_network(sample), sample)
+
+    def test_slash32_host_is_flagged_in_content(self):
+        report = validate.ValidationReport()
+        validate.validate_path_leaks(Path('notes.md'), 'allow 192.168.1.5/32 here\n', report)
+        self.assertEqual(len(report.violations), 1)
+
+
+class TestStagedAndParityGates(unittest.TestCase):
+    def test_empty_staged_scan_warns(self):
+        import subprocess, tempfile
+        with tempfile.TemporaryDirectory() as td:
+            subprocess.run(['git', 'init', '-q', td], check=True)
+            report = validate.scan_repository(Path(td), staged_only=True, private_terms=[])
+            self.assertEqual(report.files_scanned, 0)
+            self.assertEqual(len(report.warnings), 1)
+            self.assertIn('--staged', report.warnings[0])
+
+    def test_parity_marker_missing_from_adapter_fails(self):
+        import shutil, tempfile
+        repo_root = SCRIPTS_DIR.parent
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            for rel in [*validate.REQUIRED_ADAPTERS, Path('rules/AGENTS.md')]:
+                dest = root / rel
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(repo_root / rel, dest)
+            for skill in (repo_root / 'skills').iterdir():
+                if (skill / 'SKILL.md').is_file():
+                    (root / 'skills' / skill.name).mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(skill / 'SKILL.md', root / 'skills' / skill.name / 'SKILL.md')
+            (root / 'pyproject.toml').write_text('[project]\nname = "quench"\n', encoding='utf-8')
+            clean = validate.ValidationReport()
+            validate.validate_adapter_parity(root, clean)
+            drift = [v for v in clean.violations if 'drift' in v.message]
+            self.assertEqual(drift, [], [str(v) for v in drift])
+
+            target = root / 'adapters/junie/.junie/rules/steel-mind.md'
+            target.write_text(target.read_text(encoding='utf-8').replace('cannot verify', 'x'), encoding='utf-8')
+            broken = validate.ValidationReport()
+            validate.validate_adapter_parity(root, broken)
+            drift = [v for v in broken.violations if 'drift' in v.message]
+            self.assertEqual(len(drift), 1)
+            self.assertIn('cannot verify', drift[0].message)
+
 
 if __name__ == '__main__':
     unittest.main()

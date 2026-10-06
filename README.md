@@ -164,7 +164,7 @@ quench check --staged --target /path/to/project
 # Validate and auto-fix fixable plaincast and path issues
 quench check --fix --target /path/to/project
 
-# Emit machine-readable structured JSON report
+# Emit machine-readable structured JSON report (stable keys, see schema_version)
 quench check --format json --target /path/to/project
 
 # Inspect active adapters and git hooks status
@@ -190,7 +190,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.9.7
+    rev: v1.9.8
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -207,9 +207,9 @@ Validate pull requests and commits in GitHub Actions CI using the official compo
     target: .
 ```
 
-`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.7`) if you want fully reproducible CI.
+`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.8`) if you want fully reproducible CI.
 
-Violations are reported as `::error` annotations, so they appear inline on the PR diff (configurable via `format: text | github`). With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes. CI workflows can also pass `no-ignore: true` to bypass `.quenchignore` and `staged: true` to scan staged files only.
+Violations are reported as `::error` annotations, so they appear inline on the PR diff (configurable via `format: text | github | json`; `json` prints one machine-readable report and no annotations). With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes. CI workflows can also pass `no-ignore: true` to bypass `.quenchignore` and `staged: true` to scan staged files only (a CI checkout has nothing staged, so the run prints a warning that it checked nothing).
 
 The scanner honours `.gitignore` when the target is a git work tree, so build output and vendored dependencies are not scanned. `--fix` only rewrites prose files (`.md`, `.mdc`, `.mdx`, `.txt`, `.rst`, `.adoc`); violations in code and config files are reported but left for you to fix by hand.
 
@@ -279,7 +279,7 @@ Auto-update is opt-in because the clone supplies your agent's always-on rules an
 of this repository. Without it, re-run `quench update --global` when you want a new
 release.
 
-Options: `--ref v1.9.7` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
+Options: `--ref v1.9.8` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
 moves the clone, `--no-claude` updates the clone only.
 
 Run `/memory` in a new session to confirm the import is listed, and `/skills` to

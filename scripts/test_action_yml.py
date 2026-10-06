@@ -272,7 +272,7 @@ class TestActionYaml(unittest.TestCase):
                 'default': '',
             },
             'format': {
-                'desc': "Output format: 'text' for plain lines only, 'github' to also emit ::error annotations on PR diffs (default: github)",
+                'desc': "Output format: 'text' for plain lines only, 'github' to also emit ::error annotations on PR diffs, 'json' for one machine-readable report with no annotations (default: github)",
                 'default': 'github',
             },
             'no-ignore': {
@@ -280,7 +280,7 @@ class TestActionYaml(unittest.TestCase):
                 'default': 'false',
             },
             'staged': {
-                'desc': 'Scan only git-staged files',
+                'desc': 'Scan only git-staged files (a CI checkout has none staged, so this is for local or hook runs; the run warns when it scans nothing)',
                 'default': 'false',
             },
         }

@@ -390,12 +390,20 @@ class Violation:
         return data
 
 
+# Version of the --format json report layout. Bump it on any breaking change to the keys.
+JSON_SCHEMA_VERSION = 1
+
+
 class ValidationReport:
     def __init__(self):
         self.violations: List[Violation] = []
         self.files_scanned = 0
         # Files with violations that --fix left untouched because they are code, not prose.
         self.fix_skipped: List[Path] = []
+        # Files --fix rewrote. Their violations are listed as found, before the rewrite.
+        self.fixed_files: List[Path] = []
+        # Non-fatal notices, e.g. --staged found nothing to scan.
+        self.warnings: List[str] = []
 
     def add(self, violation: Violation):
         self.violations.append(violation)
@@ -406,11 +414,14 @@ class ValidationReport:
 
     def to_dict(self, root: Optional[Path] = None) -> Dict[str, Any]:
         return {
+            "schema_version": JSON_SCHEMA_VERSION,
             "passed": self.passed,
             "files_scanned": self.files_scanned,
             "violations_count": len(self.violations),
             "violations": [v.to_dict(root) for v in self.violations],
             "fix_skipped": [p.as_posix() for p in self.fix_skipped],
+            "fixed_files": [p.as_posix() for p in self.fixed_files],
+            "warnings": list(self.warnings),
         }
 
 
@@ -585,15 +596,15 @@ _PATH_PATTERN_DESCS = {
 def _is_cidr_network(sample: str) -> bool:
     """True for a CIDR network definition such as 10.0.0.0/8, 172.16.1.128/25, or
     192.168.1.0/24 (SSRF guards, firewall rules), which names a network rather than a host.
-    A host address written with a prefix whose host bits are set (e.g. non-zero host bits)
-    is still reported."""
+    A host address (set host bits, or a /32) is still reported."""
     if '/' not in sample:
         return False
     try:
         # strict=True enforces that host bits are 0, allowing any mathematically valid
         # CIDR network specification across subnets while reporting host addresses with prefix.
-        ipaddress.ip_network(sample, strict=True)
-        return True
+        net = ipaddress.ip_network(sample, strict=True)
+        # A /32 names exactly one host, which is the leak this gate reports.
+        return net.prefixlen < 32
     except ValueError:
         return False
 
@@ -840,6 +851,14 @@ def validate_skill_frontmatter(path: Path, content: str, report: ValidationRepor
             report.add(Violation('skills', path, 1, 1, f"Version '{ver}' does not adhere to SemVer format (X.Y.Z)"))
 
 
+# Phrases a skill's adapters must all carry. Add one when a rule is sharpened in
+# skills/<name>/SKILL.md, so a partial backport fails the gate instead of shipping.
+PARITY_MARKERS = {
+    'steel-mind': ('cannot verify', 'strict_types'),
+    'leakguard': ('git clone',),
+}
+
+
 def validate_adapter_parity(root: Path, report: ValidationReport):
     """Gate 3: Ensure all 11 adapters exist and represent active skills.
 
@@ -876,6 +895,22 @@ def validate_adapter_parity(root: Path, report: ValidationReport):
                     0,
                     f"Active skill '{skill}' is not referenced in rules/AGENTS.md"
                 ))
+
+
+    # 4. Check that sharpened rule phrases reached every adapter that carries the skill.
+    #    Modular adapters hold one skill per file (named after it); single-file adapters
+    #    and rules/AGENTS.md hold all of them.
+    for adapter in [*REQUIRED_ADAPTERS, Path('rules/AGENTS.md')]:
+        full_path = root / adapter
+        if full_path.suffix == '.jsonc' or not full_path.exists():
+            continue
+        carried = {adapter.stem} if adapter.stem in active_skills else set(PARITY_MARKERS)
+        text = full_path.read_text(encoding='utf-8', errors='replace').lower()
+        for skill in sorted(carried & active_skills):
+            for marker in PARITY_MARKERS.get(skill, ()):
+                if marker.lower() not in text:
+                    report.add(Violation('parity', adapter, 0, 0,
+                                         f"Adapter drift: {skill} rule text is missing '{marker}'"))
 
 
 # ---------------------------------------------------------------------------
@@ -1066,6 +1101,7 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
         report.files_scanned += 1
         fix_file = auto_fix and _is_fixable(filename, suffix)
         violations_before = len(report.violations)
+        fixed_now = False
 
         try:
             raw_bytes = file_path.read_bytes()
@@ -1091,19 +1127,26 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
         if fix_file and gate2_fixed is not None and gate2_fixed != content:
             file_path.write_text(gate2_fixed, encoding='utf-8', newline='\n')
             content = gate2_fixed
+            fixed_now = True
 
         if not check_paths_only:
             # Gate 1: Plaincast
             fixed_content = validate_plaincast(rel_path, content, report, auto_fix=fix_file)
             if fix_file and fixed_content is not None and fixed_content != content:
                 file_path.write_text(fixed_content, encoding='utf-8', newline='\n')
+                fixed_now = True
 
             # Gate 4: Skill Frontmatter
             validate_skill_frontmatter(rel_path, content, report, quench_repo=is_quench)
 
+        if fixed_now:
+            report.fixed_files.append(rel_path)
         if auto_fix and not fix_file and len(report.violations) > violations_before:
             report.fix_skipped.append(rel_path)
 
+    if staged_only and report.files_scanned == 0:
+        report.warnings.append("--staged found no staged files to scan (nothing is staged in a CI checkout); "
+                               "this run checked nothing.")
     return report
 
 
@@ -1230,6 +1273,8 @@ def main():
         sys.exit(0 if report.passed else 1)
 
     print(f"\nScanned {report.files_scanned} files across repository.")
+    for w in report.warnings:
+        print(f"Warning: {w}")
 
     if report.passed:
         print("\n[PASS] All validation gates passed with zero violations.")

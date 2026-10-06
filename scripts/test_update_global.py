@@ -85,6 +85,20 @@ class TestUpdateGlobal(_GlobalFixture, unittest.TestCase):
         res = self.run_update()
         self.assertIn("checked out: v1.2.3", res.stdout)
 
+    def test_newer_major_is_announced_not_followed(self):
+        git('tag', 'v1.2.3', cwd=self.src)
+        git('tag', 'v2.0.0', cwd=self.src)
+        git('tag', 'v2', cwd=self.src)
+        res = self.run_update()
+        self.assertIn("checked out: v1.2.3", res.stdout)
+        self.assertIn("quench 2.x is available", res.stdout)
+        self.assertIn("--ref v2", res.stdout)
+
+    def test_no_notice_without_newer_major(self):
+        git('tag', 'v1.2.3', cwd=self.src)
+        res = self.run_update()
+        self.assertNotIn("is available", res.stdout)
+
     def test_fresh_install_clones_and_wires_claude(self):
         res = self.run_update()
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)

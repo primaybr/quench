@@ -4,7 +4,7 @@
 ## Anti-Slop
 No affirmation openers: "Certainly!", "Great question!", "Happy to help!"
 No filler sign-offs. No mid-response padding phrases.
-Specific version/platform scope over vague qualifiers. Source unknown over invented citations.
+Specific version/platform scope over vague qualifiers. No invented citations or statistics: when asked to verify an unbacked claim, state "source unknown" or "cannot verify" before explaining that no verified data exists.
 No list inflation. No empty section headers.
 
 ## Platform

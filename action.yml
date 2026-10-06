@@ -22,7 +22,7 @@ inputs:
     required: false
     default: ""
   format:
-    description: "Output format: 'text' for plain lines only, 'github' to also emit ::error annotations on PR diffs (default: github)"
+    description: "Output format: 'text' for plain lines only, 'github' to also emit ::error annotations on PR diffs, 'json' for one machine-readable report with no annotations (default: github)"
     required: false
     default: "github"
   no-ignore:
@@ -30,7 +30,7 @@ inputs:
     required: false
     default: "false"
   staged:
-    description: Scan only git-staged files
+    description: Scan only git-staged files (a CI checkout has none staged, so this is for local or hook runs; the run warns when it scans nothing)
     required: false
     default: "false"
 

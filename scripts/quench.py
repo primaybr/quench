@@ -35,8 +35,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.9.7"
-__version__ = "1.9.7"
+VERSION = "quench 1.9.8"
+__version__ = "1.9.8"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -381,6 +381,8 @@ def cmd_check(args: argparse.Namespace) -> int:
         return 0 if report.passed else 1
 
     print(f"\nScanned {report.files_scanned} files across repository.")
+    for w in report.warnings:
+        print(f"Warning: {w}")
 
     if report.passed:
         print("\n[PASS] All validation gates passed with zero violations.")
@@ -398,7 +400,9 @@ def cmd_check(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 DEFAULT_REPO_URL = 'https://github.com/primaybr/quench'
-DEFAULT_GLOBAL_REF = 'v1'
+# Follow the floating tag of the running release's major version: a 1.x install keeps
+# following v1 and only crosses to v2 when the user passes --ref v2 on purpose.
+DEFAULT_GLOBAL_REF = 'v' + __version__.split('.')[0]
 GLOBAL_IMPORT_RE = re.compile(r'^@(?P<path>.+[/\\]rules[/\\]AGENTS\.md)\s*$')
 
 
@@ -474,6 +478,16 @@ def _sync_global_clone(home: Path, repo_url: str, ref: str, timeout: Optional[fl
     if exact.returncode == 0:
         return True, exact.stdout.strip()
     return True, _git(['describe', '--tags', '--always'], cwd=home).stdout.strip()
+
+
+def _newer_major_ref(home: Path, current: Tuple[int, int, int]) -> Optional[str]:
+    """Floating tag (v2) of the newest major above current's, if the clone has one."""
+    res = _git(['tag', '--list', 'v[0-9]*.[0-9]*.[0-9]*'], cwd=home)
+    if res.returncode != 0:
+        return None
+    majors = {v[0] for v in map(_parse_release, res.stdout.split()) if v}
+    newer = [m for m in majors if m > current[0]]
+    return f'v{max(newer)}' if newer else None
 
 
 def _wire_claude_rules(home: Path, claude_dir: Path) -> str:
@@ -688,6 +702,11 @@ def cmd_update_global(args: argparse.Namespace) -> int:
         print(f"Error: {message}")
         return 1
     print(f"  checked out: {message}")
+    current = _parse_release(message)
+    newer = _newer_major_ref(home, current) if current else None
+    if newer:
+        print(f"  note: quench {newer[1:]}.x is available and can change behavior; "
+              f"read its CHANGELOG, then run: quench update --global --ref {newer}")
     # Record the installed release for the auto-update no-downgrade check. Written
     # without touching the throttle meaning: a manual run counts as today's check.
     if _parse_release(message):
@@ -873,7 +892,7 @@ def build_parser() -> argparse.ArgumentParser:
                           help='Update the stable global clone (default ~/.quench or $QUENCH_HOME) to the '
                                'latest release and wire it into Claude Code (~/.claude)')
     p_update.add_argument('--ref', default=DEFAULT_GLOBAL_REF,
-                          help=f'With --global: tag or branch to follow (default: {DEFAULT_GLOBAL_REF}, the latest 1.x release)')
+                          help=f'With --global: tag or branch to follow (default: {DEFAULT_GLOBAL_REF}, the latest {DEFAULT_GLOBAL_REF[1:]}.x release)')
     p_update.add_argument('--home', help='With --global: location of the stable clone')
     p_update.add_argument('--repo', default=DEFAULT_REPO_URL, help='With --global: repository to clone')
     p_update.add_argument('--claude-dir', help='With --global: Claude Code config dir (default ~/.claude or $CLAUDE_CONFIG_DIR)')

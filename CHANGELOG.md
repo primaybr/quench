@@ -3,12 +3,28 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.9.8] 2026-10-06 - Audit Fixes & 2.0.0 Readiness
+
+### Added
+- **Adapter drift check in Gate 3 (`PARITY_MARKERS` in `scripts/validate.py`):** Fails when a skill's sharpened phrases ("cannot verify", `strict_types` for steel-mind; `git clone` for leakguard) are missing from any adapter that carries the skill or from `rules/AGENTS.md`.
+- **JSON report fields:** `schema_version` (currently 1, bumped only on breaking key changes), `fixed_files` (files `--fix` rewrote; `violations` lists what was found before the rewrite), and `warnings`.
+- **Empty `--staged` warning:** A `--staged` run that scans zero files prints a warning (and lists it in the JSON `warnings`) instead of passing silently, which is what `staged: true` does in a CI checkout.
+- **Major-version notice in `quench update --global`:** When the clone has a higher major tag, the command prints how to opt in with `--ref v<N>`; it never crosses a major on its own.
+- **2.0.0 readiness in `AGENTS.md`:** Documents that 1.9.9 is the last 1.x release and the next is 2.0.0, plus the major-release checklist.
+
+### Fixed
+- **`/32` host addresses no longer bypass Gate 2:** `_is_cidr_network` accepted any valid network including a `/32`, so a single private host written as `a.b.c.d/32` was not reported. The 1.9.7 note listing a `/32` as an intended whitelist case was wrong and is corrected.
+- **`steel-mind` junie adapter:** Backported the "source unknown" / "cannot verify" calibration that the 1.9.7 note claimed but did not deliver.
+- **1.9.7 note scope:** The leakguard Protocol 6 backport reached all 11 adapters, not only the six listed.
+- **Docs:** `action.yml` and README now list `json` as an action `format` value and explain the `staged` input.
+- **Floating major tag:** `DEFAULT_GLOBAL_REF` follows the running release's major instead of a hardcoded `v1`.
+
 ## [1.9.7] 2026-10-05 - Multi-Tool Parity, GitHub Action Inputs & Structured JSON Output
 
 ### Added
 - **`--format json` output flag (`quench check --format json` / `validate.py --format json`):** Emits machine-readable structured JSON reports containing `passed`, `files_scanned`, `violations_count`, `violations` (with gate, file, line, col, message, and sample), and `fix_skipped` list. Enables seamless integration with jq, automated audit pipelines, and IDE diagnostics.
 - **GitHub Action inputs parity (`no-ignore`, `staged` in `action.yml`):** Exposed `no-ignore` (default: `"false"`) to bypass `.quenchignore` during full CI compliance audits and `staged` (default: `"false"`) to scan only staged files in fast pre-commit actions. Both inputs are securely mapped through step environment variables to `--no-ignore` and `--staged` CLI flags.
-- **RFC-compliant CIDR subnet whitelisting in Gate 2:** Integrated standard library `ipaddress.ip_network(strict=True)` in `scripts/validate.py` to correctly whitelist arbitrary non-class-C subnets (e.g. `172.16.1.128/25`, `10.1.2.64/26`, `10.0.0.1/32`) in SSRF guards and network firewall definitions, while continuing to report host addresses with set host bits.
+- **RFC-compliant CIDR subnet whitelisting in Gate 2:** Integrated standard library `ipaddress.ip_network(strict=True)` in `scripts/validate.py` to correctly whitelist arbitrary non-class-C subnets (e.g. `172.16.1.128/25` and `10.1.2.64/26`) in SSRF guards and network firewall definitions, while continuing to report host addresses with set host bits.
 
 ### Fixed
 - **Adapter placeholder cleanup:** Replaced legacy `yourhandle` repository URLs with `primaybr/quench` in `adapters/cursor/.cursorrules` and `adapters/copilot/copilot-instructions.md`.
