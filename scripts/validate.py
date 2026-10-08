@@ -856,6 +856,8 @@ def validate_skill_frontmatter(path: Path, content: str, report: ValidationRepor
 PARITY_MARKERS = {
     'steel-mind': ('cannot verify', 'strict_types'),
     'leakguard': ('git clone',),
+    'precision-output': ('systematic debugging',),
+    'scopelock': ('task scale triage',),
 }
 
 

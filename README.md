@@ -44,8 +44,8 @@ AI coding assistants naturally drift into failure modes that degrade codebase hy
 | [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.3 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
 | [plaincast](./skills/plaincast/SKILL.md) | 1.1.1 | Text normalization: standard keyboard boundary, no emoji, no em dashes, no curly quotes, colon/list restraint |
 | [leakguard](./skills/leakguard/SKILL.md) | 1.0.3 | Environment, path, and context isolation: host path neutralization, hermetic project boundaries, credential redaction |
-| [precision-output](./skills/precision-output/SKILL.md) | 1.0.4 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution |
-| [scopelock](./skills/scopelock/SKILL.md) | 1.0.1 | Scope boundary and least agency: stated-scope adherence, blast-radius triage, clarification gates, over-execution prevention |
+| [precision-output](./skills/precision-output/SKILL.md) | 1.0.5 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution, systematic debugging, empirical completion gate |
+| [scopelock](./skills/scopelock/SKILL.md) | 1.0.2 | Scope boundary and least agency: stated-scope adherence, blast-radius triage, clarification gates, task scale triage, over-execution prevention |
 
 ---
 
@@ -190,7 +190,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.9.8
+    rev: v1.9.9
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -207,7 +207,7 @@ Validate pull requests and commits in GitHub Actions CI using the official compo
     target: .
 ```
 
-`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.8`) if you want fully reproducible CI.
+`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.9`) if you want fully reproducible CI.
 
 Violations are reported as `::error` annotations, so they appear inline on the PR diff (configurable via `format: text | github | json`; `json` prints one machine-readable report and no annotations). With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes. CI workflows can also pass `no-ignore: true` to bypass `.quenchignore` and `staged: true` to scan staged files only (a CI checkout has nothing staged, so the run prints a warning that it checked nothing).
 
@@ -279,7 +279,7 @@ Auto-update is opt-in because the clone supplies your agent's always-on rules an
 of this repository. Without it, re-run `quench update --global` when you want a new
 release.
 
-Options: `--ref v1.9.8` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
+Options: `--ref v1.9.9` pins an exact release, `--home PATH` (or `$QUENCH_HOME`)
 moves the clone, `--no-claude` updates the clone only.
 
 Run `/memory` in a new session to confirm the import is listed, and `/skills` to

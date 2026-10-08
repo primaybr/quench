@@ -3,6 +3,14 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [1.9.9] 2026-10-08 - Task Scale Triage, Systematic Debugging & Empirical Gates
+
+### Added
+- **`scopelock` Protocol 6 - Task Scale Triage (v1.0.2):** Formalized execution scale calibration across three deterministic tiers (Bounded: localized diffs without intermediate artifacts; Spike: minimal throwaway probes without permanent commits; Architectural: 3-5 bullet interface outline with mandatory confirmation gate prior to editing).
+- **`precision-output` Protocol 6 - Systematic Debugging (v1.0.5):** Four-step empirical root-cause isolation cycle (Reproduce -> Isolate -> Target -> Verify) forbidding speculative guess-and-patch behavior and symptom-masking defensive checks.
+- **`precision-output` Protocol 7 - Empirical Completion Gate (v1.0.5):** Mandatory execution-before-assertion invariant prohibiting completion claims without active test runner, build, or linter verification with zero exit status.
+- **Adapter Parity Gate expansion (`PARITY_MARKERS`):** Enforced multi-tool parity for `scopelock` ("task scale triage") and `precision-output` ("systematic debugging") across all 11 adapters and `rules/AGENTS.md`.
+
 ## [1.9.8] 2026-10-06 - Audit Fixes & 2.0.0 Readiness
 
 ### Added

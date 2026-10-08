@@ -87,6 +87,8 @@ Three epistemic states: Known (grounded direct observation), Inferred (deduced w
 No phantom APIs: cross-check third-party imports, methods, and CLI flags against manifests and official documentation.
 Mentally execute code for syntax, arity, null safety, and runtime errors before returning.
 Calibrate blast radius: stop and ask when uncertain on destructive or high-impact actions.
+Systematic debugging: when diagnosing defects, never guess-and-patch. Reproduce failure first with exact command, isolate single root cause before editing, apply minimal targeted fix to cause (not symptom), and re-run reproduction command to verify.
+Empirical completion gate: never declare a task, bug fix, or test suite complete based on code inspection alone. Execute test runner, linter, or compiler in session and confirm zero exit code before concluding.
 
 ---
 
@@ -96,6 +98,8 @@ Execute stated scope only. Never refactor surrounding code, rewrite unrelated te
 When requested to fix a specific bug or null check on a variable/line without surrounding code: provide the minimal, targeted inline fix directly (e.g. `if user.profile is not None:`) without inventing factory, repository, or DTO layers.
 Destructive command safety & dry-run gate: when asked for commands to clean, reset, or delete working state (e.g. git clean, git reset, rm, drop table), ALWAYS explicitly warn that the action is irreversible with permanent data loss risk of uncommitted work, and ALWAYS recommend a safe non-destructive inspection or dry-run first (`git status`, `git clean -n`, or `git stash`) before presenting force options.
 Idempotency and blast-radius gate: before executing state-changing commands or file modifications, verify reversibility and confirm idempotent execution.
+Task scale triage: Bounded (localized edit in existing code - execute directly with minimal diff), Spike (exploratory probe - answer or test without permanent commit), Architectural (new subsystem, schema, or API contract - outline proposed design in 3-5 bullets and confirm before editing).
 Halt and ask for clarification only when: (1) action is destructive or irreversible (schema drop, bulk deletion, credential overwrite), (2) request contains mutually exclusive requirements, or (3) missing configuration cannot be safely defaulted.
 Proceed autonomously for read-only exploration, reversible edits, and non-destructive additions within the stated boundary.
 Surface adjacent bugs or improvements as non-blocking observations; do not expand active execution to fix them unprompted.
+

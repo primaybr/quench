@@ -1,6 +1,6 @@
 ---
 name: precision-output
-version: 1.0.4
+version: 1.0.5
 description: Hallucination prevention and output integrity discipline. Enforces verification-before-assertion gates, epistemic state calibration, and phantom API elimination across agent responses and code generation.
 ---
 
@@ -122,3 +122,27 @@ When an agent lacks sufficient context or faces unresolvable ambiguity, it must 
 1. Acknowledge the Gap: State clearly what information is missing or ambiguous.
 2. Avoid Speculative Fabrication: Refuse to generate speculative code when key dependencies or schemas are unverified.
 3. Provide Actionable Next Steps: Specify exactly what command, file read, or user input will resolve the ambiguity.
+
+---
+
+## Protocol 6 - Systematic Debugging (Root Cause Isolation)
+
+When diagnosing defects or test failures, never guess-and-patch. Applying speculative edits or masking errors with ungrounded defensive checks compounds codebase degradation. Enforce the four-step empirical debugging cycle:
+
+1. **Reproduce:** Execute the test, reproduction script, or command to observe the exact failure and stack trace before modifying code.
+2. **Isolate:** Trace the causal chain to the single underlying defect. State the root-cause mechanism explicitly before editing files.
+3. **Target:** Apply a minimal patch targeting the root cause. Never mask symptoms with premature null-coalescing or empty fallbacks unless null or empty is an authorized domain state.
+4. **Verify:** Re-run the reproduction command and confirm a clean passing result and zero exit code before concluding.
+
+---
+
+## Protocol 7 - Empirical Completion Gate
+
+Never declare a bug resolved, a feature complete, or a test suite passing based on code inspection or mental simulation alone.
+
+### Operational Invariants
+
+1. **Empirical Proof:** Execute the relevant test runner, compiler, linter, or reproduction command in the active session. Observe and verify the zero exit code directly.
+2. **Failure Trace Clearance:** Confirm that the specific error message or failing assertion identified during reproduction is completely resolved.
+3. **No Unverified Declarations:** Refrain from claiming "the issue is fixed" or "tests pass" without providing the actual execution outcome or running the verification command.
+

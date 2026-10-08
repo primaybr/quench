@@ -1,6 +1,6 @@
 ---
 name: scopelock
-version: 1.0.1
+version: 1.0.2
 description: Scope boundary and least agency discipline. Enforces stated-scope adherence, blast-radius calibration, clarification gates, and over-execution prevention across AI agent tasks.
 ---
 
@@ -107,6 +107,16 @@ At each decision branch in a multi-turn task:
 1. Re-anchor to the original prompt objective.
 2. If resolving an error requires editing a module outside the initial task domain, evaluate: Is this an underlying blocker for the stated task, or an independent pre-existing issue?
 3. If an independent issue, stop and report the dependency blocker to the user rather than recursively expanding the changeset.
+
+---
+
+## Protocol 6 - Task Scale Triage
+
+Before executing modifications, calibrate the task scale to prevent both under-planning complex changes and over-engineering simple fixes:
+
+- **Bounded (Localized changes in existing code or flows):** Proceed directly with a minimal, targeted diff. Do not invent separate planning documents, intermediate specifications, or unrequested abstractions.
+- **Spike (Exploratory questions or feasibility experiments):** Produce a minimal runnable probe or direct empirical answer. Label any temporary code as throwaway; do not commit permanent artifacts to the repository.
+- **Architectural (New subsystems, database schema migrations, or public API modifications):** Present the proposed interfaces, component boundaries, and affected paths in 3-5 concise bullet points; halt for user confirmation before writing or modifying code.
 
 ---
 

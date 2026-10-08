@@ -35,8 +35,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.9.8"
-__version__ = "1.9.8"
+VERSION = "quench 1.9.9"
+__version__ = "1.9.9"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings

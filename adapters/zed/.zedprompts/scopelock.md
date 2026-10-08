@@ -16,5 +16,11 @@ Check reversibility before mutation:
 Ask only when actions are irreversible, requirements conflict, or configs cannot be safely defaulted.
 Proceed autonomously for read-only exploration and reversible edits.
 
+## Task Scale Triage
+Calibrate task scale before editing:
+- Bounded (localized edit in existing code): execute directly with minimal diff.
+- Spike (exploratory probe): produce minimal runnable answer; do not commit permanent artifacts.
+- Architectural (new subsystem, schema, or API contract): outline proposed design in 3-5 bullets and confirm before editing.
+
 ## Over-Execution Prevention
 Prohibit unprompted refactoring, dependency smuggling, test suite rewrites, and formatting sweeps.
