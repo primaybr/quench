@@ -307,11 +307,40 @@ class TestQuenchCliE2E(unittest.TestCase):
             self.assertEqual(refreshed_content, source_content)
 
     def test_10_version_flag(self):
-        """quench --version displays 'quench 1.9.9'."""
+        """quench --version displays 'quench 2.0.0'."""
         cmd = [sys.executable, str(QUENCH_PY), '--version']
         res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
         self.assertEqual(res.returncode, 0)
-        self.assertIn("quench 1.9.9", res.stdout.strip())
+        self.assertIn("quench 2.0.0", res.stdout.strip())
+
+    def test_11_anchor_workflow(self):
+        """quench anchor init and quench anchor check enforce Protocol 7 constraints."""
+        with tempfile.TemporaryDirectory() as td:
+            target = Path(td)
+            self._init_git_repo(target)
+
+            # 1. Init anchor
+            cmd = [sys.executable, str(QUENCH_PY), 'anchor', 'init', '--target', str(target)]
+            res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+            self.assertEqual(res.returncode, 0, f"Stderr: {res.stderr}")
+            anchor_file = target / 'ANCHOR.md'
+            self.assertTrue(anchor_file.is_file())
+            content = anchor_file.read_text(encoding='utf-8')
+            lines = content.splitlines()
+            self.assertLessEqual(len(lines), 30)
+
+            # 2. Check anchor passes
+            cmd_check = [sys.executable, str(QUENCH_PY), 'anchor', 'check', '--target', str(target)]
+            res_check = subprocess.run(cmd_check, capture_output=True, text=True, encoding='utf-8', errors='replace')
+            self.assertEqual(res_check.returncode, 0)
+            self.assertIn("[PASS]", res_check.stdout)
+
+            # 3. Check anchor fails if > 30 lines
+            bloated = content + "\n" + "\n".join(f"- extra line {i}" for i in range(20))
+            anchor_file.write_text(bloated, encoding='utf-8')
+            res_fail = subprocess.run(cmd_check, capture_output=True, text=True, encoding='utf-8', errors='replace')
+            self.assertEqual(res_fail.returncode, 1)
+            self.assertIn("exceeds 30-line limit", res_fail.stdout)
 
 
 if __name__ == '__main__':

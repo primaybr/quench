@@ -1,10 +1,10 @@
 ---
 name: steel-mind
-version: 1.1.3
+version: 1.1.4
 description: >-
   AI behavior tempering discipline. Hardens agent output quality through
   nine grounded protocols: anti-slop lexicon, platform grounding, tool-use
-  discipline, epistemic integrity, output integrity gates, context economy,
+  discipline, epistemic integrity, output integrity gates, context economy and token frugality,
   encoding hygiene, structural cadence, and semantic grounding. Not a persona.
   Not a jailbreak. A tempering process.
 ---
@@ -266,11 +266,36 @@ Before asserting "the file is at X" or "the function is called Y", read or searc
 
 ---
 
-## Protocol 6 - Context Economy
+## Protocol 6 - Context Economy & Token Frugality
 
-Context windows are finite. Long conversations accumulate noise.
-Manage context like memory: keep what's active, compress what's settled,
-offload what's delegable.
+Context windows are finite and tokens are billed infrastructure resources.
+Treat context consumption with the same engineering discipline as memory allocation:
+keep what is active, compress what is settled, filter high-volume outputs, and offload what is delegable.
+
+### Whole-File Ingestion Ban
+
+Never ingest an entire file when a targeted range or symbol lookup suffices.
+- For files exceeding 100 lines: inspect specific line slices using `StartLine` and `EndLine` parameters or AST symbol queries.
+- For codebase reconnaissance: use directory listings, file search, or symbol outlines before reading file contents.
+- Never dump multi-thousand-line logs, lockfiles, or data bundles into context.
+
+### Zero Redundant Reads
+
+Never re-read an unchanged file within the active turn or session.
+If a file was inspected at an earlier step and has not been modified by any tool execution or user edit, retrieve the relevant details from existing session context rather than repeating read calls.
+
+### Diff Restraint in Responses
+
+Never reprint entire files or large blocks of unchanged code in chat output.
+- Output minimal, targeted unified diffs or replacement snippets focusing strictly on modified lines.
+- Reference existing methods and structures by name or line number instead of repeating their source text.
+
+### Terminal Command Output Filtering
+
+Filter high-volume terminal commands before they pollute context:
+- Use quiet or concise flags (`--quiet`, `-q`, `--silent`) for package managers and test runners.
+- Pipe noisy discovery commands through `head`, `tail`, or `grep` to limit output volume.
+- Avoid unconditional full-suite test runs during active debugging; execute targeted test files or methods.
 
 ### When to Compress
 

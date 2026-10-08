@@ -18,6 +18,14 @@ from pathlib import Path
 SCRIPTS_DIR = Path(__file__).resolve().parent
 QUENCH = SCRIPTS_DIR / 'quench.py'
 
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+import quench
+
+CUR_MAJOR = quench.__version__.split('.')[0]
+CUR_REF = f'v{CUR_MAJOR}'
+NEXT_MAJOR = f'v{int(CUR_MAJOR) + 1}'
+
 
 def git(*args, cwd):
     subprocess.run(['git', '-c', 'user.name=t', '-c', 'user.email=t@example.com', *args],
@@ -30,21 +38,21 @@ def write(path: Path, text: str):
 
 
 class _GlobalFixture:
-    """A throwaway quench-like source repo tagged v1, plus empty clone and Claude dirs."""
+    """A throwaway quench-like source repo tagged with current major tag, plus empty clone and Claude dirs."""
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix='quench-global-')).resolve()
         self.src = self.tmp / 'src'
         self.home = self.tmp / 'home'
         self.claude = self.tmp / 'claude'
-        write(self.src / 'rules' / 'AGENTS.md', "# rules v1\n")
+        write(self.src / 'rules' / 'AGENTS.md', f"# rules {CUR_REF}\n")
         for name in ('alpha', 'beta'):
             write(self.src / 'skills' / name / 'SKILL.md', f"---\nname: {name}\ndescription: d\n---\n")
         write(self.src / 'skills' / 'notaskill' / 'README.md', "no SKILL.md here\n")
         git('init', '-q', cwd=self.src)
         git('add', '-A', cwd=self.src)
         git('commit', '-q', '-m', 'one', cwd=self.src)
-        git('tag', 'v1', cwd=self.src)
+        git('tag', CUR_REF, cwd=self.src)
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
@@ -81,28 +89,28 @@ class TestUpdateGlobal(_GlobalFixture, unittest.TestCase):
         self.assertIn('@' + (self.home / 'rules' / 'AGENTS.md').as_posix(), self.claude_md().splitlines())
 
     def test_reports_exact_release_not_floating_tag(self):
-        git('tag', 'v1.2.3', cwd=self.src)
+        git('tag', f'{CUR_REF}.2.3', cwd=self.src)
         res = self.run_update()
-        self.assertIn("checked out: v1.2.3", res.stdout)
+        self.assertIn(f"checked out: {CUR_REF}.2.3", res.stdout)
 
     def test_newer_major_is_announced_not_followed(self):
-        git('tag', 'v1.2.3', cwd=self.src)
-        git('tag', 'v2.0.0', cwd=self.src)
-        git('tag', 'v2', cwd=self.src)
+        git('tag', f'{CUR_REF}.2.3', cwd=self.src)
+        git('tag', f'{NEXT_MAJOR}.0.0', cwd=self.src)
+        git('tag', NEXT_MAJOR, cwd=self.src)
         res = self.run_update()
-        self.assertIn("checked out: v1.2.3", res.stdout)
-        self.assertIn("quench 2.x is available", res.stdout)
-        self.assertIn("--ref v2", res.stdout)
+        self.assertIn(f"checked out: {CUR_REF}.2.3", res.stdout)
+        self.assertIn(f"quench {NEXT_MAJOR[1:]}.x is available", res.stdout)
+        self.assertIn(f"--ref {NEXT_MAJOR}", res.stdout)
 
     def test_no_notice_without_newer_major(self):
-        git('tag', 'v1.2.3', cwd=self.src)
+        git('tag', f'{CUR_REF}.2.3', cwd=self.src)
         res = self.run_update()
         self.assertNotIn("is available", res.stdout)
 
     def test_fresh_install_clones_and_wires_claude(self):
         res = self.run_update()
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
-        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1\n")
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), f"# rules {CUR_REF}\n")
         self.assertIn(self.import_line(), self.claude_md().splitlines())
         for name in ('alpha', 'beta'):
             skill_md = self.claude / 'skills' / name / 'SKILL.md'
@@ -120,12 +128,12 @@ class TestUpdateGlobal(_GlobalFixture, unittest.TestCase):
 
     def test_follows_moved_release_tag(self):
         self.run_update()
-        write(self.src / 'rules' / 'AGENTS.md', "# rules v1.1\n")
+        write(self.src / 'rules' / 'AGENTS.md', f"# rules {CUR_REF}.1\n")
         git('commit', '-q', '-am', 'two', cwd=self.src)
-        git('tag', '-f', 'v1', cwd=self.src)
+        git('tag', '-f', CUR_REF, cwd=self.src)
         res = self.run_update()
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
-        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1.1\n")
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), f"# rules {CUR_REF}.1\n")
         # the linked skill now reads the updated clone without relinking
         self.assertTrue((self.claude / 'skills' / 'alpha' / 'SKILL.md').is_file())
 
@@ -204,8 +212,8 @@ class _HookFixture(_GlobalFixture):
             shutil.copy(SCRIPTS_DIR / name, self.src / 'scripts' / name)
         git('add', '-A', cwd=self.src)
         git('commit', '-q', '-m', 'cli', cwd=self.src)
-        git('tag', 'v1.0.0', cwd=self.src)
-        git('tag', '-f', 'v1', cwd=self.src)
+        git('tag', f'{CUR_REF}.0.0', cwd=self.src)
+        git('tag', '-f', CUR_REF, cwd=self.src)
         self.next_minor = 1
 
     def settings(self) -> dict:
@@ -223,14 +231,14 @@ class _HookFixture(_GlobalFixture):
         return subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', env=env)
 
     def release(self, text, version=None):
-        """Publish a release the way release.yml does: a vX.Y.Z tag, then move v1."""
+        """Publish a release the way release.yml does: a vX.Y.Z tag, then move the major tag."""
         write(self.src / 'rules' / 'AGENTS.md', text)
         git('commit', '-q', '-am', text.strip(), cwd=self.src)
         if version is None:
-            version = f'v1.{self.next_minor}.0'
+            version = f'{CUR_REF}.{self.next_minor}.0'
             self.next_minor += 1
         git('tag', version, cwd=self.src)
-        git('tag', '-f', 'v1', cwd=self.src)
+        git('tag', '-f', CUR_REF, cwd=self.src)
         return version
 
 
@@ -269,15 +277,15 @@ class TestAutoUpdateHook(_HookFixture, unittest.TestCase):
 
     def test_hook_command_runs_and_installs_new_release(self):
         self.run_update('--auto-update')
-        self.release("# rules v1.1\n")
+        self.release(f"# rules {CUR_REF}.1\n")
         cmd = self.our_hooks()[0]['command']
         env = dict(os.environ, QUENCH_AUTO_UPDATE_INTERVAL='0')
         # shell=True on purpose: this checks the exact command string Claude Code hands to a
         # shell. It is built only from this test's own temp paths, so there is no untrusted input.
         res = subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding='utf-8', errors='replace', env=env)
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
-        self.assertIn("quench updated v1.0.0 -> v1.1.0", res.stdout)
-        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1.1\n")
+        self.assertIn(f"quench updated {CUR_REF}.0.0 -> {CUR_REF}.1.0", res.stdout)
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), f"# rules {CUR_REF}.1\n")
 
     def test_auto_is_silent_when_nothing_changed(self):
         self.run_update('--auto-update')
@@ -287,12 +295,12 @@ class TestAutoUpdateHook(_HookFixture, unittest.TestCase):
     def test_auto_is_throttled(self):
         self.run_update('--auto-update')
         self.run_auto()                     # stamps the check
-        self.release("# rules v1.2\n")
+        self.release(f"# rules {CUR_REF}.2\n")
         res = self.run_auto(interval='3600')
         self.assertEqual(res.stdout, '')
-        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1\n")
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), f"# rules {CUR_REF}\n")
         res = self.run_auto(interval='0')
-        self.assertIn("quench updated v1.0.0 -> v1.1.0", res.stdout)
+        self.assertIn(f"quench updated {CUR_REF}.0.0 -> {CUR_REF}.1.0", res.stdout)
 
     def test_auto_never_fails_the_session(self):
         self.run_update('--auto-update')
@@ -301,7 +309,7 @@ class TestAutoUpdateHook(_HookFixture, unittest.TestCase):
         self.assertEqual((res.returncode, res.stdout), (0, ''))
         write(self.home / 'rules' / 'AGENTS.md', "# local edit\n")   # dirty clone
         git('remote', 'set-url', 'origin', str(self.src), cwd=self.home)
-        self.release("# rules v1.3\n")
+        self.release(f"# rules {CUR_REF}.3\n")
         res = self.run_auto()
         self.assertEqual((res.returncode, res.stdout), (0, ''))
         self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# local edit\n")
@@ -330,30 +338,30 @@ class TestAutoUpdateSafety(_HookFixture, unittest.TestCase):
     def test_update_message_shows_version_and_commit_range(self):
         self.run_update('--auto-update')
         before = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=self.home, capture_output=True, text=True).stdout.strip()
-        version = self.release("# rules v1.1\n")
+        version = self.release(f"# rules {CUR_REF}.1\n")
         res = self.run_auto()
         after = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=self.home, capture_output=True, text=True).stdout.strip()
-        self.assertIn(f"quench updated v1.0.0 -> {version}", res.stdout)
+        self.assertIn(f"quench updated {CUR_REF}.0.0 -> {version}", res.stdout)
         self.assertIn(f"commits {before[:12]}..{after[:12]}", res.stdout)
 
     def test_backwards_moved_tag_is_not_installed(self):
         self.run_update('--auto-update')
-        self.release("# rules v1.1\n")
-        self.run_auto()                                  # now on v1.1.0
-        # v1 moved back to the v1.0.0 commit, e.g. an old-line hotfix tagged by mistake
-        git('tag', '-f', 'v1', 'v1.0.0', cwd=self.src)
+        self.release(f"# rules {CUR_REF}.1\n")
+        self.run_auto()                                  # now on v2.1.0
+        # CUR_REF moved back to the CUR_REF.0.0 commit, e.g. an old-line hotfix tagged by mistake
+        git('tag', '-f', CUR_REF, f'{CUR_REF}.0.0', cwd=self.src)
         res = self.run_auto()
         self.assertIn("not downgrading", res.stdout)
-        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1.1\n")
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), f"# rules {CUR_REF}.1\n")
 
     def test_recorded_version_survives_retagging(self):
         """After a history rewrite the old HEAD has no tags; the recorded version still guards."""
         self.run_update('--auto-update')
-        self.release("# rules v1.1\n")
-        self.run_auto()                                  # records v1.1.0
-        git('tag', '-d', 'v1.1.0', cwd=self.src)         # the old commit loses its tag
+        self.release(f"# rules {CUR_REF}.1\n")
+        self.run_auto()                                  # records v2.1.0
+        git('tag', '-d', f'{CUR_REF}.1.0', cwd=self.src)         # the old commit loses its tag
         git('fetch', '--quiet', '--prune', '--prune-tags', '--force', 'origin', cwd=self.home)
-        git('tag', '-f', 'v1', 'v1.0.0', cwd=self.src)
+        git('tag', '-f', CUR_REF, f'{CUR_REF}.0.0', cwd=self.src)
         res = self.run_auto()
         self.assertIn("not downgrading", res.stdout)
 
@@ -361,10 +369,10 @@ class TestAutoUpdateSafety(_HookFixture, unittest.TestCase):
         self.run_update('--auto-update')
         write(self.src / 'rules' / 'AGENTS.md', "# unreleased\n")
         git('commit', '-q', '-am', 'unreleased', cwd=self.src)
-        git('tag', '-f', 'v1', cwd=self.src)             # v1 moved to a commit with no release tag
+        git('tag', '-f', CUR_REF, cwd=self.src)             # CUR_REF moved to a commit with no release tag
         res = self.run_auto()
         self.assertIn("untagged commit", res.stdout)
-        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), "# rules v1\n")
+        self.assertEqual((self.home / 'rules' / 'AGENTS.md').read_text(encoding='utf-8'), f"# rules {CUR_REF}\n")
 
 
 if __name__ == '__main__':

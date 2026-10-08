@@ -41,11 +41,11 @@ AI coding assistants naturally drift into failure modes that degrade codebase hy
 
 | Skill | Version | Description |
 |-------|---------|-------------|
-| [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.3 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, structural cadence, and semantic grounding |
+| [steel-mind](./skills/steel-mind/SKILL.md) | 1.1.4 | AI behavior tempering: anti-slop, platform grounding, tool discipline, epistemic integrity, context economy and token frugality, structural cadence, and semantic grounding |
 | [plaincast](./skills/plaincast/SKILL.md) | 1.1.1 | Text normalization: standard keyboard boundary, no emoji, no em dashes, no curly quotes, colon/list restraint |
 | [leakguard](./skills/leakguard/SKILL.md) | 1.0.3 | Environment, path, and context isolation: host path neutralization, hermetic project boundaries, credential redaction |
 | [precision-output](./skills/precision-output/SKILL.md) | 1.0.5 | Hallucination prevention: verify-before-assert, three epistemic states, manifest grounding, mental runtime execution, systematic debugging, empirical completion gate |
-| [scopelock](./skills/scopelock/SKILL.md) | 1.0.2 | Scope boundary and least agency: stated-scope adherence, blast-radius triage, clarification gates, task scale triage, over-execution prevention |
+| [scopelock](./skills/scopelock/SKILL.md) | 1.0.3 | Scope boundary and least agency: stated-scope adherence, blast-radius triage, clarification gates, task scale triage, over-execution prevention, and project anchor continuity |
 
 ---
 
@@ -152,8 +152,14 @@ quench init
 # Direct adapter initialization in a project directory
 quench init --tool cursor --target /path/to/project
 
-# Install all adapters and git validation hooks
-quench init --tool all --hooks --target /path/to/project
+# Scaffold a compliant 30-line project anchor (ANCHOR.md)
+quench anchor init --target /path/to/project
+
+# Validate project anchor structure and size cap
+quench anchor check --target /path/to/project
+
+# Install all adapters, anchor template, and git validation hooks
+quench init --tool all --anchor --hooks --target /path/to/project
 
 # Validate repository integrity across all 5 gates
 quench check --target /path/to/project
@@ -190,7 +196,7 @@ If your project uses [pre-commit](https://pre-commit.com), add Quench to `.pre-c
 ```yaml
 repos:
   - repo: https://github.com/primaybr/quench
-    rev: v1.9.9
+    rev: v2.0.0
     hooks:
       - id: quench-check
       - id: quench-commit-msg
@@ -202,12 +208,12 @@ Validate pull requests and commits in GitHub Actions CI using the official compo
 
 ```yaml
 - name: Run Quench Validation
-  uses: primaybr/quench@v1
+  uses: primaybr/quench@v2
   with:
     target: .
 ```
 
-`@v1` tracks the latest 1.x release, so you get fixes without editing your workflow and never a breaking 2.x change. Pin an exact release instead (for example `@v1.9.9`) if you want fully reproducible CI.
+`@v2` tracks the latest 2.x release, so you get fixes without editing your workflow. Pin an exact release instead (for example `@v2.0.0`) if you want fully reproducible CI.
 
 Violations are reported as `::error` annotations, so they appear inline on the PR diff (configurable via `format: text | github | json`; `json` prints one machine-readable report and no annotations). With `fix: true` the action rewrites prose files on the runner and prints a `git diff --stat`, but it does not commit; add your own commit step if you want to keep the changes. CI workflows can also pass `no-ignore: true` to bypass `.quenchignore` and `staged: true` to scan staged files only (a CI checkout has nothing staged, so the run prints a warning that it checked nothing).
 
@@ -338,7 +344,7 @@ enforcing strict repository quality and cleanliness before commits:
 - **Gate 1 (Plaincast Character Boundary):** Flags banned emojis, typographic dashes (em dash, en dash), curly quotes, Unicode ellipsis, and zero-width or invisible characters. Supports `--fix` for automatic conversion to ASCII equivalents.
 - **Gate 2 (Leakguard & Path Sanitization):** Scans for hardcoded local drives (`C:`, `F:`, etc.), user profile paths, absolute home directories, and accidental secret leaks (API tokens, PATs). It can also flag your own private tool, sibling-project or internal host names (see below).
 - **Gate 3 (Multi-Tool Adapter Parity):** Verifies all 11 adapters exist and stay synchronized with active skills.
-- **Gate 4 (Skill Frontmatter Schema):** Validates YAML frontmatter on all `skills/*/SKILL.md` files (requires `name`, SemVer `version`, `description`; rejects illegal fields like `trigger`).
+- **Gate 4 (Skill Frontmatter & Project Anchors):** Validates YAML frontmatter on all `skills/*/SKILL.md` files (requires `name`, SemVer `version`, `description`; rejects illegal fields like `trigger`) and verifies `ANCHOR.md` files against the 30-line limit and 4 required sections (scopelock Protocol 7).
 - **Gate 5 (Encoding & Line Endings):** Verifies UTF-8 encoding without BOM and rejects CRLF line endings in what gets committed. In a git work tree it reads `git ls-files --eol`, so CRLF that exists only in a Windows working copy (`core.autocrlf`, a `text` attribute) is not reported; `.bat` and `.cmd` files may use CRLF.
 
 ### Private terms (context bleed)
@@ -352,7 +358,7 @@ Quench ships no private names. To stop names of your own private tools, sibling 
 Each term matches as a whole word, case-insensitively, including tool-style suffixes (`term_search`). Only the number of configured terms is printed, never the terms.
 
 ```yaml
-- uses: primaybr/quench@v1
+- uses: primaybr/quench@v2
   with:
     private-terms: ${{ secrets.QUENCH_PRIVATE_TERMS }}
 ```

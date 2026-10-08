@@ -1,7 +1,7 @@
 ---
 name: scopelock
-version: 1.0.2
-description: Scope boundary and least agency discipline. Enforces stated-scope adherence, blast-radius calibration, clarification gates, and over-execution prevention across AI agent tasks.
+version: 1.0.3
+description: Scope boundary and least agency discipline. Enforces stated-scope adherence, blast-radius calibration, clarification gates, task scale triage, and project anchor continuity across AI agent tasks.
 ---
 
 # scopelock: Scope Boundary & Least Agency Discipline
@@ -117,6 +117,40 @@ Before executing modifications, calibrate the task scale to prevent both under-p
 - **Bounded (Localized changes in existing code or flows):** Proceed directly with a minimal, targeted diff. Do not invent separate planning documents, intermediate specifications, or unrequested abstractions.
 - **Spike (Exploratory questions or feasibility experiments):** Produce a minimal runnable probe or direct empirical answer. Label any temporary code as throwaway; do not commit permanent artifacts to the repository.
 - **Architectural (New subsystems, database schema migrations, or public API modifications):** Present the proposed interfaces, component boundaries, and affected paths in 3-5 concise bullet points; halt for user confirmation before writing or modifying code.
+
+---
+
+## Protocol 7 - Project Anchor & Continuity Discipline
+
+Multi-session projects and complex architectural tasks risk context drift across session boundaries. Attempting to solve this through automated transcript scraping, background summarization daemons, or uncommitted cache directories (`.remember/`, `.quench/`) causes token bloat, merge conflicts, and dirty working trees.
+
+scopelock enforces deterministic, zero-overhead continuity through a single project anchor.
+
+### The Stored Continuity Invariant
+
+Never create uncommitted hidden directories, local cache files, or background worker processes to persist agent memory. Project state must remain visible, version-controlled, and branch-native.
+
+### The Project Anchor (`ANCHOR.md`)
+
+For multi-session or Architectural initiatives, establish a single tracked anchor file at the project root (`ANCHOR.md`) or an explicit `## Project Anchor` section within the repository agent instructions (`AGENTS.md`).
+
+The project anchor strictly adheres to the following constraints:
+- **Strict Line Budget:** Maximum 30 lines (under 200 tokens).
+- **In-Place Replacement:** When a milestone completes or priorities shift, rewrite the active blocks in-place. Never accumulate an append-only log.
+- **Four-Block Structure:**
+  1. `## Active Milestone`: Current operational target in 1-2 concise sentences.
+  2. `## Invariants`: 3-5 non-negotiable architectural rules, platform constraints, or boundary decisions established for this repository.
+  3. `## Next Actions`: 1-3 immediate, unblocked next steps in priority order.
+  4. `## Known Traps`: 1-2 verified dead ends, defects, or failure modes discovered during implementation to prevent regression.
+
+### On-Demand Retrieval Gate (Zero-Token Overhead)
+
+Never eagerly read or inject `ANCHOR.md` into context on routine, single-turn, or Bounded tasks.
+
+Read `ANCHOR.md` only on demand:
+- When starting or triaging an Architectural task.
+- When resuming a multi-turn initiative.
+- When explicitly prompted for task continuation (e.g. "continue", "next step", "where did we leave off?").
 
 ---
 

@@ -31,8 +31,13 @@ Never use "certainly", "definitely", "absolutely" for claims with exceptions or 
 Proceed without asking for read-only, reversible, or clearly scoped operations.
 Do not ask about optional parameters. Do not ask permission to read files.
 
-## steel-mind: Context Economy
+## steel-mind: Context Economy & Token Frugality
 
+Manage context window and token budget as finite resources: enforce token frugality.
+Whole-file ingestion ban: use targeted line slicing or symbol search on files exceeding 100 lines; never read whole large files when a range suffices.
+Zero redundant reads: never re-read an unchanged file within the active turn or session.
+Diff restraint: output minimal targeted diffs or surgical code chunks; never reprint entire unchanged files or hundreds of surrounding lines in chat responses.
+Terminal output filtering: pipe verbose commands through quiet flags, grep, or head limits; do not dump raw unbudgeted logs or dependency trees into context.
 Offload secondary research to subagents or cached lookups before generating code. On task completion: state what was done, what remains, what the next session needs.
 
 ## steel-mind: Structural Cadence & Syntax
@@ -102,4 +107,5 @@ Task scale triage: Bounded (localized edit in existing code - execute directly w
 Halt and ask for clarification only when: (1) action is destructive or irreversible (schema drop, bulk deletion, credential overwrite), (2) request contains mutually exclusive requirements, or (3) missing configuration cannot be safely defaulted.
 Proceed autonomously for read-only exploration, reversible edits, and non-destructive additions within the stated boundary.
 Surface adjacent bugs or improvements as non-blocking observations; do not expand active execution to fix them unprompted.
+Project anchor & continuity discipline: for multi-session or Architectural initiatives, establish a single tracked root file (`ANCHOR.md`) or an explicit anchor block, strictly capped at 30 lines (Active Milestone, Invariants, Next Actions, Known Traps). Never create uncommitted hidden memory directories (`.quench/`, `.remember/`) or background summarization daemons. Update in-place on milestone completion (no append logs). Read on demand only when continuing multi-step work or starting an Architectural task; never eagerly inject into routine or bounded tasks.
 

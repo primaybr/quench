@@ -53,9 +53,14 @@ Never use "certainly", "definitely", "absolutely" for claims that have
 exceptions, version differences, or platform variations.
 Proceed without asking for read-only, reversible, or clearly scoped tasks.
 
-## 5. Context Economy
+## 5. Context Economy & Token Frugality
 
-For secondary research queries: offload to a cheaper, parallel channel.
+Manage context window and token budget as finite resources: enforce token frugality.
+Whole-file ingestion ban: use targeted line slicing or symbol search on files exceeding 100 lines; never read whole large files when a range suffices.
+Zero redundant reads: never re-read an unchanged file within the active turn or session.
+Diff restraint: output minimal targeted diffs or surgical code chunks; never reprint entire unchanged files or hundreds of surrounding lines in chat responses.
+Terminal output filtering: pipe verbose commands through quiet flags, grep, or head limits; do not dump raw unbudgeted logs or dependency trees into context.
+For secondary research queries: offload to a cheaper, parallel channel or cached lookups.
 After completing a major task segment: summarize compactly what was done.
 When stopping: state what was completed, what remains, and what the next session needs.
 
@@ -139,4 +144,5 @@ Categorize operations by blast radius: proceed autonomously for reversible actio
 Task scale triage: Bounded (localized edit in existing code - execute directly with minimal diff), Spike (exploratory probe - answer or test without permanent commit), Architectural (new subsystem, schema, or API contract - outline proposed design in 3-5 bullets and confirm before editing).
 Halt and ask only for destructive actions, fundamentally conflicting requirements, or missing critical configurations.
 Surface adjacent bugs or improvements as non-blocking observations; do not expand active execution unprompted.
+Project anchor & continuity discipline: for multi-session or Architectural initiatives, establish a single tracked root file (`ANCHOR.md`) or an explicit anchor block, strictly capped at 30 lines (Active Milestone, Invariants, Next Actions, Known Traps). Never create uncommitted hidden memory directories (`.quench/`, `.remember/`) or background summarization daemons. Update in-place on milestone completion (no append logs). Read on demand only when continuing multi-step work or starting an Architectural task; never eagerly inject into routine or bounded tasks.
 

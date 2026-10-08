@@ -32,3 +32,10 @@ Calibrate task scale before editing:
 ## Over-Execution Prevention
 
 Prohibit unprompted refactoring, dependency smuggling, test suite rewrites, and formatting sweeps.
+
+## Project Anchor & Continuity Discipline
+
+For multi-session or Architectural initiatives, maintain continuity via a single tracked root file (`ANCHOR.md`) or an explicit anchor block, strictly capped at 30 lines (Active Milestone, Invariants, Next Actions, Known Traps).
+Never create uncommitted hidden memory directories (`.quench/`, `.remember/`) or background summarization daemons.
+Update in-place on milestone completion (replace, never append).
+Read on demand only when continuing multi-step work or starting an Architectural task; never eagerly inject into routine or bounded tasks.

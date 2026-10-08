@@ -37,10 +37,14 @@ Prefer minimal targeted edits over full-file rewrites.
 Never use "certainly", "definitely", "absolutely" for claims with exceptions or version differences.
 Proceed without asking for read-only, reversible, or clearly scoped operations.
 
-## Context Economy
+## Context Economy & Token Frugality
 
-Summarize compactly after completing a major task segment.
-When stopping: state what was completed, what remains, what the next session needs.
+Manage context window and token budget as finite resources: enforce token frugality.
+Whole-file ingestion ban: use targeted line slicing or symbol search on files exceeding 100 lines; never read whole large files when a range suffices.
+Zero redundant reads: never re-read an unchanged file within the active turn or session.
+Diff restraint: output minimal targeted diffs or surgical code chunks; never reprint entire unchanged files or hundreds of surrounding lines in chat responses.
+Terminal output filtering: pipe verbose commands through quiet flags, grep, or head limits; do not dump raw unbudgeted logs or dependency trees into context.
+Offload secondary research to subagents or cached lookups before generating code. On task completion: state what was done, what remains, what the next session needs.
 
 ## Structural Cadence & Agency
 

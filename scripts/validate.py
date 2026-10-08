@@ -851,13 +851,51 @@ def validate_skill_frontmatter(path: Path, content: str, report: ValidationRepor
             report.add(Violation('skills', path, 1, 1, f"Version '{ver}' does not adhere to SemVer format (X.Y.Z)"))
 
 
+def validate_project_anchor(path: Path, content: str, report: ValidationReport):
+    """Validate project anchor (ANCHOR.md) against scopelock Protocol 7 constraints.
+
+    Enforces:
+    1. Line count <= 30 to strictly prevent token bloat and unbudgeted history accumulation.
+    2. Presence of all 4 required sections: Active Milestone, Invariants, Next Actions, Known Traps.
+    """
+    if path.name.lower() != 'anchor.md':
+        return
+
+    lines = content.splitlines()
+    if len(lines) > 30:
+        report.add(Violation(
+            gate='anchor',
+            file_path=path,
+            line=31,
+            col=1,
+            message=f"ANCHOR.md exceeds 30-line limit (found {len(lines)} lines; max 30 allowed to prevent token bloat)"
+        ))
+
+    required_sections = [
+        'Active Milestone',
+        'Invariants',
+        'Next Actions',
+        'Known Traps',
+    ]
+    lower_content = content.lower()
+    for section in required_sections:
+        if section.lower() not in lower_content:
+            report.add(Violation(
+                gate='anchor',
+                file_path=path,
+                line=1,
+                col=1,
+                message=f"ANCHOR.md missing required section: '{section}'"
+            ))
+
+
 # Phrases a skill's adapters must all carry. Add one when a rule is sharpened in
 # skills/<name>/SKILL.md, so a partial backport fails the gate instead of shipping.
 PARITY_MARKERS = {
-    'steel-mind': ('cannot verify', 'strict_types'),
+    'steel-mind': ('cannot verify', 'strict_types', 'token frugality'),
     'leakguard': ('git clone',),
     'precision-output': ('systematic debugging',),
-    'scopelock': ('task scale triage',),
+    'scopelock': ('task scale triage', 'project anchor'),
 }
 
 
@@ -1140,6 +1178,9 @@ def scan_repository(root: Path, check_paths_only: bool = False, auto_fix: bool =
 
             # Gate 4: Skill Frontmatter
             validate_skill_frontmatter(rel_path, content, report, quench_repo=is_quench)
+
+            # Project Anchor Validation (scopelock Protocol 7)
+            validate_project_anchor(rel_path, content, report)
 
         if fixed_now:
             report.fixed_files.append(rel_path)

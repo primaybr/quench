@@ -1031,5 +1031,52 @@ class TestStagedAndParityGates(unittest.TestCase):
             self.assertIn('cannot verify', drift[0].message)
 
 
+class TestProjectAnchorValidation(unittest.TestCase):
+    def test_compliant_anchor_passes(self):
+        content = (
+            "# Project Anchor: Demo\n\n"
+            "## Active Milestone\n- [ ] Task 1\n\n"
+            "## Invariants\n- Rule 1\n\n"
+            "## Next Actions\n1. Step 1\n\n"
+            "## Known Traps\n- Trap 1\n"
+        )
+        report = validate.ValidationReport()
+        validate.validate_project_anchor(Path('ANCHOR.md'), content, report)
+        self.assertEqual(len(report.violations), 0)
+
+    def test_anchor_exceeding_30_lines_fails(self):
+        content = (
+            "# Project Anchor: Demo\n\n"
+            "## Active Milestone\n- [ ] Task 1\n\n"
+            "## Invariants\n- Rule 1\n\n"
+            "## Next Actions\n1. Step 1\n\n"
+            "## Known Traps\n- Trap 1\n" +
+            "\n".join(f"- extra line {i}" for i in range(25))
+        )
+        report = validate.ValidationReport()
+        validate.validate_project_anchor(Path('ANCHOR.md'), content, report)
+        anchor_violations = [v for v in report.violations if v.gate == 'anchor']
+        self.assertTrue(any('exceeds 30-line limit' in v.message for v in anchor_violations))
+
+    def test_anchor_missing_required_section_fails(self):
+        content = (
+            "# Project Anchor: Demo\n\n"
+            "## Active Milestone\n- [ ] Task 1\n\n"
+            "## Invariants\n- Rule 1\n\n"
+            "## Next Actions\n1. Step 1\n"
+        )
+        report = validate.ValidationReport()
+        validate.validate_project_anchor(Path('ANCHOR.md'), content, report)
+        anchor_violations = [v for v in report.violations if v.gate == 'anchor']
+        self.assertTrue(any("missing required section: 'Known Traps'" in v.message for v in anchor_violations))
+
+    def test_non_anchor_file_ignored(self):
+        content = "\n".join(f"line {i}" for i in range(100))
+        report = validate.ValidationReport()
+        validate.validate_project_anchor(Path('README.md'), content, report)
+        self.assertEqual(len(report.violations), 0)
+
+
 if __name__ == '__main__':
     unittest.main()
+

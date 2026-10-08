@@ -4,6 +4,7 @@ quench CLI - Unified zero-dependency command line interface for quench.
 
 Commands:
   quench init     Initialize quench in any project repository.
+  quench anchor   Scaffold or validate a 30-line project anchor (ANCHOR.md).
   quench check    Run the 5-gate Quench validation engine on any target directory.
                   Use --no-ignore to bypass .quenchignore and scan all files.
                   Use --format github to emit ::error annotations for GitHub Actions PR diffs.
@@ -35,8 +36,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 import validate
 
-VERSION = "quench 1.9.9"
-__version__ = "1.9.9"
+VERSION = "quench 2.0.0"
+__version__ = "2.0.0"
 
 # ---------------------------------------------------------------------------
 # Tool Adapter Definitions & Mappings
@@ -335,6 +336,9 @@ def cmd_init(args: argparse.Namespace) -> int:
         )
         print("  Created: .quenchignore (template)")
 
+    if getattr(args, 'anchor', False):
+        init_anchor(target, force=args.force)
+
     if args.hooks:
         print("Installing Git validation hooks...")
         h_count, h_installed = install_git_hooks(REPO_ROOT, target, force=args.force)
@@ -343,6 +347,70 @@ def cmd_init(args: argparse.Namespace) -> int:
 
     print(f"\nQuench initialization complete. {count} file(s) configured.")
     return 0
+
+
+ANCHOR_TEMPLATE = """# Project Anchor: {project_name}
+
+Continuity anchor for multi-session and architectural tasks.
+Maintained in-place. Capped strictly at 30 lines.
+
+## Active Milestone
+- [ ] Milestone 1: Initial implementation
+
+## Invariants
+- Invariant 1: Preserve core architectural boundaries
+- Invariant 2: Maintain zero test failures
+
+## Next Actions
+1. Next immediate step
+2. Follow-up verification
+
+## Known Traps
+- Known trap: Avoid unbudgeted dependencies or hidden memory directories
+"""
+
+
+def init_anchor(target: Path, force: bool = False) -> bool:
+    """Scaffold a canonical ANCHOR.md in the target directory."""
+    anchor_file = target / 'ANCHOR.md'
+    if anchor_file.exists() and not force:
+        print(f"  ANCHOR.md already exists in {target}. Use --force to overwrite.")
+        return False
+    project_name = target.name or 'Project'
+    content = ANCHOR_TEMPLATE.format(project_name=project_name)
+    anchor_file.write_text(content, encoding='utf-8', newline='\n')
+    print(f"  Created: ANCHOR.md ({len(content.splitlines())}/30 lines)")
+    return True
+
+
+def cmd_anchor(args: argparse.Namespace) -> int:
+    """Handle the 'quench anchor' command."""
+    target = Path(args.target).resolve()
+    action = getattr(args, 'action', 'init') or 'init'
+
+    if action == 'init':
+        target.mkdir(parents=True, exist_ok=True)
+        ok = init_anchor(target, force=getattr(args, 'force', False))
+        return 0 if ok else 1
+    elif action == 'check':
+        anchor_file = target / 'ANCHOR.md'
+        if not anchor_file.is_file():
+            print(f"Error: ANCHOR.md not found in {target}")
+            return 1
+        content = anchor_file.read_text(encoding='utf-8', errors='replace')
+        report = validate.ValidationReport()
+        validate.validate_project_anchor(Path('ANCHOR.md'), content, report)
+        if report.violations:
+            print(f"[FAIL] ANCHOR.md has {len(report.violations)} violation(s):")
+            for v in report.violations:
+                print(f"  - {v.message}")
+            return 1
+        lines = len(content.splitlines())
+        print(f"[PASS] ANCHOR.md is compliant ({lines}/30 lines, all 4 sections present).")
+        return 0
+    else:
+        print(f"Unknown anchor action: {action}")
+        return 1
 
 
 def cmd_check(args: argparse.Namespace) -> int:
@@ -867,7 +935,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_init.add_argument('-t', '--tool', choices=SUPPORTED_TOOLS, help='Tool adapter to initialize')
     p_init.add_argument('-d', '--target', default='.', help='Target project directory (default: current dir)')
     p_init.add_argument('--hooks', action='store_true', help='Install git pre-commit and commit-msg hooks')
+    p_init.add_argument('--anchor', action='store_true', help='Scaffold ANCHOR.md template in target directory')
     p_init.add_argument('-f', '--force', action='store_true', help='Overwrite existing files')
+
+    # anchor
+    p_anchor = subparsers.add_parser('anchor', help='Scaffold or inspect project anchor (ANCHOR.md)')
+    p_anchor.add_argument('action', choices=['init', 'check'], nargs='?', default='init',
+                          help='Anchor action: init (default) or check')
+    p_anchor.add_argument('-d', '--target', default='.', help='Target project directory (default: current dir)')
+    p_anchor.add_argument('-f', '--force', action='store_true', help='Overwrite existing ANCHOR.md')
 
     # check
     p_check = subparsers.add_parser('check', help='Run validation engine on a directory')
@@ -935,6 +1011,8 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if args.command == 'init':
         return cmd_init(args)
+    elif args.command == 'anchor':
+        return cmd_anchor(args)
     elif args.command == 'check':
         return cmd_check(args)
     elif args.command == 'update':

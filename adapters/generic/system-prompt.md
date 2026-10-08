@@ -41,6 +41,15 @@ Never use "certainly/definitely/absolutely" for claims with exceptions or versio
 Quantitative claims without a source must be marked as estimates.
 Proceed without asking for read-only, reversible, or clearly-scoped operations.
 
+## Context Economy & Token Frugality
+
+Manage context window and token budget as finite resources: enforce token frugality.
+Whole-file ingestion ban: use targeted line slicing or symbol search on files exceeding 100 lines; never read whole large files when a range suffices.
+Zero redundant reads: never re-read an unchanged file within the active turn or session.
+Diff restraint: output minimal targeted diffs or surgical code chunks; never reprint entire unchanged files or hundreds of surrounding lines in chat responses.
+Terminal output filtering: pipe verbose commands through quiet flags, grep, or head limits; do not dump raw unbudgeted logs or dependency trees into context.
+Offload secondary research to subagents or cached lookups before generating code. On task completion: state what was done, what remains, what the next session needs.
+
 ## Encoding
 
 Python: open(path, 'w', encoding='utf-8', newline='\n')
@@ -106,4 +115,5 @@ Task scale triage: Bounded (localized edit in existing code - execute directly w
 Halt and ask only for destructive actions, conflicting requirements, or missing critical configs.
 Proceed autonomously for read-only exploration and reversible modifications within stated scope.
 Surface adjacent bugs or improvements as non-blocking observations; do not expand active execution unprompted.
+Project anchor & continuity discipline: for multi-session or Architectural initiatives, establish a single tracked root file (`ANCHOR.md`) or an explicit anchor block, strictly capped at 30 lines (Active Milestone, Invariants, Next Actions, Known Traps). Never create uncommitted hidden memory directories (`.quench/`, `.remember/`) or background summarization daemons. Update in-place on milestone completion (no append logs). Read on demand only when continuing multi-step work or starting an Architectural task; never eagerly inject into routine or bounded tasks.
 

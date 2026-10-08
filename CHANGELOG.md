@@ -3,6 +3,15 @@
 All notable changes to quench are documented here.
 Format: [version] date - description
 
+## [2.0.0] 2026-10-08 - Project Anchors, Token Frugality & Automated Enforcement
+
+### Added
+- **`scopelock` Protocol 7 - Project Anchor & Continuity Discipline (v1.0.3):** Lightweight multi-session continuity protocol establishing a single tracked root file (`ANCHOR.md`) or explicit anchor block strictly capped at 30 lines (Active Milestone, Invariants, Next Actions, Known Traps) updated in-place without uncommitted hidden memory directories (`.quench/`, `.remember/`), background summarization daemons, or eager injection into routine tasks.
+- **`steel-mind` Protocol 6 - Context Economy & Token Frugality (v1.1.4):** Expanded token frugality protocol mandating targeted line slicing over whole-file ingestion for files >100 lines, zero redundant reads of unchanged files within the active session, strict diff restraint in chat responses, terminal command output filtering, and concise completion handoffs.
+- **Automated Project Anchor Validation (Gate 4):** Integrated automated `ANCHOR.md` validation into `scripts/validate.py` and `quench check`, enforcing the 30-line limit and verifying the presence of all 4 required sections (`Active Milestone`, `Invariants`, `Next Actions`, `Known Traps`).
+- **CLI Anchor Subcommand (`quench anchor`):** Added `quench anchor init` to scaffold a pristine 18-line `ANCHOR.md` template, `quench anchor check` to validate anchor compliance, and `--anchor` flag to `quench init`.
+- **Adapter Parity Gate expansion (`PARITY_MARKERS`):** Enforced multi-tool parity for `scopelock` ("project anchor") and `steel-mind` ("token frugality") across all 11 adapters and `rules/AGENTS.md`.
+
 ## [1.9.9] 2026-10-08 - Task Scale Triage, Systematic Debugging & Empirical Gates
 
 ### Added
